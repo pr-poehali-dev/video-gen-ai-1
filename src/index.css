@@ -6,33 +6,33 @@
 
 @layer base {
   :root {
-    --background: 270 100% 98%;
-    --foreground: 270 15% 10%;
+    --background: 230 35% 7%;
+    --foreground: 210 40% 98%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 270 15% 10%;
+    --card: 230 25% 10%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 270 15% 10%;
+    --popover: 230 25% 10%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 280 85% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 190 95% 55%;
+    --primary-foreground: 230 35% 7%;
 
-    --secondary: 320 95% 70%;
-    --secondary-foreground: 270 15% 10%;
+    --secondary: 270 85% 65%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 270 30% 96%;
-    --muted-foreground: 270 15% 45%;
+    --muted: 230 20% 20%;
+    --muted-foreground: 210 20% 60%;
 
-    --accent: 300 80% 65%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 270 85% 65%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 270 20% 90%;
-    --input: 270 20% 92%;
-    --ring: 280 85% 60%;
+    --border: 230 20% 18%;
+    --input: 230 20% 15%;
+    --ring: 190 95% 55%;
 
     --radius: 1rem;
 
@@ -137,12 +137,23 @@
   }
 
   .gradient-blur {
-    background: linear-gradient(
-      135deg,
-      rgba(168, 85, 247, 0.1) 0%,
-      rgba(236, 72, 153, 0.1) 100%
-    );
-    backdrop-filter: blur(10px);
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(100, 255, 218, 0.1);
+  }
+
+  .neon-glow {
+    box-shadow:
+      0 0 10px rgba(100, 255, 218, 0.3),
+      0 0 20px rgba(100, 255, 218, 0.2),
+      0 0 30px rgba(100, 255, 218, 0.1);
+  }
+
+  .neon-glow-purple {
+    box-shadow:
+      0 0 10px rgba(168, 85, 247, 0.4),
+      0 0 20px rgba(168, 85, 247, 0.3),
+      0 0 30px rgba(168, 85, 247, 0.2);
   }
 
   .wave {
@@ -177,20 +188,64 @@
 
   .gradient-animate {
     background-size: 200% 200%;
-    animation: gradient-shift 15s ease infinite;
+    animation: gradient-shift 8s ease infinite;
+  }
+
+  .text-shadow-neon {
+    text-shadow:
+      0 0 10px rgba(100, 255, 218, 0.8),
+      0 0 20px rgba(100, 255, 218, 0.5),
+      0 0 30px rgba(100, 255, 218, 0.3);
+  }
+
+  .text-shadow-purple {
+    text-shadow:
+      0 0 10px rgba(168, 85, 247, 0.8),
+      0 0 20px rgba(168, 85, 247, 0.5);
   }
 
   @keyframes pulse-glow {
     0%,
     100% {
-      box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+      box-shadow:
+        0 0 20px rgba(100, 255, 218, 0.4),
+        0 0 40px rgba(100, 255, 218, 0.2);
     }
     50% {
-      box-shadow: 0 0 40px rgba(236, 72, 153, 0.5);
+      box-shadow:
+        0 0 30px rgba(100, 255, 218, 0.6),
+        0 0 60px rgba(100, 255, 218, 0.3),
+        0 0 80px rgba(168, 85, 247, 0.2);
     }
   }
 
   .pulse-glow {
     animation: pulse-glow 3s ease-in-out infinite;
+  }
+
+  @keyframes neon-flicker {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    41% {
+      opacity: 1;
+    }
+    42% {
+      opacity: 0.8;
+    }
+    43% {
+      opacity: 1;
+    }
+    45% {
+      opacity: 0.9;
+    }
+    46% {
+      opacity: 1;
+    }
+  }
+
+  .neon-flicker {
+    animation: neon-flicker 8s infinite;
   }
 }
