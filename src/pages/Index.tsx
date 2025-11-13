@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Progress } from '@/components/ui/progress';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
+import Header from '@/components/Header';
+import GeneratorModals from '@/components/GeneratorModals';
+import ContactForm from '@/components/ContactForm';
 
 const Index = () => {
   const { toast } = useToast();
@@ -24,24 +25,6 @@ const Index = () => {
   const [progress, setProgress] = useState(0);
   const [generatedContent, setGeneratedContent] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
-  const [contactName, setContactName] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactMessage, setContactMessage] = useState('');
-  const [isSendingMessage, setIsSendingMessage] = useState(false);
-  const [captchaAnswer, setCaptchaAnswer] = useState('');
-  const [captchaQuestion, setCaptchaQuestion] = useState({ num1: 0, num2: 0, answer: 0 });
-
-  const generateCaptcha = () => {
-    const num1 = Math.floor(Math.random() * 10) + 1;
-    const num2 = Math.floor(Math.random() * 10) + 1;
-    setCaptchaQuestion({ num1, num2, answer: num1 + num2 });
-    setCaptchaAnswer('');
-  };
-
-  useEffect(() => {
-    generateCaptcha();
-  }, []);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -106,84 +89,6 @@ const Index = () => {
     simulateGeneration('presentation', presentationTopic);
   };
 
-  const handleSendMessage = async () => {
-    if (!contactName.trim() || !contactEmail.trim() || !contactMessage.trim()) {
-      toast({
-        title: 'Ошибка',
-        description: 'Пожалуйста, заполните все поля',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!captchaAnswer.trim() || parseInt(captchaAnswer) !== captchaQuestion.answer) {
-      toast({
-        title: 'Ошибка',
-        description: 'Неверный ответ на вопрос. Попробуйте еще раз.',
-        variant: 'destructive',
-      });
-      generateCaptcha();
-      return;
-    }
-
-    setIsSendingMessage(true);
-
-    try {
-      const captchaHash = await crypto.subtle.digest(
-        'SHA-256',
-        new TextEncoder().encode(captchaAnswer)
-      );
-      const hashArray = Array.from(new Uint8Array(captchaHash));
-      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-      const response = await fetch('https://functions.poehali.dev/0e7f29bd-c996-440c-9658-c17677f2981a', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: contactName,
-          email: contactEmail,
-          message: contactMessage,
-          captcha: hashHex,
-          captchaAnswer: captchaAnswer,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: 'Успешно!',
-          description: 'Ваше сообщение отправлено. Мы свяжемся с вами в ближайшее время.',
-        });
-        setContactName('');
-        setContactEmail('');
-        setContactMessage('');
-        generateCaptcha();
-      } else {
-        if (response.status === 429) {
-          toast({
-            title: 'Слишком много запросов',
-            description: 'Пожалуйста, подождите немного перед следующей попыткой.',
-            variant: 'destructive',
-          });
-        } else {
-          throw new Error(data.error || 'Failed to send message');
-        }
-      }
-    } catch (error) {
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось отправить сообщение. Попробуйте позже.',
-        variant: 'destructive',
-      });
-      generateCaptcha();
-    } finally {
-      setIsSendingMessage(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -192,104 +97,11 @@ const Index = () => {
         <div className="absolute -bottom-20 left-1/3 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 floating-slow"></div>
       </div>
 
-      <nav className="fixed top-0 left-0 right-0 z-50 gradient-blur border-b border-white/20">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl flex items-center justify-center">
-                <Icon name="Sparkles" className="text-white" size={24} />
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                AI Studio
-              </span>
-            </div>
-            <div className="hidden md:flex items-center space-x-8">
-              <button onClick={() => scrollToSection('home')} className="text-sm font-medium hover:text-blue-600 transition-colors">
-                Главная
-              </button>
-              <button onClick={() => scrollToSection('generators')} className="text-sm font-medium hover:text-blue-600 transition-colors">
-                Генераторы
-              </button>
-              <button onClick={() => scrollToSection('about')} className="text-sm font-medium hover:text-blue-600 transition-colors">
-                О сервисе
-              </button>
-              <button onClick={() => scrollToSection('pricing')} className="text-sm font-medium hover:text-blue-600 transition-colors">
-                Тарифы
-              </button>
-              <button onClick={() => scrollToSection('contacts')} className="text-sm font-medium hover:text-blue-600 transition-colors">
-                Контакты
-              </button>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <Button className="hidden md:flex bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white">
-                Начать бесплатно
-              </Button>
-              
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="md:hidden"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              >
-                <Icon name={isMobileMenuOpen ? "X" : "Menu"} size={24} />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
-          <div 
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsMobileMenuOpen(false)}
-          ></div>
-          
-          <div className="absolute top-20 left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-xl animate-fade-in">
-            <div className="container mx-auto px-6 py-6">
-              <div className="flex flex-col space-y-4">
-                <button 
-                  onClick={() => scrollToSection('home')} 
-                  className="text-left text-lg font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
-                >
-                  Главная
-                </button>
-                <button 
-                  onClick={() => scrollToSection('generators')} 
-                  className="text-left text-lg font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
-                >
-                  Генераторы
-                </button>
-                <button 
-                  onClick={() => scrollToSection('about')} 
-                  className="text-left text-lg font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
-                >
-                  О сервисе
-                </button>
-                <button 
-                  onClick={() => scrollToSection('pricing')} 
-                  className="text-left text-lg font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
-                >
-                  Тарифы
-                </button>
-                <button 
-                  onClick={() => scrollToSection('contacts')} 
-                  className="text-left text-lg font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
-                >
-                  Контакты
-                </button>
-                
-                <div className="pt-4 border-t border-gray-200">
-                  <Button className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white">
-                    Начать бесплатно
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <Header 
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+        scrollToSection={scrollToSection}
+      />
 
       <main className="relative z-10 pt-24">
         <section id="home" className="min-h-screen flex items-center justify-center px-6">
@@ -408,22 +220,18 @@ const Index = () => {
                         <Icon name="Settings" size={18} />
                       </Button>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
-                      <div className="text-center p-4 bg-white/60 rounded-lg">
-                        <Icon name="Clock" className="mx-auto mb-2 text-blue-600" size={24} />
-                        <p className="text-sm font-medium">До 2 минут</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4 pt-4">
+                      <div className="text-center p-3 md:p-4 bg-white/60 rounded-lg">
+                        <Icon name="Film" className="mx-auto mb-2 text-blue-600" size={20} />
+                        <p className="text-xs md:text-sm font-medium">Full HD</p>
                       </div>
-                      <div className="text-center p-4 bg-white/60 rounded-lg">
-                        <Icon name="Film" className="mx-auto mb-2 text-blue-600" size={24} />
-                        <p className="text-sm font-medium">Full HD</p>
+                      <div className="text-center p-3 md:p-4 bg-white/60 rounded-lg">
+                        <Icon name="Music" className="mx-auto mb-2 text-blue-600" size={20} />
+                        <p className="text-xs md:text-sm font-medium">Со звуком</p>
                       </div>
-                      <div className="text-center p-4 bg-white/60 rounded-lg">
-                        <Icon name="Music" className="mx-auto mb-2 text-blue-600" size={24} />
-                        <p className="text-sm font-medium">Со звуком</p>
-                      </div>
-                      <div className="text-center p-4 bg-white/60 rounded-lg">
-                        <Icon name="Zap" className="mx-auto mb-2 text-blue-600" size={24} />
-                        <p className="text-sm font-medium">За 30 сек</p>
+                      <div className="text-center p-3 md:p-4 bg-white/60 rounded-lg">
+                        <Icon name="Zap" className="mx-auto mb-2 text-blue-600" size={20} />
+                        <p className="text-xs md:text-sm font-medium">За 30 сек</p>
                       </div>
                     </div>
                   </CardContent>
@@ -465,9 +273,9 @@ const Index = () => {
                         <Icon name="Languages" className="mx-auto mb-2 text-blue-600" size={20} />
                         <p className="text-xs md:text-sm font-medium">50+ языков</p>
                       </div>
-                      <div className="text-center p-4 bg-white/60 rounded-lg">
-                        <Icon name="CheckCircle" className="mx-auto mb-2 text-blue-600" size={24} />
-                        <p className="text-sm font-medium">SEO оптимизация</p>
+                      <div className="text-center p-3 md:p-4 bg-white/60 rounded-lg">
+                        <Icon name="Sparkles" className="mx-auto mb-2 text-blue-600" size={20} />
+                        <p className="text-xs md:text-sm font-medium">AI улучшение</p>
                       </div>
                     </div>
                   </CardContent>
@@ -523,9 +331,9 @@ const Index = () => {
                         <Icon name="Download" className="mx-auto mb-2 text-blue-600" size={20} />
                         <p className="text-xs md:text-sm font-medium">PPT/PDF</p>
                       </div>
-                      <div className="text-center p-4 bg-white/60 rounded-lg">
-                        <Icon name="Users" className="mx-auto mb-2 text-blue-600" size={24} />
-                        <p className="text-sm font-medium">Совместная работа</p>
+                      <div className="text-center p-3 md:p-4 bg-white/60 rounded-lg">
+                        <Icon name="Users" className="mx-auto mb-2 text-blue-600" size={20} />
+                        <p className="text-xs md:text-sm font-medium">Совместная работа</p>
                       </div>
                     </div>
                   </CardContent>
@@ -581,7 +389,7 @@ const Index = () => {
                     <Icon name="Headphones" className="text-blue-600 mb-4" size={32} />
                     <CardTitle>Поддержка 24/7</CardTitle>
                     <CardDescription>
-                      Наша команда всегда готова помочь вам разобраться с любыми вопросами
+                      Наша команда всегда готова помочь вам с любыми вопросами и проблемами
                     </CardDescription>
                   </CardHeader>
                 </Card>
@@ -679,7 +487,7 @@ const Index = () => {
                   <CardTitle className="text-2xl">Бизнес</CardTitle>
                   <CardDescription>Для команд и компаний</CardDescription>
                   <div className="mt-4">
-                    <span className="text-4xl font-bold">4990₽</span>
+                    <span className="text-4xl font-bold">2990₽</span>
                     <span className="text-gray-600">/месяц</span>
                   </div>
                 </CardHeader>
@@ -700,10 +508,6 @@ const Index = () => {
                     <li className="flex items-center">
                       <Icon name="Check" className="text-blue-600 mr-2" size={20} />
                       <span>4K качество</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Icon name="Check" className="text-blue-600 mr-2" size={20} />
-                      <span>API доступ</span>
                     </li>
                     <li className="flex items-center">
                       <Icon name="Check" className="text-blue-600 mr-2" size={20} />
@@ -775,77 +579,7 @@ const Index = () => {
                     </div>
                   </div>
 
-                  <div className="border-t border-gray-200 pt-8">
-                    <h3 className="font-semibold mb-4 text-center">Напишите нам</h3>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input 
-                          placeholder="Ваше имя" 
-                          className="bg-white/80"
-                          value={contactName}
-                          onChange={(e) => setContactName(e.target.value)}
-                        />
-                        <Input 
-                          placeholder="Email" 
-                          type="email" 
-                          className="bg-white/80"
-                          value={contactEmail}
-                          onChange={(e) => setContactEmail(e.target.value)}
-                        />
-                      </div>
-                      <Textarea 
-                        placeholder="Ваше сообщение" 
-                        className="min-h-32 bg-white/80"
-                        value={contactMessage}
-                        onChange={(e) => setContactMessage(e.target.value)}
-                      />
-                      
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div className="flex items-center gap-3 mb-3">
-                          <Icon name="Shield" className="text-blue-600" size={20} />
-                          <label className="text-sm font-medium text-gray-700">
-                            Проверка: Сколько будет {captchaQuestion.num1} + {captchaQuestion.num2}?
-                          </label>
-                        </div>
-                        <div className="flex gap-3">
-                          <Input 
-                            type="number"
-                            placeholder="Ваш ответ"
-                            className="bg-white"
-                            value={captchaAnswer}
-                            onChange={(e) => setCaptchaAnswer(e.target.value)}
-                          />
-                          <Button 
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={generateCaptcha}
-                            className="flex-shrink-0"
-                          >
-                            <Icon name="RefreshCw" size={18} />
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      <Button 
-                        onClick={handleSendMessage}
-                        disabled={isSendingMessage}
-                        className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white disabled:opacity-50"
-                      >
-                        {isSendingMessage ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                            Отправка...
-                          </>
-                        ) : (
-                          <>
-                            <Icon name="Send" className="mr-2" size={18} />
-                            Отправить сообщение
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
+                  <ContactForm />
                 </CardContent>
               </Card>
             </div>
@@ -882,176 +616,17 @@ const Index = () => {
         </div>
       </footer>
 
-      <Dialog open={isVideoModalOpen} onOpenChange={setIsVideoModalOpen}>
-        <DialogContent className="max-w-3xl w-[95vw] sm:w-full gradient-blur border-white/40">
-          <DialogHeader>
-            <DialogTitle className="text-xl sm:text-2xl bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-              Генерация видео
-            </DialogTitle>
-            <DialogDescription>
-              {isGenerating ? 'Создаем ваше видео с помощью AI...' : 'Ваше видео готово!'}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-6">
-            {isGenerating ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-center py-12">
-                  <div className="relative">
-                    <div className="w-24 h-24 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
-                    <Icon name="Video" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-600" size={32} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Прогресс</span>
-                    <span>{progress}%</span>
-                  </div>
-                  <Progress value={progress} className="h-2" />
-                </div>
-                <div className="text-center text-sm text-gray-600">
-                  <p>Обрабатываем ваш запрос и создаем видео...</p>
-                  <p className="mt-2 text-xs">Это может занять несколько секунд</p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="aspect-video bg-gradient-to-br from-blue-100 to-cyan-100 rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <Icon name="Video" className="mx-auto mb-4 text-blue-600" size={64} />
-                    <p className="text-lg font-medium text-gray-700">Видео плеер</p>
-                    <p className="text-sm text-gray-500 mt-2">{generatedContent}</p>
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white">
-                    <Icon name="Download" className="mr-2" size={18} />
-                    Скачать видео
-                  </Button>
-                  <Button variant="outline" className="flex-1 border-blue-300">
-                    <Icon name="Share2" className="mr-2" size={18} />
-                    Поделиться
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isTextModalOpen} onOpenChange={setIsTextModalOpen}>
-        <DialogContent className="max-w-4xl w-[95vw] sm:w-full max-h-[80vh] gradient-blur border-white/40">
-          <DialogHeader>
-            <DialogTitle className="text-xl sm:text-2xl bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-              Генерация текста
-            </DialogTitle>
-            <DialogDescription>
-              {isGenerating ? 'Пишем текст с помощью AI...' : 'Ваш текст готов!'}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-6 overflow-y-auto max-h-[60vh]">
-            {isGenerating ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-center py-12">
-                  <div className="relative">
-                    <div className="w-24 h-24 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
-                    <Icon name="FileText" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-600" size={32} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Прогресс</span>
-                    <span>{progress}%</span>
-                  </div>
-                  <Progress value={progress} className="h-2" />
-                </div>
-                <div className="text-center text-sm text-gray-600">
-                  <p>Генерируем уникальный текст на основе вашего запроса...</p>
-                  <p className="mt-2 text-xs">AI анализирует требования и создает контент</p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="bg-white/80 p-6 rounded-lg min-h-[300px] whitespace-pre-wrap font-sans">
-                  {generatedContent}
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white">
-                    <Icon name="Copy" className="mr-2" size={18} />
-                    Копировать текст
-                  </Button>
-                  <Button variant="outline" className="flex-1 border-blue-300">
-                    <Icon name="Download" className="mr-2" size={18} />
-                    Скачать .docx
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isPresentationModalOpen} onOpenChange={setIsPresentationModalOpen}>
-        <DialogContent className="max-w-4xl w-[95vw] sm:w-full gradient-blur border-white/40">
-          <DialogHeader>
-            <DialogTitle className="text-xl sm:text-2xl bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-              Генерация презентации
-            </DialogTitle>
-            <DialogDescription>
-              {isGenerating ? 'Создаем профессиональную презентацию...' : 'Ваша презентация готова!'}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-6">
-            {isGenerating ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-center py-12">
-                  <div className="relative">
-                    <div className="w-24 h-24 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
-                    <Icon name="Presentation" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-600" size={32} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Прогресс</span>
-                    <span>{progress}%</span>
-                  </div>
-                  <Progress value={progress} className="h-2" />
-                </div>
-                <div className="text-center text-sm text-gray-600">
-                  <p>Создаем слайды и подбираем дизайн...</p>
-                  <p className="mt-2 text-xs">Генерируем структуру и контент презентации</p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
-                  {[1, 2, 3, 4, 5, 6].map((slide) => (
-                    <div key={slide} className="aspect-video bg-gradient-to-br from-blue-100 to-cyan-100 rounded-lg p-2 sm:p-4 flex flex-col items-center justify-center border-2 border-blue-200">
-                      <Icon name="FileText" className="text-blue-600 mb-1 sm:mb-2" size={20} />
-                      <p className="text-xs font-medium">Слайд {slide}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="bg-white/60 p-4 rounded-lg">
-                  <p className="text-sm text-gray-700">{generatedContent}</p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white">
-                    <Icon name="Download" className="mr-2" size={18} />
-                    Скачать PPT
-                  </Button>
-                  <Button variant="outline" className="flex-1 border-blue-300">
-                    <Icon name="FileText" className="mr-2" size={18} />
-                    Скачать PDF
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <GeneratorModals 
+        isVideoModalOpen={isVideoModalOpen}
+        setIsVideoModalOpen={setIsVideoModalOpen}
+        isTextModalOpen={isTextModalOpen}
+        setIsTextModalOpen={setIsTextModalOpen}
+        isPresentationModalOpen={isPresentationModalOpen}
+        setIsPresentationModalOpen={setIsPresentationModalOpen}
+        isGenerating={isGenerating}
+        progress={progress}
+        generatedContent={generatedContent}
+      />
     </div>
   );
 };
