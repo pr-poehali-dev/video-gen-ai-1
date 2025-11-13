@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 
@@ -13,6 +14,8 @@ const ContactForm = () => {
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [captchaAnswer, setCaptchaAnswer] = useState('');
   const [captchaQuestion, setCaptchaQuestion] = useState({ num1: 0, num2: 0, answer: 0 });
+  const [agreePersonalData, setAgreePersonalData] = useState(false);
+  const [agreePrivacyPolicy, setAgreePrivacyPolicy] = useState(false);
 
   const generateCaptcha = () => {
     const num1 = Math.floor(Math.random() * 10) + 1;
@@ -42,6 +45,15 @@ const ContactForm = () => {
         variant: 'destructive',
       });
       generateCaptcha();
+      return;
+    }
+
+    if (!agreePersonalData || !agreePrivacyPolicy) {
+      toast({
+        title: 'Ошибка',
+        description: 'Необходимо согласие с обработкой данных и политикой конфиденциальности',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -79,6 +91,8 @@ const ContactForm = () => {
         setContactName('');
         setContactEmail('');
         setContactMessage('');
+        setAgreePersonalData(false);
+        setAgreePrivacyPolicy(false);
         generateCaptcha();
       } else {
         if (response.status === 429) {
@@ -156,9 +170,35 @@ const ContactForm = () => {
           </div>
         </div>
         
+        <div className="space-y-3 pt-2">
+          <div className="flex items-start gap-3">
+            <Checkbox 
+              id="personal-data"
+              checked={agreePersonalData}
+              onCheckedChange={(checked) => setAgreePersonalData(checked as boolean)}
+              className="mt-1 border-cyan-500/40 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
+            />
+            <label htmlFor="personal-data" className="text-sm text-cyan-100/70 leading-relaxed cursor-pointer">
+              Я согласен с <a href="#" className="text-cyan-400 hover:text-cyan-300 underline transition-colors">обработкой персональных данных</a>
+            </label>
+          </div>
+          
+          <div className="flex items-start gap-3">
+            <Checkbox 
+              id="privacy-policy"
+              checked={agreePrivacyPolicy}
+              onCheckedChange={(checked) => setAgreePrivacyPolicy(checked as boolean)}
+              className="mt-1 border-cyan-500/40 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
+            />
+            <label htmlFor="privacy-policy" className="text-sm text-cyan-100/70 leading-relaxed cursor-pointer">
+              Я согласен с <a href="#" className="text-cyan-400 hover:text-cyan-300 underline transition-colors">политикой конфиденциальности</a>
+            </label>
+          </div>
+        </div>
+        
         <Button 
           onClick={handleSendMessage}
-          disabled={isSendingMessage}
+          disabled={isSendingMessage || !agreePersonalData || !agreePrivacyPolicy}
           className="w-full bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] disabled:opacity-50 border-0 font-bold neon-glow transition-all duration-300"
         >
           {isSendingMessage ? (
