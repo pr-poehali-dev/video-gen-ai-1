@@ -23,10 +23,12 @@ const Index = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [generatedContent, setGeneratedContent] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     element?.scrollIntoView({ behavior: 'smooth' });
+    setIsMobileMenuOpen(false);
   };
 
   const simulateGeneration = async (type: 'video' | 'text' | 'presentation', prompt: string) => {
@@ -122,12 +124,76 @@ const Index = () => {
                 Контакты
               </button>
             </div>
-            <Button className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white">
-              Начать бесплатно
-            </Button>
+            
+            <div className="flex items-center gap-4">
+              <Button className="hidden md:flex bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white">
+                Начать бесплатно
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="md:hidden"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                <Icon name={isMobileMenuOpen ? "X" : "Menu"} size={24} />
+              </Button>
+            </div>
           </div>
         </div>
       </nav>
+
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsMobileMenuOpen(false)}
+          ></div>
+          
+          <div className="absolute top-20 left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-xl animate-fade-in">
+            <div className="container mx-auto px-6 py-6">
+              <div className="flex flex-col space-y-4">
+                <button 
+                  onClick={() => scrollToSection('home')} 
+                  className="text-left text-lg font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+                >
+                  Главная
+                </button>
+                <button 
+                  onClick={() => scrollToSection('generators')} 
+                  className="text-left text-lg font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+                >
+                  Генераторы
+                </button>
+                <button 
+                  onClick={() => scrollToSection('about')} 
+                  className="text-left text-lg font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+                >
+                  О сервисе
+                </button>
+                <button 
+                  onClick={() => scrollToSection('pricing')} 
+                  className="text-left text-lg font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+                >
+                  Тарифы
+                </button>
+                <button 
+                  onClick={() => scrollToSection('contacts')} 
+                  className="text-left text-lg font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+                >
+                  Контакты
+                </button>
+                
+                <div className="pt-4 border-t border-gray-200">
+                  <Button className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white">
+                    Начать бесплатно
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="relative z-10 pt-24">
         <section id="home" className="min-h-screen flex items-center justify-center px-6">
