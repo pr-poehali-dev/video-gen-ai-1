@@ -19,10 +19,18 @@
 
 ## Шаг 3: Добавление ключей в проект
 
-В интерфейсе poehali.dev уже созданы поля для секретов:
+### Обязательные ключи для платежей:
 
-1. **YOOKASSA_SHOP_ID** - вставьте ваш shopId
-2. **YOOKASSA_SECRET_KEY** - вставьте ваш secret_key
+1. **YOOKASSA_SHOP_ID** - ваш shopId из личного кабинета ЮКassa
+2. **YOOKASSA_SECRET_KEY** - секретный ключ для API ЮКassa
+
+### Обязательные ключи для генерации контента (см. AI_SETUP.md):
+
+3. **OPENAI_API_KEY** - ключ OpenAI для генерации текстов через GPT-4
+4. **REPLICATE_API_TOKEN** - токен Replicate для генерации видео
+5. **STABILITY_API_KEY** - ключ Stability AI для генерации изображений
+
+Все поля для секретов уже созданы в интерфейсе poehali.dev
 
 ## Шаг 4: Настройка webhook
 

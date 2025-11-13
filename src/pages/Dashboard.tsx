@@ -212,7 +212,17 @@ const Dashboard = () => {
 
       <main className="relative z-10 pt-32 pb-20 px-6">
         <div className="container mx-auto max-w-6xl">
-          <h1 className="text-4xl font-black text-cyan-400 text-flicker mb-8">Личный кабинет</h1>
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-4xl font-black text-cyan-400 text-flicker">Личный кабинет</h1>
+            <Button
+              onClick={() => navigate('/generate')}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white border-0 font-bold glow-pulse-purple"
+              size="lg"
+            >
+              <Icon name="Sparkles" className="mr-2" size={20} />
+              Создать контент
+            </Button>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Card className="bg-[#1a2332]/80 border border-cyan-500/20 backdrop-blur-xl">
