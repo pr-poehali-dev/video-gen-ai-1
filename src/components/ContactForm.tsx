@@ -179,7 +179,7 @@ const ContactForm = () => {
               className="mt-1 border-cyan-500/40 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
             />
             <label htmlFor="personal-data" className="text-sm text-cyan-100/70 leading-relaxed cursor-pointer">
-              Я согласен с <a href="#" className="text-cyan-400 hover:text-cyan-300 underline transition-colors">обработкой персональных данных</a>
+              Я согласен с <a href="/personal-data" target="_blank" className="text-cyan-400 hover:text-cyan-300 underline transition-colors">обработкой персональных данных</a>
             </label>
           </div>
           
@@ -191,7 +191,7 @@ const ContactForm = () => {
               className="mt-1 border-cyan-500/40 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
             />
             <label htmlFor="privacy-policy" className="text-sm text-cyan-100/70 leading-relaxed cursor-pointer">
-              Я согласен с <a href="#" className="text-cyan-400 hover:text-cyan-300 underline transition-colors">политикой конфиденциальности</a>
+              Я согласен с <a href="/privacy-policy" target="_blank" className="text-cyan-400 hover:text-cyan-300 underline transition-colors">политикой конфиденциальности</a>
             </label>
           </div>
         </div>
