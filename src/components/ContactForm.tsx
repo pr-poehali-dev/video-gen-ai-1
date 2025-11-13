@@ -104,35 +104,35 @@ const ContactForm = () => {
   };
 
   return (
-    <div className="border-t border-gray-200 pt-8">
-      <h3 className="font-bold text-lg mb-4 text-center bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Напишите нам</h3>
+    <div className="border-t border-cyan-500/20 pt-8">
+      <h3 className="font-bold text-lg mb-4 text-center text-cyan-300 text-shadow-neon">Напишите нам</h3>
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input 
             placeholder="Ваше имя" 
-            className="bg-white/80"
+            className="bg-[#0f1729] border-cyan-500/30 text-cyan-100 placeholder:text-cyan-100/30"
             value={contactName}
             onChange={(e) => setContactName(e.target.value)}
           />
           <Input 
             placeholder="Email" 
             type="email" 
-            className="bg-white/80"
+            className="bg-[#0f1729] border-cyan-500/30 text-cyan-100 placeholder:text-cyan-100/30"
             value={contactEmail}
             onChange={(e) => setContactEmail(e.target.value)}
           />
         </div>
         <Textarea 
           placeholder="Ваше сообщение" 
-          className="min-h-32 bg-white/80"
+          className="min-h-32 bg-[#0f1729] border-cyan-500/30 text-cyan-100 placeholder:text-cyan-100/30"
           value={contactMessage}
           onChange={(e) => setContactMessage(e.target.value)}
         />
         
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
+        <div className="bg-purple-500/5 border border-purple-500/20 rounded-lg p-4">
           <div className="flex items-center gap-3 mb-3">
-            <Icon name="Shield" className="text-purple-600" size={20} />
-            <label className="text-sm font-semibold text-gray-700">
+            <Icon name="Shield" className="text-purple-400" size={20} />
+            <label className="text-sm font-semibold text-purple-100">
               Проверка: Сколько будет {captchaQuestion.num1} + {captchaQuestion.num2}?
             </label>
           </div>
@@ -140,7 +140,7 @@ const ContactForm = () => {
             <Input 
               type="number"
               placeholder="Ваш ответ"
-              className="bg-white"
+              className="bg-[#0f1729] border-purple-500/30 text-purple-100 placeholder:text-purple-100/30"
               value={captchaAnswer}
               onChange={(e) => setCaptchaAnswer(e.target.value)}
             />
@@ -149,7 +149,7 @@ const ContactForm = () => {
               variant="outline"
               size="icon"
               onClick={generateCaptcha}
-              className="flex-shrink-0"
+              className="flex-shrink-0 border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
             >
               <Icon name="RefreshCw" size={18} />
             </Button>
@@ -159,11 +159,11 @@ const ContactForm = () => {
         <Button 
           onClick={handleSendMessage}
           disabled={isSendingMessage}
-          className="w-full bg-gradient-to-r from-purple-600 via-pink-500 to-violet-600 hover:from-purple-700 hover:via-pink-600 hover:to-violet-700 text-white disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+          className="w-full bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] disabled:opacity-50 border-0 font-bold neon-glow transition-all duration-300"
         >
           {isSendingMessage ? (
             <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+              <div className="w-4 h-4 border-2 border-[#0f1729] border-t-transparent rounded-full animate-spin mr-2"></div>
               Отправка...
             </>
           ) : (
