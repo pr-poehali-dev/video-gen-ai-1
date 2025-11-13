@@ -105,7 +105,7 @@ const ContactForm = () => {
 
   return (
     <div className="border-t border-gray-200 pt-8">
-      <h3 className="font-semibold mb-4 text-center">Напишите нам</h3>
+      <h3 className="font-bold text-lg mb-4 text-center bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Напишите нам</h3>
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input 
@@ -129,10 +129,10 @@ const ContactForm = () => {
           onChange={(e) => setContactMessage(e.target.value)}
         />
         
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
           <div className="flex items-center gap-3 mb-3">
-            <Icon name="Shield" className="text-blue-600" size={20} />
-            <label className="text-sm font-medium text-gray-700">
+            <Icon name="Shield" className="text-purple-600" size={20} />
+            <label className="text-sm font-semibold text-gray-700">
               Проверка: Сколько будет {captchaQuestion.num1} + {captchaQuestion.num2}?
             </label>
           </div>
@@ -159,7 +159,7 @@ const ContactForm = () => {
         <Button 
           onClick={handleSendMessage}
           disabled={isSendingMessage}
-          className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white disabled:opacity-50"
+          className="w-full bg-gradient-to-r from-purple-600 via-pink-500 to-violet-600 hover:from-purple-700 hover:via-pink-600 hover:to-violet-700 text-white disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
         >
           {isSendingMessage ? (
             <>

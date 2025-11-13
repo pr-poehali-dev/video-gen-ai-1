@@ -10,37 +10,37 @@ interface HeaderProps {
 const Header = ({ isMobileMenuOpen, setIsMobileMenuOpen, scrollToSection }: HeaderProps) => {
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 gradient-blur border-b border-white/20">
+      <nav className="fixed top-0 left-0 right-0 z-50 gradient-blur border-b border-purple-200/30 backdrop-blur-xl">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl flex items-center justify-center">
-                <Icon name="Sparkles" className="text-white" size={24} />
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 via-pink-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg pulse-glow">
+                <Icon name="Sparkles" className="text-white" size={28} />
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                AI Studio
+              <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-500 to-violet-600 bg-clip-text text-transparent gradient-animate">
+                ROUSHEN
               </span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
-              <button onClick={() => scrollToSection('home')} className="text-sm font-medium hover:text-blue-600 transition-colors">
+              <button onClick={() => scrollToSection('home')} className="text-sm font-semibold text-gray-700 hover:text-purple-600 transition-all duration-300 hover:scale-105">
                 Главная
               </button>
-              <button onClick={() => scrollToSection('generators')} className="text-sm font-medium hover:text-blue-600 transition-colors">
+              <button onClick={() => scrollToSection('generators')} className="text-sm font-semibold text-gray-700 hover:text-pink-600 transition-all duration-300 hover:scale-105">
                 Генераторы
               </button>
-              <button onClick={() => scrollToSection('about')} className="text-sm font-medium hover:text-blue-600 transition-colors">
+              <button onClick={() => scrollToSection('about')} className="text-sm font-semibold text-gray-700 hover:text-violet-600 transition-all duration-300 hover:scale-105">
                 О сервисе
               </button>
-              <button onClick={() => scrollToSection('pricing')} className="text-sm font-medium hover:text-blue-600 transition-colors">
+              <button onClick={() => scrollToSection('pricing')} className="text-sm font-semibold text-gray-700 hover:text-fuchsia-600 transition-all duration-300 hover:scale-105">
                 Тарифы
               </button>
-              <button onClick={() => scrollToSection('contacts')} className="text-sm font-medium hover:text-blue-600 transition-colors">
+              <button onClick={() => scrollToSection('contacts')} className="text-sm font-semibold text-gray-700 hover:text-purple-600 transition-all duration-300 hover:scale-105">
                 Контакты
               </button>
             </div>
             
             <div className="flex items-center gap-4">
-              <Button className="hidden md:flex bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white">
+              <Button className="hidden md:flex bg-gradient-to-r from-purple-600 via-pink-500 to-violet-600 hover:from-purple-700 hover:via-pink-600 hover:to-violet-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold">
                 Начать бесплатно
               </Button>
               
@@ -69,37 +69,37 @@ const Header = ({ isMobileMenuOpen, setIsMobileMenuOpen, scrollToSection }: Head
               <div className="flex flex-col space-y-4">
                 <button 
                   onClick={() => scrollToSection('home')} 
-                  className="text-left text-lg font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+                  className="text-left text-lg font-semibold py-3 px-4 rounded-lg hover:bg-purple-50 hover:text-purple-600 transition-all"
                 >
                   Главная
                 </button>
                 <button 
                   onClick={() => scrollToSection('generators')} 
-                  className="text-left text-lg font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+                  className="text-left text-lg font-semibold py-3 px-4 rounded-lg hover:bg-pink-50 hover:text-pink-600 transition-all"
                 >
                   Генераторы
                 </button>
                 <button 
                   onClick={() => scrollToSection('about')} 
-                  className="text-left text-lg font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+                  className="text-left text-lg font-semibold py-3 px-4 rounded-lg hover:bg-violet-50 hover:text-violet-600 transition-all"
                 >
                   О сервисе
                 </button>
                 <button 
                   onClick={() => scrollToSection('pricing')} 
-                  className="text-left text-lg font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+                  className="text-left text-lg font-semibold py-3 px-4 rounded-lg hover:bg-fuchsia-50 hover:text-fuchsia-600 transition-all"
                 >
                   Тарифы
                 </button>
                 <button 
                   onClick={() => scrollToSection('contacts')} 
-                  className="text-left text-lg font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+                  className="text-left text-lg font-semibold py-3 px-4 rounded-lg hover:bg-purple-50 hover:text-purple-600 transition-all"
                 >
                   Контакты
                 </button>
                 
-                <div className="pt-4 border-t border-gray-200">
-                  <Button className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white">
+                <div className="pt-4 border-t border-purple-200">
+                  <Button className="w-full bg-gradient-to-r from-purple-600 via-pink-500 to-violet-600 hover:from-purple-700 hover:via-pink-600 hover:to-violet-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold">
                     Начать бесплатно
                   </Button>
                 </div>
