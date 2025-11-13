@@ -40,7 +40,18 @@ const Header = ({ isMobileMenuOpen, setIsMobileMenuOpen, scrollToSection }: Head
             </div>
             
             <div className="flex items-center gap-4">
-              <Button className="hidden md:flex bg-purple-600 hover:bg-purple-500 text-white border-0 font-bold glow-pulse-purple transition-all duration-300 hover:scale-105">
+              <Button 
+                onClick={() => window.location.href = '/login'}
+                variant="outline"
+                className="hidden md:flex border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 transition-all duration-300"
+              >
+                <Icon name="LogIn" className="mr-2" size={18} />
+                Войти
+              </Button>
+              <Button 
+                onClick={() => window.location.href = '/register'}
+                className="hidden md:flex bg-purple-600 hover:bg-purple-500 text-white border-0 font-bold glow-pulse-purple transition-all duration-300 hover:scale-105"
+              >
                 Начать проект
               </Button>
               
@@ -98,8 +109,19 @@ const Header = ({ isMobileMenuOpen, setIsMobileMenuOpen, scrollToSection }: Head
                   Контакты
                 </button>
                 
-                <div className="pt-4 border-t border-cyan-500/20">
-                  <Button className="w-full bg-purple-600 hover:bg-purple-500 text-white border-0 font-bold neon-glow-purple transition-all duration-300">
+                <div className="pt-4 border-t border-cyan-500/20 space-y-2">
+                  <Button 
+                    onClick={() => window.location.href = '/login'}
+                    variant="outline"
+                    className="w-full border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                  >
+                    <Icon name="LogIn" className="mr-2" size={18} />
+                    Войти
+                  </Button>
+                  <Button 
+                    onClick={() => window.location.href = '/register'}
+                    className="w-full bg-purple-600 hover:bg-purple-500 text-white border-0 font-bold neon-glow-purple transition-all duration-300"
+                  >
                     Начать проект
                   </Button>
                 </div>

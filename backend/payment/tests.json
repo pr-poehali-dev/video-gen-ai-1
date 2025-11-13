@@ -1,0 +1,21 @@
+{
+  "tests": [
+    {
+      "name": "Create free subscription",
+      "method": "POST",
+      "path": "/?action=create",
+      "headers": {
+        "X-User-Token": "test-token"
+      },
+      "body": {
+        "plan": "start",
+        "auto_renew": false
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
