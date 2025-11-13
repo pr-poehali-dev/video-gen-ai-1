@@ -201,17 +201,17 @@ const Index = () => {
             <Badge className="mb-6 bg-blue-100 text-blue-700 hover:bg-blue-200 px-4 py-2 text-sm">
               🚀 Новое поколение AI инструментов
             </Badge>
-            <h1 className="text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 bg-clip-text text-transparent leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 bg-clip-text text-transparent leading-tight">
               Создавайте контент<br />с помощью AI
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto">
-              Генерируйте видео, пишите тексты и создавайте презентации за секунды.<br />
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto px-4">
+              Генерируйте видео, пишите тексты и создавайте презентации за секунды.<br className="hidden sm:block" />
               Искусственный интеллект нового поколения для ваших задач.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button 
                 size="lg" 
-                className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white text-lg px-8 py-6"
+                className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6"
                 onClick={() => scrollToSection('generators')}
               >
                 <Icon name="Sparkles" className="mr-2" size={20} />
@@ -220,7 +220,7 @@ const Index = () => {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-2 border-blue-300 text-blue-600 hover:bg-blue-50 text-lg px-8 py-6"
+                className="w-full sm:w-auto border-2 border-blue-300 text-blue-600 hover:bg-blue-50 text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6"
                 onClick={() => scrollToSection('about')}
               >
                 <Icon name="Play" className="mr-2" size={20} />
@@ -228,7 +228,7 @@ const Index = () => {
               </Button>
             </div>
 
-            <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
               <Card className="gradient-blur border-white/40 hover:scale-105 transition-transform duration-300">
                 <CardHeader>
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl flex items-center justify-center mb-4 mx-auto">
@@ -265,47 +265,50 @@ const Index = () => {
         <section id="generators" className="min-h-screen py-20 px-6">
           <div className="container mx-auto">
             <div className="text-center mb-16 animate-fade-in">
-              <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                 AI Генераторы
               </h2>
-              <p className="text-xl text-gray-600">Выберите инструмент и начните создавать</p>
+              <p className="text-lg sm:text-xl text-gray-600 px-4">Выберите инструмент и начните создавать</p>
             </div>
 
             <Tabs defaultValue="video" className="max-w-5xl mx-auto">
-              <TabsList className="grid w-full grid-cols-3 mb-8 bg-white/60 backdrop-blur-sm p-1">
-                <TabsTrigger value="video" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-400 data-[state=active]:text-white">
-                  <Icon name="Video" className="mr-2" size={18} />
-                  Видео
+              <TabsList className="grid w-full grid-cols-3 mb-8 bg-white/60 backdrop-blur-sm p-1 h-auto">
+                <TabsTrigger value="video" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-400 data-[state=active]:text-white py-3 text-sm md:text-base">
+                  <Icon name="Video" className="mr-1 md:mr-2" size={18} />
+                  <span className="hidden sm:inline">Видео</span>
+                  <span className="sm:hidden">Вид</span>
                 </TabsTrigger>
-                <TabsTrigger value="text" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-400 data-[state=active]:text-white">
-                  <Icon name="FileText" className="mr-2" size={18} />
-                  Текст
+                <TabsTrigger value="text" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-400 data-[state=active]:text-white py-3 text-sm md:text-base">
+                  <Icon name="FileText" className="mr-1 md:mr-2" size={18} />
+                  <span className="hidden sm:inline">Текст</span>
+                  <span className="sm:hidden">Тек</span>
                 </TabsTrigger>
-                <TabsTrigger value="presentation" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-400 data-[state=active]:text-white">
-                  <Icon name="Presentation" className="mr-2" size={18} />
-                  Презентация
+                <TabsTrigger value="presentation" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-400 data-[state=active]:text-white py-3 text-sm md:text-base">
+                  <Icon name="Presentation" className="mr-1 md:mr-2" size={18} />
+                  <span className="hidden sm:inline">Презентация</span>
+                  <span className="sm:hidden">През</span>
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="video" className="animate-fade-in">
                 <Card className="gradient-blur border-white/40">
                   <CardHeader>
-                    <CardTitle className="text-2xl">Генератор видео</CardTitle>
-                    <CardDescription>Опишите, какое видео вы хотите создать</CardDescription>
+                    <CardTitle className="text-xl md:text-2xl">Генератор видео</CardTitle>
+                    <CardDescription className="text-sm md:text-base">Опишите, какое видео вы хотите создать</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 p-4 sm:p-6">
                     <Textarea 
                       placeholder="Например: Создай видео о закате на океане с чайками и спокойной музыкой..."
                       className="min-h-32 resize-none bg-white/80"
                       value={videoPrompt}
                       onChange={(e) => setVideoPrompt(e.target.value)}
                     />
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                       <Button onClick={handleVideoGenerate} className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white">
                         <Icon name="Sparkles" className="mr-2" size={18} />
                         Сгенерировать видео
                       </Button>
-                      <Button variant="outline" className="border-blue-300">
+                      <Button variant="outline" className="border-blue-300 sm:w-auto">
                         <Icon name="Settings" size={18} />
                       </Button>
                     </div>
@@ -334,10 +337,10 @@ const Index = () => {
               <TabsContent value="text" className="animate-fade-in">
                 <Card className="gradient-blur border-white/40">
                   <CardHeader>
-                    <CardTitle className="text-2xl">Текстовый редактор AI</CardTitle>
-                    <CardDescription>Создайте статью, доклад или любой текст</CardDescription>
+                    <CardTitle className="text-xl md:text-2xl">Текстовый редактор AI</CardTitle>
+                    <CardDescription className="text-sm md:text-base">Создайте статью, доклад или любой текст</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 p-4 sm:p-6">
                     <Input 
                       placeholder="Тема текста (например: История искусственного интеллекта)"
                       className="bg-white/80"
@@ -348,23 +351,23 @@ const Index = () => {
                       placeholder="Дополнительные детали или требования к тексту..."
                       className="min-h-32 resize-none bg-white/80"
                     />
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                       <Button onClick={handleTextGenerate} className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white">
                         <Icon name="Sparkles" className="mr-2" size={18} />
                         Написать текст
                       </Button>
-                      <Button variant="outline" className="border-blue-300">
+                      <Button variant="outline" className="border-blue-300 sm:w-auto">
                         <Icon name="Download" size={18} />
                       </Button>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4">
-                      <div className="text-center p-4 bg-white/60 rounded-lg">
-                        <Icon name="FileText" className="mx-auto mb-2 text-blue-600" size={24} />
-                        <p className="text-sm font-medium">До 10 000 слов</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 pt-4">
+                      <div className="text-center p-3 md:p-4 bg-white/60 rounded-lg">
+                        <Icon name="FileText" className="mx-auto mb-2 text-blue-600" size={20} />
+                        <p className="text-xs md:text-sm font-medium">До 10 000 слов</p>
                       </div>
-                      <div className="text-center p-4 bg-white/60 rounded-lg">
-                        <Icon name="Languages" className="mx-auto mb-2 text-blue-600" size={24} />
-                        <p className="text-sm font-medium">50+ языков</p>
+                      <div className="text-center p-3 md:p-4 bg-white/60 rounded-lg">
+                        <Icon name="Languages" className="mx-auto mb-2 text-blue-600" size={20} />
+                        <p className="text-xs md:text-sm font-medium">50+ языков</p>
                       </div>
                       <div className="text-center p-4 bg-white/60 rounded-lg">
                         <Icon name="CheckCircle" className="mx-auto mb-2 text-blue-600" size={24} />
@@ -378,24 +381,24 @@ const Index = () => {
               <TabsContent value="presentation" className="animate-fade-in">
                 <Card className="gradient-blur border-white/40">
                   <CardHeader>
-                    <CardTitle className="text-2xl">Конструктор презентаций</CardTitle>
-                    <CardDescription>Создайте профессиональную презентацию за минуты</CardDescription>
+                    <CardTitle className="text-xl md:text-2xl">Конструктор презентаций</CardTitle>
+                    <CardDescription className="text-sm md:text-base">Создайте профессиональную презентацию за минуты</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 p-4 sm:p-6">
                     <Input 
                       placeholder="Тема презентации"
                       className="bg-white/80"
                       value={presentationTopic}
                       onChange={(e) => setPresentationTopic(e.target.value)}
                     />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium mb-2 block">Количество слайдов</label>
+                        <label className="text-xs sm:text-sm font-medium mb-2 block">Количество слайдов</label>
                         <Input type="number" defaultValue="10" className="bg-white/80" />
                       </div>
                       <div>
-                        <label className="text-sm font-medium mb-2 block">Стиль</label>
-                        <select className="w-full h-10 px-3 rounded-md border bg-white/80">
+                        <label className="text-xs sm:text-sm font-medium mb-2 block">Стиль</label>
+                        <select className="w-full h-10 px-3 rounded-md border bg-white/80 text-sm">
                           <option>Минимализм</option>
                           <option>Бизнес</option>
                           <option>Креативный</option>
@@ -411,18 +414,18 @@ const Index = () => {
                       <Icon name="Sparkles" className="mr-2" size={18} />
                       Создать презентацию
                     </Button>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
-                      <div className="text-center p-4 bg-white/60 rounded-lg">
-                        <Icon name="Layout" className="mx-auto mb-2 text-blue-600" size={24} />
-                        <p className="text-sm font-medium">50+ шаблонов</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 pt-4">
+                      <div className="text-center p-3 md:p-4 bg-white/60 rounded-lg">
+                        <Icon name="Layout" className="mx-auto mb-2 text-blue-600" size={20} />
+                        <p className="text-xs md:text-sm font-medium">50+ шаблонов</p>
                       </div>
-                      <div className="text-center p-4 bg-white/60 rounded-lg">
-                        <Icon name="Palette" className="mx-auto mb-2 text-blue-600" size={24} />
-                        <p className="text-sm font-medium">Свой дизайн</p>
+                      <div className="text-center p-3 md:p-4 bg-white/60 rounded-lg">
+                        <Icon name="Palette" className="mx-auto mb-2 text-blue-600" size={20} />
+                        <p className="text-xs md:text-sm font-medium">Свой дизайн</p>
                       </div>
-                      <div className="text-center p-4 bg-white/60 rounded-lg">
-                        <Icon name="Download" className="mx-auto mb-2 text-blue-600" size={24} />
-                        <p className="text-sm font-medium">PPT/PDF</p>
+                      <div className="text-center p-3 md:p-4 bg-white/60 rounded-lg">
+                        <Icon name="Download" className="mx-auto mb-2 text-blue-600" size={20} />
+                        <p className="text-xs md:text-sm font-medium">PPT/PDF</p>
                       </div>
                       <div className="text-center p-4 bg-white/60 rounded-lg">
                         <Icon name="Users" className="mx-auto mb-2 text-blue-600" size={24} />
@@ -439,14 +442,14 @@ const Index = () => {
         <section id="about" className="py-20 px-6">
           <div className="container mx-auto">
             <div className="max-w-4xl mx-auto text-center animate-fade-in">
-              <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                 О сервисе
               </h2>
               <p className="text-xl text-gray-600 mb-12">
                 AI Studio — это платформа нового поколения для создания контента с использованием искусственного интеллекта. 
                 Мы объединили лучшие AI-модели для генерации видео, текстов и презентаций в одном удобном интерфейсе.
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 mt-16">
                 <Card className="gradient-blur border-white/40 text-left">
                   <CardHeader>
                     <Icon name="Zap" className="text-blue-600 mb-4" size={32} />
@@ -494,13 +497,13 @@ const Index = () => {
         <section id="pricing" className="py-20 px-6">
           <div className="container mx-auto">
             <div className="text-center mb-16 animate-fade-in">
-              <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                 Тарифы
               </h2>
-              <p className="text-xl text-gray-600">Выберите план, который подходит именно вам</p>
+              <p className="text-lg sm:text-xl text-gray-600 px-4">Выберите план, который подходит именно вам</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
               <Card className="gradient-blur border-white/40 hover:scale-105 transition-transform duration-300">
                 <CardHeader>
                   <CardTitle className="text-2xl">Старт</CardTitle>
@@ -624,15 +627,15 @@ const Index = () => {
           <div className="container mx-auto">
             <div className="max-w-3xl mx-auto animate-fade-in">
               <div className="text-center mb-12">
-                <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                   Контакты
                 </h2>
-                <p className="text-xl text-gray-600">Свяжитесь с нами любым удобным способом</p>
+                <p className="text-lg sm:text-xl text-gray-600 px-4">Свяжитесь с нами любым удобным способом</p>
               </div>
 
               <Card className="gradient-blur border-white/40">
-                <CardContent className="p-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <CardContent className="p-4 sm:p-6 md:p-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 mb-8">
                     <div className="flex items-start space-x-4">
                       <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl flex items-center justify-center flex-shrink-0">
                         <Icon name="Mail" className="text-white" size={24} />
@@ -727,9 +730,9 @@ const Index = () => {
       </footer>
 
       <Dialog open={isVideoModalOpen} onOpenChange={setIsVideoModalOpen}>
-        <DialogContent className="max-w-3xl gradient-blur border-white/40">
+        <DialogContent className="max-w-3xl w-[95vw] sm:w-full gradient-blur border-white/40">
           <DialogHeader>
-            <DialogTitle className="text-2xl bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+            <DialogTitle className="text-xl sm:text-2xl bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
               Генерация видео
             </DialogTitle>
             <DialogDescription>
@@ -767,7 +770,7 @@ const Index = () => {
                     <p className="text-sm text-gray-500 mt-2">{generatedContent}</p>
                   </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Button className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white">
                     <Icon name="Download" className="mr-2" size={18} />
                     Скачать видео
@@ -784,9 +787,9 @@ const Index = () => {
       </Dialog>
 
       <Dialog open={isTextModalOpen} onOpenChange={setIsTextModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] gradient-blur border-white/40">
+        <DialogContent className="max-w-4xl w-[95vw] sm:w-full max-h-[80vh] gradient-blur border-white/40">
           <DialogHeader>
-            <DialogTitle className="text-2xl bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+            <DialogTitle className="text-xl sm:text-2xl bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
               Генерация текста
             </DialogTitle>
             <DialogDescription>
@@ -820,7 +823,7 @@ const Index = () => {
                 <div className="bg-white/80 p-6 rounded-lg min-h-[300px] whitespace-pre-wrap font-sans">
                   {generatedContent}
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Button className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white">
                     <Icon name="Copy" className="mr-2" size={18} />
                     Копировать текст
@@ -837,9 +840,9 @@ const Index = () => {
       </Dialog>
 
       <Dialog open={isPresentationModalOpen} onOpenChange={setIsPresentationModalOpen}>
-        <DialogContent className="max-w-4xl gradient-blur border-white/40">
+        <DialogContent className="max-w-4xl w-[95vw] sm:w-full gradient-blur border-white/40">
           <DialogHeader>
-            <DialogTitle className="text-2xl bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+            <DialogTitle className="text-xl sm:text-2xl bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
               Генерация презентации
             </DialogTitle>
             <DialogDescription>
@@ -870,10 +873,10 @@ const Index = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
                   {[1, 2, 3, 4, 5, 6].map((slide) => (
-                    <div key={slide} className="aspect-video bg-gradient-to-br from-blue-100 to-cyan-100 rounded-lg p-4 flex flex-col items-center justify-center border-2 border-blue-200">
-                      <Icon name="FileText" className="text-blue-600 mb-2" size={24} />
+                    <div key={slide} className="aspect-video bg-gradient-to-br from-blue-100 to-cyan-100 rounded-lg p-2 sm:p-4 flex flex-col items-center justify-center border-2 border-blue-200">
+                      <Icon name="FileText" className="text-blue-600 mb-1 sm:mb-2" size={20} />
                       <p className="text-xs font-medium">Слайд {slide}</p>
                     </div>
                   ))}
@@ -881,7 +884,7 @@ const Index = () => {
                 <div className="bg-white/60 p-4 rounded-lg">
                   <p className="text-sm text-gray-700">{generatedContent}</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Button className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white">
                     <Icon name="Download" className="mr-2" size={18} />
                     Скачать PPT
