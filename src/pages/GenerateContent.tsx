@@ -14,6 +14,7 @@ const GenerateContent = () => {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
 
   const generateContent = async () => {
     if (!prompt.trim()) {
@@ -51,9 +52,10 @@ const GenerateContent = () => {
 
       if (data.success) {
         setGeneratedContent(data.content_url);
+        setIsDemo(data.is_demo || false);
         toast({
-          title: 'Готово!',
-          description: `${activeTab === 'video' ? 'Видео' : activeTab === 'text' ? 'Текст' : 'Изображение'} успешно создано`,
+          title: data.is_demo ? '✨ Демо-версия' : 'Готово!',
+          description: data.message || `${activeTab === 'video' ? 'Видео' : activeTab === 'text' ? 'Текст' : 'Изображение'} успешно создано`,
         });
       } else {
         throw new Error(data.error || 'Ошибка генерации');
@@ -78,6 +80,27 @@ const GenerateContent = () => {
             <Icon name="ArrowLeft" className="mr-2" size={18} />
             Назад
           </Button>
+        </div>
+
+        <div className="mb-6 p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
+          <div className="flex items-start gap-3">
+            <Icon name="Sparkles" className="text-cyan-400 mt-1" size={24} />
+            <div>
+              <h3 className="text-cyan-400 font-semibold mb-2">🚀 Демо-режим активен</h3>
+              <p className="text-slate-300 text-sm mb-2">
+                Сейчас используются бесплатные API для демонстрации возможностей. 
+                Для получения реальных результатов от нейросетей добавьте API ключи:
+              </p>
+              <ul className="text-slate-400 text-sm space-y-1 ml-4">
+                <li>• <strong>OPENAI_API_KEY</strong> - для текстов через GPT-4</li>
+                <li>• <strong>REPLICATE_API_TOKEN</strong> - для видео через Stable Diffusion</li>
+                <li>• <strong>STABILITY_API_KEY</strong> - для изображений через SDXL</li>
+              </ul>
+              <p className="text-cyan-400 text-sm mt-2">
+                📄 Инструкция в файле <code className="bg-slate-800 px-2 py-1 rounded">AI_SETUP.md</code>
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="grid gap-6 md:grid-cols-3 mb-8">
@@ -168,6 +191,14 @@ const GenerateContent = () => {
 
             {generatedContent && (
               <div className="mt-6 p-4 border border-slate-700 rounded-lg bg-slate-900/50">
+                {isDemo && (
+                  <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                    <p className="text-yellow-400 text-sm flex items-center">
+                      <Icon name="Info" className="mr-2" size={16} />
+                      Демо-режим. Добавьте API ключи для реальной генерации (см. AI_SETUP.md)
+                    </p>
+                  </div>
+                )}
                 <h3 className="text-lg font-semibold mb-4 text-white">Результат:</h3>
                 
                 {activeTab === 'video' && (
