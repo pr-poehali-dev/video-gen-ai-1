@@ -2,12 +2,33 @@ import json
 import os
 import urllib.request
 import urllib.parse
+import hashlib
+import time
 from typing import Dict, Any
+
+spam_tracker: Dict[str, list] = {}
+
+def clean_old_requests(ip: str, current_time: float) -> None:
+    if ip in spam_tracker:
+        spam_tracker[ip] = [t for t in spam_tracker[ip] if current_time - t < 60]
+
+def is_rate_limited(ip: str) -> bool:
+    current_time = time.time()
+    clean_old_requests(ip, current_time)
+    
+    if ip not in spam_tracker:
+        spam_tracker[ip] = []
+    
+    if len(spam_tracker[ip]) >= 3:
+        return True
+    
+    spam_tracker[ip].append(current_time)
+    return False
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
-    Business: Отправляет сообщения с контактной формы сайта в Telegram
-    Args: event с httpMethod, body (name, email, message)
+    Business: Отправляет сообщения с контактной формы сайта в Telegram с защитой от спама
+    Args: event с httpMethod, body (name, email, message, captcha, captchaAnswer)
           context с request_id
     Returns: HTTP response dict
     '''
@@ -37,6 +58,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'isBase64Encoded': False
         }
     
+    request_context = event.get('requestContext', {})
+    identity = request_context.get('identity', {})
+    source_ip = identity.get('sourceIp', 'unknown')
+    
+    if is_rate_limited(source_ip):
+        return {
+            'statusCode': 429,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({'error': 'Too many requests. Please try again later.'}),
+            'isBase64Encoded': False
+        }
+    
     bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
     chat_id = os.environ.get('TELEGRAM_CHAT_ID')
     
@@ -55,6 +91,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     name = body_data.get('name', '').strip()
     email = body_data.get('email', '').strip()
     message = body_data.get('message', '').strip()
+    captcha_answer = body_data.get('captchaAnswer', '').strip()
+    captcha_hash = body_data.get('captcha', '').strip()
     
     if not name or not email or not message:
         return {
@@ -64,6 +102,40 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'Access-Control-Allow-Origin': '*'
             },
             'body': json.dumps({'error': 'All fields are required'}),
+            'isBase64Encoded': False
+        }
+    
+    if not captcha_answer or not captcha_hash:
+        return {
+            'statusCode': 400,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({'error': 'Captcha is required'}),
+            'isBase64Encoded': False
+        }
+    
+    expected_hash = hashlib.sha256(captcha_answer.encode()).hexdigest()
+    if expected_hash != captcha_hash:
+        return {
+            'statusCode': 400,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({'error': 'Invalid captcha'}),
+            'isBase64Encoded': False
+        }
+    
+    if len(name) > 100 or len(email) > 100 or len(message) > 2000:
+        return {
+            'statusCode': 400,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({'error': 'Input too long'}),
             'isBase64Encoded': False
         }
     

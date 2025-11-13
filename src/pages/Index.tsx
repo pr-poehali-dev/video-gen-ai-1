@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -29,6 +29,19 @@ const Index = () => {
   const [contactEmail, setContactEmail] = useState('');
   const [contactMessage, setContactMessage] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [captchaAnswer, setCaptchaAnswer] = useState('');
+  const [captchaQuestion, setCaptchaQuestion] = useState({ num1: 0, num2: 0, answer: 0 });
+
+  const generateCaptcha = () => {
+    const num1 = Math.floor(Math.random() * 10) + 1;
+    const num2 = Math.floor(Math.random() * 10) + 1;
+    setCaptchaQuestion({ num1, num2, answer: num1 + num2 });
+    setCaptchaAnswer('');
+  };
+
+  useEffect(() => {
+    generateCaptcha();
+  }, []);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -103,9 +116,26 @@ const Index = () => {
       return;
     }
 
+    if (!captchaAnswer.trim() || parseInt(captchaAnswer) !== captchaQuestion.answer) {
+      toast({
+        title: 'Ошибка',
+        description: 'Неверный ответ на вопрос. Попробуйте еще раз.',
+        variant: 'destructive',
+      });
+      generateCaptcha();
+      return;
+    }
+
     setIsSendingMessage(true);
 
     try {
+      const captchaHash = await crypto.subtle.digest(
+        'SHA-256',
+        new TextEncoder().encode(captchaAnswer)
+      );
+      const hashArray = Array.from(new Uint8Array(captchaHash));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
       const response = await fetch('https://functions.poehali.dev/0e7f29bd-c996-440c-9658-c17677f2981a', {
         method: 'POST',
         headers: {
@@ -115,6 +145,8 @@ const Index = () => {
           name: contactName,
           email: contactEmail,
           message: contactMessage,
+          captcha: hashHex,
+          captchaAnswer: captchaAnswer,
         }),
       });
 
@@ -128,8 +160,17 @@ const Index = () => {
         setContactName('');
         setContactEmail('');
         setContactMessage('');
+        generateCaptcha();
       } else {
-        throw new Error(data.error || 'Failed to send message');
+        if (response.status === 429) {
+          toast({
+            title: 'Слишком много запросов',
+            description: 'Пожалуйста, подождите немного перед следующей попыткой.',
+            variant: 'destructive',
+          });
+        } else {
+          throw new Error(data.error || 'Failed to send message');
+        }
       }
     } catch (error) {
       toast({
@@ -137,6 +178,7 @@ const Index = () => {
         description: 'Не удалось отправить сообщение. Попробуйте позже.',
         variant: 'destructive',
       });
+      generateCaptcha();
     } finally {
       setIsSendingMessage(false);
     }
@@ -757,6 +799,34 @@ const Index = () => {
                         value={contactMessage}
                         onChange={(e) => setContactMessage(e.target.value)}
                       />
+                      
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <Icon name="Shield" className="text-blue-600" size={20} />
+                          <label className="text-sm font-medium text-gray-700">
+                            Проверка: Сколько будет {captchaQuestion.num1} + {captchaQuestion.num2}?
+                          </label>
+                        </div>
+                        <div className="flex gap-3">
+                          <Input 
+                            type="number"
+                            placeholder="Ваш ответ"
+                            className="bg-white"
+                            value={captchaAnswer}
+                            onChange={(e) => setCaptchaAnswer(e.target.value)}
+                          />
+                          <Button 
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={generateCaptcha}
+                            className="flex-shrink-0"
+                          >
+                            <Icon name="RefreshCw" size={18} />
+                          </Button>
+                        </div>
+                      </div>
+                      
                       <Button 
                         onClick={handleSendMessage}
                         disabled={isSendingMessage}
