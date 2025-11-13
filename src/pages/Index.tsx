@@ -639,8 +639,7 @@ const Index = () => {
                       </div>
                       <div>
                         <h3 className="font-semibold mb-1">Email</h3>
-                        <p className="text-gray-600">support@aistudio.com</p>
-                        <p className="text-gray-600">info@aistudio.com</p>
+                        <a href="mailto:Rpmxxx@mail.ru" className="text-gray-600 hover:text-blue-600 transition-colors block">Rpmxxx@mail.ru</a>
                       </div>
                     </div>
 
@@ -650,8 +649,7 @@ const Index = () => {
                       </div>
                       <div>
                         <h3 className="font-semibold mb-1">Телефон</h3>
-                        <p className="text-gray-600">+7 (495) 123-45-67</p>
-                        <p className="text-gray-600">+7 (800) 555-35-35</p>
+                        <a href="tel:+79282264638" className="text-gray-600 hover:text-blue-600 transition-colors block">+7 928 226-46-38</a>
                       </div>
                     </div>
 
@@ -661,8 +659,8 @@ const Index = () => {
                       </div>
                       <div>
                         <h3 className="font-semibold mb-1">Адрес</h3>
-                        <p className="text-gray-600">Москва, ул. Примерная, д. 123</p>
-                        <p className="text-gray-600">Бизнес-центр "Технопарк"</p>
+                        <p className="text-gray-600">г. Ростов-на-Дону,</p>
+                        <p className="text-gray-600">пер. Технологический, 8И</p>
                       </div>
                     </div>
 
