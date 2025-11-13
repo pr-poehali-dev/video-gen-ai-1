@@ -91,12 +91,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-[#0f1729] relative overflow-hidden">
+      <div className="scan-line"></div>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-[600px] h-[600px] bg-cyan-500/10 rounded-full filter blur-3xl opacity-50 floating"></div>
-        <div className="absolute top-40 right-20 w-[700px] h-[700px] bg-purple-500/10 rounded-full filter blur-3xl opacity-40 floating-delayed"></div>
+        <div className="absolute top-20 left-10 w-[600px] h-[600px] bg-cyan-500/10 rounded-full filter blur-3xl opacity-50 floating glow-pulse-cyan"></div>
+        <div className="absolute top-40 right-20 w-[700px] h-[700px] bg-purple-500/10 rounded-full filter blur-3xl opacity-40 floating-delayed glow-pulse-purple"></div>
         <div className="absolute -bottom-20 left-1/3 w-[500px] h-[500px] bg-blue-500/10 rounded-full filter blur-3xl opacity-30 floating-slow"></div>
         
-        <div className="absolute inset-0" style={{
+        <div className="absolute inset-0 grid-pulse" style={{
           backgroundImage: `
             linear-gradient(rgba(100, 255, 218, 0.03) 1px, transparent 1px),
             linear-gradient(90deg, rgba(100, 255, 218, 0.03) 1px, transparent 1px)
@@ -114,11 +115,11 @@ const Index = () => {
       <main className="relative z-10 pt-24">
         <section id="home" className="min-h-screen flex items-center justify-center px-6">
           <div className="container mx-auto text-center animate-fade-in">
-            <Badge className="mb-6 bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/30 px-6 py-2 text-sm font-semibold neon-glow-purple">
+            <Badge className="mb-6 bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/30 px-6 py-2 text-sm font-semibold glow-pulse-purple">
               ✨ Новое поколение AI инструментов
             </Badge>
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black mb-8 leading-tight">
-              <span className="bg-gradient-to-r from-cyan-400 via-cyan-300 to-cyan-500 bg-clip-text text-transparent text-shadow-neon neon-flicker">ROUSHEN</span>
+              <span className="bg-gradient-to-r from-cyan-400 via-cyan-300 to-cyan-500 bg-clip-text text-transparent text-flicker neon-flicker">ROUSHEN</span>
               <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl mt-2 bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent text-shadow-purple">AI-решения<br className="sm:hidden" /> с молодым драйвом<br />и высоким качеством</span>
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-cyan-100/70 mb-12 max-w-3xl mx-auto px-4 font-light leading-relaxed">
@@ -144,9 +145,9 @@ const Index = () => {
             </div>
 
             <div className="mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
-              <Card className="bg-[#1a2332]/80 border border-cyan-500/20 hover:border-cyan-500/40 hover:shadow-cyan-500/20 hover:shadow-2xl transition-all duration-300 group backdrop-blur-xl">
+              <Card className="bg-[#1a2332]/80 border border-cyan-500/20 hover:border-cyan-500/40 hover:shadow-cyan-500/20 hover:shadow-2xl transition-all duration-500 group backdrop-blur-xl hover:scale-105 animate-slide-up">
                 <CardHeader>
-                  <div className="w-16 h-16 bg-cyan-500/10 border border-cyan-500/30 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:bg-cyan-500/20 group-hover:border-cyan-500/50 transition-all duration-300 neon-glow">
+                  <div className="w-16 h-16 bg-cyan-500/10 border border-cyan-500/30 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:bg-cyan-500/20 group-hover:border-cyan-500/50 transition-all duration-300 neon-glow group-hover:glow-pulse-cyan">
                     <Icon name="Video" className="text-cyan-400" size={32} />
                   </div>
                   <CardTitle className="text-center font-bold text-cyan-100">Генерация видео</CardTitle>
@@ -154,9 +155,9 @@ const Index = () => {
                 </CardHeader>
               </Card>
 
-              <Card className="bg-[#1a2332]/80 border border-purple-500/20 hover:border-purple-500/40 hover:shadow-purple-500/20 hover:shadow-2xl transition-all duration-300 group backdrop-blur-xl">
+              <Card className="bg-[#1a2332]/80 border border-purple-500/20 hover:border-purple-500/40 hover:shadow-purple-500/20 hover:shadow-2xl transition-all duration-500 group backdrop-blur-xl hover:scale-105 animate-slide-up" style={{animationDelay: '0.1s'}}>
                 <CardHeader>
-                  <div className="w-16 h-16 bg-purple-500/10 border border-purple-500/30 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:bg-purple-500/20 group-hover:border-purple-500/50 transition-all duration-300 neon-glow-purple">
+                  <div className="w-16 h-16 bg-purple-500/10 border border-purple-500/30 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:bg-purple-500/20 group-hover:border-purple-500/50 transition-all duration-300 neon-glow-purple group-hover:glow-pulse-purple">
                     <Icon name="FileText" className="text-purple-400" size={32} />
                   </div>
                   <CardTitle className="text-center font-bold text-purple-100">Текстовый редактор</CardTitle>
@@ -164,9 +165,9 @@ const Index = () => {
                 </CardHeader>
               </Card>
 
-              <Card className="bg-[#1a2332]/80 border border-cyan-500/20 hover:border-cyan-500/40 hover:shadow-cyan-500/20 hover:shadow-2xl transition-all duration-300 group backdrop-blur-xl">
+              <Card className="bg-[#1a2332]/80 border border-cyan-500/20 hover:border-cyan-500/40 hover:shadow-cyan-500/20 hover:shadow-2xl transition-all duration-500 group backdrop-blur-xl hover:scale-105 animate-slide-up" style={{animationDelay: '0.2s'}}>
                 <CardHeader>
-                  <div className="w-16 h-16 bg-cyan-500/10 border border-cyan-500/30 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:bg-cyan-500/20 group-hover:border-cyan-500/50 transition-all duration-300 neon-glow">
+                  <div className="w-16 h-16 bg-cyan-500/10 border border-cyan-500/30 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:bg-cyan-500/20 group-hover:border-cyan-500/50 transition-all duration-300 neon-glow group-hover:glow-pulse-cyan">
                     <Icon name="Presentation" className="text-cyan-400" size={32} />
                   </div>
                   <CardTitle className="text-center font-bold text-cyan-100">Презентации</CardTitle>
@@ -180,25 +181,25 @@ const Index = () => {
         <section id="generators" className="min-h-screen py-20 px-6">
           <div className="container mx-auto">
             <div className="text-center mb-16 animate-fade-in">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 text-cyan-400 text-shadow-neon">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 text-cyan-400 text-flicker">
                 AI Генераторы
               </h2>
               <p className="text-lg sm:text-xl text-cyan-100/60 px-4">Выберите инструмент и начните создавать</p>
             </div>
 
             <Tabs defaultValue="video" className="max-w-5xl mx-auto">
-              <TabsList className="grid w-full grid-cols-3 mb-8 bg-[#1a2332]/60 border border-cyan-500/20 backdrop-blur-sm p-1 h-auto">
-                <TabsTrigger value="video" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300 data-[state=active]:border data-[state=active]:border-cyan-500/40 text-cyan-100/50 py-3 text-sm md:text-base font-semibold transition-all duration-300">
+              <TabsList className="grid w-full grid-cols-3 mb-8 bg-[#1a2332]/60 border border-cyan-500/20 backdrop-blur-sm p-1 h-auto border-glow-animate">
+                <TabsTrigger value="video" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300 data-[state=active]:border data-[state=active]:border-cyan-500/40 data-[state=active]:glow-pulse-cyan text-cyan-100/50 py-3 text-sm md:text-base font-semibold transition-all duration-300">
                   <Icon name="Video" className="mr-1 md:mr-2" size={18} />
                   <span className="hidden sm:inline">Видео</span>
                   <span className="sm:hidden">Вид</span>
                 </TabsTrigger>
-                <TabsTrigger value="text" className="data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-300 data-[state=active]:border data-[state=active]:border-purple-500/40 text-cyan-100/50 py-3 text-sm md:text-base font-semibold transition-all duration-300">
+                <TabsTrigger value="text" className="data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-300 data-[state=active]:border data-[state=active]:border-purple-500/40 data-[state=active]:glow-pulse-purple text-cyan-100/50 py-3 text-sm md:text-base font-semibold transition-all duration-300">
                   <Icon name="FileText" className="mr-1 md:mr-2" size={18} />
                   <span className="hidden sm:inline">Текст</span>
                   <span className="sm:hidden">Тек</span>
                 </TabsTrigger>
-                <TabsTrigger value="presentation" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300 data-[state=active]:border data-[state=active]:border-cyan-500/40 text-cyan-100/50 py-3 text-sm md:text-base font-semibold transition-all duration-300">
+                <TabsTrigger value="presentation" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300 data-[state=active]:border data-[state=active]:border-cyan-500/40 data-[state=active]:glow-pulse-cyan text-cyan-100/50 py-3 text-sm md:text-base font-semibold transition-all duration-300">
                   <Icon name="Presentation" className="mr-1 md:mr-2" size={18} />
                   <span className="hidden sm:inline">Презентация</span>
                   <span className="sm:hidden">През</span>
@@ -219,7 +220,7 @@ const Index = () => {
                       onChange={(e) => setVideoPrompt(e.target.value)}
                     />
                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                      <Button onClick={handleVideoGenerate} className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] border-0 font-bold neon-glow transition-all duration-300">
+                      <Button onClick={handleVideoGenerate} className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] border-0 font-bold glow-pulse-cyan transition-all duration-300 hover:scale-105">
                         <Icon name="Sparkles" className="mr-2" size={18} />
                         Сгенерировать видео
                       </Button>
@@ -357,17 +358,17 @@ const Index = () => {
         <section id="about" className="py-20 px-6">
           <div className="container mx-auto">
             <div className="max-w-4xl mx-auto text-center animate-fade-in">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-6 text-cyan-400 text-shadow-neon">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-6 text-cyan-400 text-flicker">
                 О сервисе
               </h2>
               <p className="text-xl text-cyan-100/70 mb-12 font-light">
-                <span className="text-cyan-300 font-bold text-shadow-neon">ROUSHEN</span> — это платформа нового поколения для создания контента с использованием искусственного интеллекта. 
+                <span className="text-cyan-300 font-bold text-flicker">ROUSHEN</span> — это платформа нового поколения для создания контента с использованием искусственного интеллекта. 
                 Мы объединили лучшие AI-модели для генерации видео, текстов и презентаций в одном удобном интерфейсе.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 mt-16">
-                <Card className="bg-[#1a2332]/80 border border-cyan-500/20 hover:border-cyan-500/40 hover:shadow-cyan-500/20 hover:shadow-2xl transition-all duration-300 group backdrop-blur-xl text-left">
+                <Card className="bg-[#1a2332]/80 border border-cyan-500/20 hover:border-cyan-500/40 hover:shadow-cyan-500/20 hover:shadow-2xl transition-all duration-500 group backdrop-blur-xl text-left hover:scale-105">
                   <CardHeader>
-                    <div className="w-16 h-16 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-cyan-500/20 group-hover:border-cyan-500/50 transition-all duration-300 neon-glow">
+                    <div className="w-16 h-16 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-cyan-500/20 group-hover:border-cyan-500/50 transition-all duration-300 neon-glow group-hover:glow-pulse-cyan">
                       <Icon name="Zap" className="text-cyan-400" size={32} />
                     </div>
                     <CardTitle className="font-bold text-cyan-100">Быстро и просто</CardTitle>
@@ -377,9 +378,9 @@ const Index = () => {
                   </CardHeader>
                 </Card>
 
-                <Card className="bg-[#1a2332]/80 border border-purple-500/20 hover:border-purple-500/40 hover:shadow-purple-500/20 hover:shadow-2xl transition-all duration-300 group backdrop-blur-xl text-left">
+                <Card className="bg-[#1a2332]/80 border border-purple-500/20 hover:border-purple-500/40 hover:shadow-purple-500/20 hover:shadow-2xl transition-all duration-500 group backdrop-blur-xl text-left hover:scale-105">
                   <CardHeader>
-                    <div className="w-16 h-16 bg-purple-500/10 border border-purple-500/30 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-purple-500/20 group-hover:border-purple-500/50 transition-all duration-300 neon-glow-purple">
+                    <div className="w-16 h-16 bg-purple-500/10 border border-purple-500/30 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-purple-500/20 group-hover:border-purple-500/50 transition-all duration-300 neon-glow-purple group-hover:glow-pulse-purple">
                       <Icon name="Shield" className="text-purple-400" size={32} />
                     </div>
                     <CardTitle className="font-bold text-purple-100">Безопасность данных</CardTitle>
@@ -389,9 +390,9 @@ const Index = () => {
                   </CardHeader>
                 </Card>
 
-                <Card className="bg-[#1a2332]/80 border border-cyan-500/20 hover:border-cyan-500/40 hover:shadow-cyan-500/20 hover:shadow-2xl transition-all duration-300 group backdrop-blur-xl text-left">
+                <Card className="bg-[#1a2332]/80 border border-cyan-500/20 hover:border-cyan-500/40 hover:shadow-cyan-500/20 hover:shadow-2xl transition-all duration-500 group backdrop-blur-xl text-left hover:scale-105">
                   <CardHeader>
-                    <div className="w-16 h-16 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-cyan-500/20 group-hover:border-cyan-500/50 transition-all duration-300 neon-glow">
+                    <div className="w-16 h-16 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-cyan-500/20 group-hover:border-cyan-500/50 transition-all duration-300 neon-glow group-hover:glow-pulse-cyan">
                       <Icon name="Cpu" className="text-cyan-400" size={32} />
                     </div>
                     <CardTitle className="font-bold text-cyan-100">Передовые AI-модели</CardTitle>
@@ -401,9 +402,9 @@ const Index = () => {
                   </CardHeader>
                 </Card>
 
-                <Card className="bg-[#1a2332]/80 border border-purple-500/20 hover:border-purple-500/40 hover:shadow-purple-500/20 hover:shadow-2xl transition-all duration-300 group backdrop-blur-xl text-left">
+                <Card className="bg-[#1a2332]/80 border border-purple-500/20 hover:border-purple-500/40 hover:shadow-purple-500/20 hover:shadow-2xl transition-all duration-500 group backdrop-blur-xl text-left hover:scale-105">
                   <CardHeader>
-                    <div className="w-16 h-16 bg-purple-500/10 border border-purple-500/30 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-purple-500/20 group-hover:border-purple-500/50 transition-all duration-300 neon-glow-purple">
+                    <div className="w-16 h-16 bg-purple-500/10 border border-purple-500/30 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-purple-500/20 group-hover:border-purple-500/50 transition-all duration-300 neon-glow-purple group-hover:glow-pulse-purple">
                       <Icon name="Headphones" className="text-purple-400" size={32} />
                     </div>
                     <CardTitle className="font-bold text-purple-100">Поддержка 24/7</CardTitle>
@@ -420,14 +421,14 @@ const Index = () => {
         <section id="pricing" className="py-20 px-6">
           <div className="container mx-auto">
             <div className="text-center mb-16 animate-fade-in">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 text-cyan-400 text-shadow-neon">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 text-cyan-400 text-flicker">
                 Тарифы
               </h2>
               <p className="text-lg sm:text-xl text-cyan-100/70 px-4 font-light">Выберите план, который подходит именно вам</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
-              <Card className="bg-[#1a2332]/80 border border-cyan-500/20 hover:border-cyan-500/40 hover:shadow-cyan-500/20 hover:shadow-2xl transition-all duration-300 backdrop-blur-xl">
+              <Card className="bg-[#1a2332]/80 border border-cyan-500/20 hover:border-cyan-500/40 hover:shadow-cyan-500/20 hover:shadow-2xl transition-all duration-500 backdrop-blur-xl hover:scale-105">
                 <CardHeader>
                   <CardTitle className="text-2xl font-bold text-cyan-100">Старт</CardTitle>
                   <CardDescription className="text-cyan-100/60">Для личного использования</CardDescription>
@@ -460,8 +461,8 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              <Card className="bg-[#1a2332]/80 border-2 border-purple-500/40 hover:shadow-purple-500/30 hover:shadow-2xl transition-all duration-300 relative pulse-glow backdrop-blur-xl">
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 text-white font-bold px-6 py-1 neon-glow-purple">
+              <Card className="bg-[#1a2332]/80 border-2 border-purple-500/40 hover:shadow-purple-500/30 hover:shadow-2xl transition-all duration-500 relative pulse-glow backdrop-blur-xl hover:scale-110">
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 text-white font-bold px-6 py-1 glow-pulse-purple">
                   Популярный
                 </Badge>
                 <CardHeader>
@@ -495,13 +496,13 @@ const Index = () => {
                       <span className="text-purple-100/80">Приоритетная поддержка</span>
                     </li>
                   </ul>
-                  <Button className="w-full mt-6 bg-purple-600 hover:bg-purple-500 text-white border-0 font-bold neon-glow-purple transition-all duration-300">
+                  <Button className="w-full mt-6 bg-purple-600 hover:bg-purple-500 text-white border-0 font-bold glow-pulse-purple transition-all duration-300 hover:scale-105">
                     Выбрать план
                   </Button>
                 </CardContent>
               </Card>
 
-              <Card className="bg-[#1a2332]/80 border border-cyan-500/20 hover:border-cyan-500/40 hover:shadow-cyan-500/20 hover:shadow-2xl transition-all duration-300 backdrop-blur-xl">
+              <Card className="bg-[#1a2332]/80 border border-cyan-500/20 hover:border-cyan-500/40 hover:shadow-cyan-500/20 hover:shadow-2xl transition-all duration-500 backdrop-blur-xl hover:scale-105">
                 <CardHeader>
                   <CardTitle className="text-2xl font-bold text-cyan-100">Бизнес</CardTitle>
                   <CardDescription className="text-cyan-100/60">Для команд и компаний</CardDescription>
@@ -533,7 +534,7 @@ const Index = () => {
                       <span className="text-cyan-100/80">Персональный менеджер</span>
                     </li>
                   </ul>
-                  <Button className="w-full mt-6 bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] border-0 font-bold neon-glow transition-all duration-300">
+                  <Button className="w-full mt-6 bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] border-0 font-bold glow-pulse-cyan transition-all duration-300 hover:scale-105">
                     Связаться с нами
                   </Button>
                 </CardContent>
@@ -546,17 +547,17 @@ const Index = () => {
           <div className="container mx-auto">
             <div className="max-w-3xl mx-auto animate-fade-in">
               <div className="text-center mb-12">
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 text-cyan-400 text-shadow-neon">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 text-cyan-400 text-flicker">
                   Контакты
                 </h2>
                 <p className="text-lg sm:text-xl text-cyan-100/70 px-4 font-light">Свяжитесь с нами любым удобным способом</p>
               </div>
 
-              <Card className="bg-[#1a2332]/80 border border-cyan-500/20 backdrop-blur-xl">
+              <Card className="bg-[#1a2332]/80 border border-cyan-500/20 backdrop-blur-xl hover:border-cyan-500/40 transition-all duration-500">
                 <CardContent className="p-4 sm:p-6 md:p-8">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 mb-8">
                     <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-cyan-500/10 border border-cyan-500/30 rounded-xl flex items-center justify-center flex-shrink-0 neon-glow">
+                      <div className="w-12 h-12 bg-cyan-500/10 border border-cyan-500/30 rounded-xl flex items-center justify-center flex-shrink-0 neon-glow hover:glow-pulse-cyan transition-all duration-300">
                         <Icon name="Mail" className="text-cyan-400" size={24} />
                       </div>
                       <div>

@@ -10,14 +10,14 @@ interface HeaderProps {
 const Header = ({ isMobileMenuOpen, setIsMobileMenuOpen, scrollToSection }: HeaderProps) => {
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0f1729]/95 border-b border-cyan-500/10 backdrop-blur-xl">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0f1729]/95 border-b border-cyan-500/10 backdrop-blur-xl border-glow-animate">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-cyan-500/10 border-2 border-cyan-500/30 rounded-lg flex items-center justify-center neon-glow">
+              <div className="w-12 h-12 bg-cyan-500/10 border-2 border-cyan-500/30 rounded-lg flex items-center justify-center glow-pulse-cyan">
                 <Icon name="Sparkles" className="text-cyan-400" size={28} />
               </div>
-              <span className="text-2xl font-black text-cyan-400 text-shadow-neon tracking-tight">
+              <span className="text-2xl font-black text-cyan-400 text-flicker tracking-tight">
                 ROUSHEN
               </span>
             </div>
@@ -40,7 +40,7 @@ const Header = ({ isMobileMenuOpen, setIsMobileMenuOpen, scrollToSection }: Head
             </div>
             
             <div className="flex items-center gap-4">
-              <Button className="hidden md:flex bg-purple-600 hover:bg-purple-500 text-white border-0 font-bold neon-glow-purple transition-all duration-300">
+              <Button className="hidden md:flex bg-purple-600 hover:bg-purple-500 text-white border-0 font-bold glow-pulse-purple transition-all duration-300 hover:scale-105">
                 Начать проект
               </Button>
               
