@@ -24,6 +24,11 @@ const Index = () => {
   const [progress, setProgress] = useState(0);
   const [generatedContent, setGeneratedContent] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -86,6 +91,55 @@ const Index = () => {
   const handlePresentationGenerate = () => {
     setIsPresentationModalOpen(true);
     simulateGeneration('presentation', presentationTopic);
+  };
+
+  const handleSendMessage = async () => {
+    if (!contactName.trim() || !contactEmail.trim() || !contactMessage.trim()) {
+      toast({
+        title: 'Ошибка',
+        description: 'Пожалуйста, заполните все поля',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSendingMessage(true);
+
+    try {
+      const response = await fetch('https://functions.poehali.dev/0e7f29bd-c996-440c-9658-c17677f2981a', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: contactName,
+          email: contactEmail,
+          message: contactMessage,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: 'Успешно!',
+          description: 'Ваше сообщение отправлено. Мы свяжемся с вами в ближайшее время.',
+        });
+        setContactName('');
+        setContactEmail('');
+        setContactMessage('');
+      } else {
+        throw new Error(data.error || 'Failed to send message');
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось отправить сообщение. Попробуйте позже.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSendingMessage(false);
+    }
   };
 
   return (
@@ -683,13 +737,42 @@ const Index = () => {
                     <h3 className="font-semibold mb-4 text-center">Напишите нам</h3>
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input placeholder="Ваше имя" className="bg-white/80" />
-                        <Input placeholder="Email" type="email" className="bg-white/80" />
+                        <Input 
+                          placeholder="Ваше имя" 
+                          className="bg-white/80"
+                          value={contactName}
+                          onChange={(e) => setContactName(e.target.value)}
+                        />
+                        <Input 
+                          placeholder="Email" 
+                          type="email" 
+                          className="bg-white/80"
+                          value={contactEmail}
+                          onChange={(e) => setContactEmail(e.target.value)}
+                        />
                       </div>
-                      <Textarea placeholder="Ваше сообщение" className="min-h-32 bg-white/80" />
-                      <Button className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white">
-                        <Icon name="Send" className="mr-2" size={18} />
-                        Отправить сообщение
+                      <Textarea 
+                        placeholder="Ваше сообщение" 
+                        className="min-h-32 bg-white/80"
+                        value={contactMessage}
+                        onChange={(e) => setContactMessage(e.target.value)}
+                      />
+                      <Button 
+                        onClick={handleSendMessage}
+                        disabled={isSendingMessage}
+                        className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white disabled:opacity-50"
+                      >
+                        {isSendingMessage ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                            Отправка...
+                          </>
+                        ) : (
+                          <>
+                            <Icon name="Send" className="mr-2" size={18} />
+                            Отправить сообщение
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>

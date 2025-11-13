@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "Handle OPTIONS preflight request",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Reject GET requests",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 405
+    },
+    {
+      "name": "Validate required fields",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "name": "Test",
+        "email": ""
+      },
+      "expectedStatus": 400
+    }
+  ]
+}
