@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 
@@ -8,6 +10,33 @@ interface HeaderProps {
 }
 
 const Header = ({ isMobileMenuOpen, setIsMobileMenuOpen, scrollToSection }: HeaderProps) => {
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const isAuth = localStorage.getItem('isAuthenticated');
+      const userData = localStorage.getItem('user');
+      
+      if (isAuth === 'true' && userData) {
+        setIsAuthenticated(true);
+        try {
+          const user = JSON.parse(userData);
+          setUserName(user.name || 'Пользователь');
+        } catch (e) {
+          setUserName('Пользователь');
+        }
+      } else {
+        setIsAuthenticated(false);
+      }
+    };
+
+    checkAuth();
+    window.addEventListener('storage', checkAuth);
+    
+    return () => window.removeEventListener('storage', checkAuth);
+  }, []);
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0f1729]/95 border-b border-cyan-500/10 backdrop-blur-xl border-glow-animate">
@@ -40,20 +69,34 @@ const Header = ({ isMobileMenuOpen, setIsMobileMenuOpen, scrollToSection }: Head
             </div>
             
             <div className="flex items-center gap-4">
-              <Button 
-                onClick={() => window.location.href = '/login'}
-                variant="outline"
-                className="hidden md:flex border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 transition-all duration-300"
-              >
-                <Icon name="LogIn" className="mr-2" size={18} />
-                Войти
-              </Button>
-              <Button 
-                onClick={() => window.location.href = '/register'}
-                className="hidden md:flex bg-purple-600 hover:bg-purple-500 text-white border-0 font-bold glow-pulse-purple transition-all duration-300 hover:scale-105"
-              >
-                Начать проект
-              </Button>
+              {isAuthenticated ? (
+                <>
+                  <Button 
+                    onClick={() => navigate('/dashboard')}
+                    className="hidden md:flex bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-500 text-[#0f1729] font-bold transition-all duration-300"
+                  >
+                    <Icon name="User" className="mr-2" size={18} />
+                    {userName}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button 
+                    onClick={() => navigate('/login')}
+                    variant="outline"
+                    className="hidden md:flex border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 transition-all duration-300"
+                  >
+                    <Icon name="LogIn" className="mr-2" size={18} />
+                    Войти
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/register')}
+                    className="hidden md:flex bg-purple-600 hover:bg-purple-500 text-white border-0 font-bold glow-pulse-purple transition-all duration-300 hover:scale-105"
+                  >
+                    Начать проект
+                  </Button>
+                </>
+              )}
               
               <Button 
                 variant="ghost" 
@@ -110,20 +153,32 @@ const Header = ({ isMobileMenuOpen, setIsMobileMenuOpen, scrollToSection }: Head
                 </button>
                 
                 <div className="pt-4 border-t border-cyan-500/20 space-y-2">
-                  <Button 
-                    onClick={() => window.location.href = '/login'}
-                    variant="outline"
-                    className="w-full border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
-                  >
-                    <Icon name="LogIn" className="mr-2" size={18} />
-                    Войти
-                  </Button>
-                  <Button 
-                    onClick={() => window.location.href = '/register'}
-                    className="w-full bg-purple-600 hover:bg-purple-500 text-white border-0 font-bold neon-glow-purple transition-all duration-300"
-                  >
-                    Начать проект
-                  </Button>
+                  {isAuthenticated ? (
+                    <Button 
+                      onClick={() => navigate('/dashboard')}
+                      className="w-full bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-500 text-[#0f1729] font-bold"
+                    >
+                      <Icon name="User" className="mr-2" size={18} />
+                      {userName}
+                    </Button>
+                  ) : (
+                    <>
+                      <Button 
+                        onClick={() => navigate('/login')}
+                        variant="outline"
+                        className="w-full border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                      >
+                        <Icon name="LogIn" className="mr-2" size={18} />
+                        Войти
+                      </Button>
+                      <Button 
+                        onClick={() => navigate('/register')}
+                        className="w-full bg-purple-600 hover:bg-purple-500 text-white border-0 font-bold neon-glow-purple transition-all duration-300"
+                      >
+                        Начать проект
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

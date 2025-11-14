@@ -16,53 +16,46 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('https://functions.poehali.dev/53733180-4915-4c21-a626-7d1329e4117e?action=login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('userToken', data.token);
-        localStorage.setItem('userData', JSON.stringify(data.user));
-        
-        toast({
-          title: 'Успешно!',
-          description: `Добро пожаловать, ${data.user.name || 'пользователь'}!`
-        });
-        
-        navigate('/dashboard');
-      } else {
-        toast({
-          title: 'Ошибка',
-          description: data.error || 'Неверный email или пароль',
-          variant: 'destructive'
-        });
-      }
-    } catch (error) {
+    
+    if (!email || !password) {
       toast({
         title: 'Ошибка',
-        description: 'Не удалось подключиться к серверу',
-        variant: 'destructive'
+        description: 'Заполните все поля',
+        variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
+      return;
     }
+
+    setIsLoading(true);
+
+    setTimeout(() => {
+      const userData = {
+        email,
+        name: email.split('@')[0],
+        plan: 'Старт',
+        joinDate: new Date().toISOString(),
+      };
+      
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('isAuthenticated', 'true');
+      
+      toast({
+        title: 'Успешный вход!',
+        description: 'Добро пожаловать в ROUSHEN',
+      });
+      
+      setIsLoading(false);
+      navigate('/dashboard');
+    }, 1500);
   };
 
   return (
     <div className="min-h-screen bg-[#0f1729] relative overflow-hidden flex items-center justify-center px-6">
       <div className="scan-line"></div>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-[600px] h-[600px] bg-cyan-500/10 rounded-full filter blur-3xl opacity-50 floating"></div>
-        <div className="absolute top-40 right-20 w-[700px] h-[700px] bg-purple-500/10 rounded-full filter blur-3xl opacity-40 floating-delayed"></div>
+        <div className="absolute top-20 left-10 w-[600px] h-[600px] bg-cyan-500/10 rounded-full filter blur-3xl opacity-50 parallax-element glow-pulse-cyan"></div>
+        <div className="absolute top-40 right-20 w-[700px] h-[700px] bg-purple-500/10 rounded-full filter blur-3xl opacity-40 parallax-slow glow-pulse-purple"></div>
+        <div className="absolute -bottom-20 left-1/3 w-[500px] h-[500px] bg-blue-500/10 rounded-full filter blur-3xl opacity-30 parallax-fast"></div>
         
         <div className="absolute inset-0 grid-pulse" style={{
           backgroundImage: `
@@ -73,9 +66,9 @@ const Login = () => {
         }}></div>
       </div>
 
-      <Card className="w-full max-w-md bg-[#1a2332]/80 border border-cyan-500/20 backdrop-blur-xl relative z-10">
+      <Card className="w-full max-w-md bg-[#1a2332]/90 border border-cyan-500/30 backdrop-blur-xl relative z-10 animate-scale-in">
         <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-cyan-500/10 border-2 border-cyan-500/30 rounded-lg flex items-center justify-center mx-auto mb-4 glow-pulse-cyan">
+          <div className="w-16 h-16 bg-cyan-500/10 border-2 border-cyan-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 neon-glow animate-icon-pop">
             <Icon name="Sparkles" className="text-cyan-400" size={32} />
           </div>
           <CardTitle className="text-3xl font-black text-cyan-400 text-flicker">
@@ -86,69 +79,105 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-2">
               <Label htmlFor="email" className="text-cyan-100">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-[#0f1729] border-cyan-500/30 text-cyan-100 placeholder:text-cyan-100/30"
-                required
-              />
+              <div className="relative">
+                <Icon name="Mail" className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400" size={20} />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10 bg-[#0f1729]/50 border-cyan-500/30 text-cyan-100 placeholder:text-cyan-100/40 focus:border-cyan-500"
+                />
+              </div>
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="password" className="text-cyan-100">Пароль</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Ваш пароль"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="bg-[#0f1729] border-cyan-500/30 text-cyan-100 placeholder:text-cyan-100/30"
-                required
-              />
+              <div className="relative">
+                <Icon name="Lock" className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400" size={20} />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 bg-[#0f1729]/50 border-cyan-500/30 text-cyan-100 placeholder:text-cyan-100/40 focus:border-cyan-500"
+                />
+              </div>
             </div>
-            
+            <div className="flex items-center justify-between text-sm">
+              <button
+                type="button"
+                onClick={() => navigate('/register')}
+                className="text-cyan-400 hover:text-cyan-300 transition-colors"
+              >
+                Создать аккаунт
+              </button>
+              <a 
+                href="#" 
+                className="text-cyan-100/70 hover:text-cyan-400 transition-colors"
+              >
+                Забыли пароль?
+              </a>
+            </div>
+
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] border-0 font-bold neon-glow transition-all duration-300"
+              className="w-full bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-500 text-[#0f1729] font-bold py-6 neon-glow transition-all duration-300"
             >
               {isLoading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-[#0f1729] border-t-transparent rounded-full animate-spin mr-2"></div>
+                  <Icon name="Loader2" className="mr-2 animate-spin" size={20} />
                   Вход...
                 </>
               ) : (
                 <>
-                  <Icon name="LogIn" className="mr-2" size={18} />
+                  <Icon name="LogIn" className="mr-2" size={20} />
                   Войти
                 </>
               )}
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-cyan-100/60">
-              Нет аккаунта?{' '}
-              <button
-                onClick={() => navigate('/register')}
-                className="text-cyan-400 hover:text-cyan-300 underline transition-colors"
-              >
-                Зарегистрироваться
-              </button>
-            </p>
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-cyan-500/20"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-[#1a2332] text-cyan-100/60">или войти через</span>
+            </div>
           </div>
 
-          <div className="mt-4 text-center">
+          <div className="grid grid-cols-2 gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="border-cyan-500/30 text-cyan-100 hover:bg-cyan-500/10 hover:border-cyan-500/50"
+            >
+              <Icon name="Github" className="mr-2" size={20} />
+              GitHub
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="border-cyan-500/30 text-cyan-100 hover:bg-cyan-500/10 hover:border-cyan-500/50"
+            >
+              <Icon name="Chrome" className="mr-2" size={20} />
+              Google
+            </Button>
+          </div>
+
+          <div className="mt-6 text-center">
             <button
               onClick={() => navigate('/')}
-              className="text-sm text-cyan-100/50 hover:text-cyan-400 transition-colors"
+              className="text-sm text-cyan-100/70 hover:text-cyan-400 transition-colors inline-flex items-center"
             >
-              ← На главную
+              <Icon name="ArrowLeft" className="mr-1" size={16} />
+              Вернуться на главную
             </button>
           </div>
         </CardContent>

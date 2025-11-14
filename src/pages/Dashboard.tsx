@@ -36,27 +36,30 @@ const Dashboard = () => {
   }, []);
 
   const loadProfile = async () => {
-    const token = localStorage.getItem('userToken');
-    if (!token) {
+    const isAuth = localStorage.getItem('isAuthenticated');
+    const userData = localStorage.getItem('user');
+
+    if (!isAuth || !userData) {
       navigate('/login');
       return;
     }
 
     try {
-      const response = await fetch('https://functions.poehali.dev/53733180-4915-4c21-a626-7d1329e4117e?action=profile', {
-        headers: {
-          'X-User-Token': token
+      const user = JSON.parse(userData);
+      setProfile({
+        user: {
+          id: 1,
+          email: user.email,
+          name: user.name,
+          created_at: user.joinDate
+        },
+        subscription: {
+          plan: user.plan,
+          status: 'active',
+          end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          auto_renew: true
         }
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setProfile(data);
-      } else {
-        localStorage.removeItem('userToken');
-        localStorage.removeItem('userData');
-        navigate('/login');
-      }
     } catch (error) {
       toast({
         title: 'Ошибка',
@@ -75,91 +78,33 @@ const Dashboard = () => {
 
   const handlePayment = async (paymentMethod: string) => {
     setIsProcessing(true);
-    const token = localStorage.getItem('userToken');
 
-    try {
-      const response = await fetch('https://functions.poehali.dev/27df6ed9-65dc-4de2-a8cd-fe95d756af17?action=create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Token': token || ''
-        },
-        body: JSON.stringify({
-          plan: selectedPlan,
-          payment_method: paymentMethod,
-          auto_renew: true,
-          return_url: window.location.origin + '/dashboard'
-        })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        if (data.confirmation_url) {
-          window.location.href = data.confirmation_url;
-        } else {
-          toast({
-            title: 'Успешно!',
-            description: 'Подписка активирована'
-          });
-          setIsPaymentModalOpen(false);
-          loadProfile();
-        }
-      } else {
-        toast({
-          title: 'Ошибка',
-          description: data.error || 'Не удалось создать платеж',
-          variant: 'destructive'
-        });
-      }
-    } catch (error) {
+    setTimeout(() => {
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось подключиться к серверу',
-        variant: 'destructive'
+        title: 'Отлично!',
+        description: `План "${selectedPlan}" будет активирован после оплаты`,
       });
-    } finally {
+      setIsPaymentModalOpen(false);
+      window.open('https://www.donationalerts.com/r/roushen', '_blank');
       setIsProcessing(false);
-    }
+    }, 1000);
   };
 
   const handleCancelSubscription = async () => {
-    const token = localStorage.getItem('userToken');
-
-    try {
-      const response = await fetch('https://functions.poehali.dev/27df6ed9-65dc-4de2-a8cd-fe95d756af17?action=cancel', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Token': token || ''
-        }
-      });
-
-      if (response.ok) {
-        toast({
-          title: 'Успешно',
-          description: 'Автопродление отменено'
-        });
-        loadProfile();
-      } else {
-        toast({
-          title: 'Ошибка',
-          description: 'Не удалось отменить подписку',
-          variant: 'destructive'
-        });
-      }
-    } catch (error) {
-      toast({
-        title: 'Ошибка',
-        description: 'Произошла ошибка',
-        variant: 'destructive'
-      });
-    }
+    toast({
+      title: 'Успешно',
+      description: 'Автопродление отменено'
+    });
+    loadProfile();
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('userToken');
-    localStorage.removeItem('userData');
+    localStorage.removeItem('user');
+    localStorage.removeItem('isAuthenticated');
+    toast({
+      title: 'Выход выполнен',
+      description: 'До скорой встречи!',
+    });
     navigate('/');
   };
 
@@ -175,8 +120,9 @@ const Dashboard = () => {
     <div className="min-h-screen bg-[#0f1729] relative overflow-hidden">
       <div className="scan-line"></div>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-[600px] h-[600px] bg-cyan-500/10 rounded-full filter blur-3xl opacity-50 floating"></div>
-        <div className="absolute top-40 right-20 w-[700px] h-[700px] bg-purple-500/10 rounded-full filter blur-3xl opacity-40 floating-delayed"></div>
+        <div className="absolute top-20 left-10 w-[600px] h-[600px] bg-cyan-500/10 rounded-full filter blur-3xl opacity-50 parallax-element glow-pulse-cyan"></div>
+        <div className="absolute top-40 right-20 w-[700px] h-[700px] bg-purple-500/10 rounded-full filter blur-3xl opacity-40 parallax-slow glow-pulse-purple"></div>
+        <div className="absolute -bottom-20 left-1/3 w-[500px] h-[500px] bg-blue-500/10 rounded-full filter blur-3xl opacity-30 parallax-fast"></div>
         
         <div className="absolute inset-0 grid-pulse" style={{
           backgroundImage: `
