@@ -8,15 +8,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { useTypingAnimation } from '@/hooks/useTypingAnimation';
 import Header from '@/components/Header';
 import GeneratorModals from '@/components/GeneratorModals';
 import ContactForm from '@/components/ContactForm';
+import OfferModal from '@/components/OfferModal';
 
 const Index = () => {
   const { toast } = useToast();
   const aboutSection = useScrollAnimation(0.2);
   const pricingSection = useScrollAnimation(0.2);
   const contactSection = useScrollAnimation(0.2);
+  const typingText = useTypingAnimation('AI-решения с молодым драйвом и высоким качеством', 80);
   const [videoPrompt, setVideoPrompt] = useState('');
   const [textPrompt, setTextPrompt] = useState('');
   const [presentationTopic, setPresentationTopic] = useState('');
@@ -24,6 +27,8 @@ const Index = () => {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [isTextModalOpen, setIsTextModalOpen] = useState(false);
   const [isPresentationModalOpen, setIsPresentationModalOpen] = useState(false);
+  const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState('');
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -93,13 +98,31 @@ const Index = () => {
     simulateGeneration('presentation', presentationTopic);
   };
 
+  const handlePlanClick = (planName: string) => {
+    setSelectedPlan(planName);
+    setIsOfferModalOpen(true);
+  };
+
+  const handleOfferAccept = () => {
+    setIsOfferModalOpen(false);
+    toast({
+      title: 'Отлично!',
+      description: `Вы приняли условия тарифа "${selectedPlan}". Сейчас откроется страница оплаты.`,
+    });
+    setTimeout(() => {
+      window.open('https://www.donationalerts.com/r/roushen', '_blank');
+    }, 1000);
+  };
+
   return (
     <div className="min-h-screen bg-[#0f1729] relative overflow-hidden">
       <div className="scan-line"></div>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-[600px] h-[600px] bg-cyan-500/10 rounded-full filter blur-3xl opacity-50 floating glow-pulse-cyan"></div>
-        <div className="absolute top-40 right-20 w-[700px] h-[700px] bg-purple-500/10 rounded-full filter blur-3xl opacity-40 floating-delayed glow-pulse-purple"></div>
-        <div className="absolute -bottom-20 left-1/3 w-[500px] h-[500px] bg-blue-500/10 rounded-full filter blur-3xl opacity-30 floating-slow"></div>
+        <div className="absolute top-20 left-10 w-[600px] h-[600px] bg-cyan-500/10 rounded-full filter blur-3xl opacity-50 parallax-element glow-pulse-cyan"></div>
+        <div className="absolute top-40 right-20 w-[700px] h-[700px] bg-purple-500/10 rounded-full filter blur-3xl opacity-40 parallax-slow glow-pulse-purple"></div>
+        <div className="absolute -bottom-20 left-1/3 w-[500px] h-[500px] bg-blue-500/10 rounded-full filter blur-3xl opacity-30 parallax-fast"></div>
+        <div className="absolute top-60 right-1/4 w-[400px] h-[400px] bg-pink-500/5 rounded-full filter blur-3xl opacity-30 parallax-element"></div>
+        <div className="absolute bottom-40 left-20 w-[350px] h-[350px] bg-cyan-400/5 rounded-full filter blur-3xl opacity-25 parallax-slow"></div>
         
         <div className="absolute inset-0 grid-pulse" style={{
           backgroundImage: `
@@ -124,7 +147,10 @@ const Index = () => {
             </Badge>
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black mb-8 leading-tight">
               <span className="bg-gradient-to-r from-cyan-400 via-cyan-300 to-cyan-500 bg-clip-text text-transparent text-flicker neon-flicker">ROUSHEN</span>
-              <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl mt-2 bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent text-shadow-purple">AI-решения<br className="sm:hidden" /> с молодым драйвом<br />и высоким качеством</span>
+              <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl mt-2 bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent text-shadow-purple">
+                {typingText.displayedText}
+                {!typingText.isComplete && <span className="border-r-2 border-purple-400 animate-pulse ml-1"></span>}
+              </span>
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-cyan-100/70 mb-12 max-w-3xl mx-auto px-4 font-light leading-relaxed">
               Мы объединяем технологическую экспертизу с креативным подходом.<br className="hidden sm:block" />
@@ -459,7 +485,10 @@ const Index = () => {
                       <span className="text-cyan-100/80">HD качество</span>
                     </li>
                   </ul>
-                  <Button className="w-full mt-6 bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] border-0 font-bold neon-glow transition-all duration-300">
+                  <Button 
+                    onClick={() => handlePlanClick('Старт')}
+                    className="w-full mt-6 bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] border-0 font-bold neon-glow transition-all duration-300"
+                  >
                     Начать бесплатно
                   </Button>
                 </CardContent>
@@ -500,7 +529,10 @@ const Index = () => {
                       <span className="text-purple-100/80">Приоритетная поддержка</span>
                     </li>
                   </ul>
-                  <Button className="w-full mt-6 bg-purple-600 hover:bg-purple-500 text-white border-0 font-bold glow-pulse-purple transition-all duration-300 hover:scale-105">
+                  <Button 
+                    onClick={() => handlePlanClick('Про')}
+                    className="w-full mt-6 bg-purple-600 hover:bg-purple-500 text-white border-0 font-bold glow-pulse-purple transition-all duration-300 hover:scale-105"
+                  >
                     Выбрать план
                   </Button>
                 </CardContent>
@@ -538,7 +570,10 @@ const Index = () => {
                       <span className="text-cyan-100/80">Персональный менеджер</span>
                     </li>
                   </ul>
-                  <Button className="w-full mt-6 bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] border-0 font-bold glow-pulse-cyan transition-all duration-300 hover:scale-105">
+                  <Button 
+                    onClick={() => handlePlanClick('Бизнес')}
+                    className="w-full mt-6 bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] border-0 font-bold glow-pulse-cyan transition-all duration-300 hover:scale-105"
+                  >
                     Связаться с нами
                   </Button>
                 </CardContent>
@@ -650,6 +685,13 @@ const Index = () => {
         isGenerating={isGenerating}
         progress={progress}
         generatedContent={generatedContent}
+      />
+
+      <OfferModal 
+        isOpen={isOfferModalOpen}
+        onClose={() => setIsOfferModalOpen(false)}
+        onAccept={handleOfferAccept}
+        planName={selectedPlan}
       />
     </div>
   );

@@ -440,6 +440,65 @@
     opacity: 0;
   }
 
+  @keyframes typing {
+    from {
+      width: 0;
+    }
+    to {
+      width: 100%;
+    }
+  }
+
+  @keyframes blink {
+    0%,
+    100% {
+      border-color: transparent;
+    }
+    50% {
+      border-color: rgba(100, 255, 218, 0.8);
+    }
+  }
+
+  .typing-animation {
+    overflow: hidden;
+    border-right: 3px solid rgba(100, 255, 218, 0.8);
+    white-space: nowrap;
+    animation:
+      typing 3s steps(40, end),
+      blink 0.75s step-end infinite;
+    display: inline-block;
+  }
+
+  @keyframes parallax-float {
+    0%,
+    100% {
+      transform: translateY(0) translateX(0);
+    }
+    25% {
+      transform: translateY(-15px) translateX(10px);
+    }
+    50% {
+      transform: translateY(-30px) translateX(-5px);
+    }
+    75% {
+      transform: translateY(-15px) translateX(15px);
+    }
+  }
+
+  .parallax-element {
+    animation: parallax-float 20s ease-in-out infinite;
+  }
+
+  .parallax-slow {
+    animation: parallax-float 25s ease-in-out infinite;
+    animation-delay: 2s;
+  }
+
+  .parallax-fast {
+    animation: parallax-float 15s ease-in-out infinite;
+    animation-delay: 1s;
+  }
+
   @keyframes scan-line {
     0% {
       transform: translateY(-100%);
