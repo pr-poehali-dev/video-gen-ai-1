@@ -41,6 +41,14 @@ const Index = () => {
   useEffect(() => {
     const count = parseInt(localStorage.getItem('request_count') || '0');
     setRequestCount(count);
+
+    const isRegistered = localStorage.getItem('user_registered') === 'true';
+    const userData = localStorage.getItem('user_data');
+    
+    if (isRegistered && userData) {
+      const user = JSON.parse(userData);
+      console.log('Пользователь авторизован:', user);
+    }
   }, []);
 
   const scrollToSection = (sectionId: string) => {

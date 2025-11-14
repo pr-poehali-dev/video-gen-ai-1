@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
+import UserProfile from '@/components/UserProfile';
 
 interface HeaderProps {
   isMobileMenuOpen: boolean;
@@ -16,10 +17,10 @@ const Header = ({ isMobileMenuOpen, setIsMobileMenuOpen, scrollToSection }: Head
 
   useEffect(() => {
     const checkAuth = () => {
-      const isAuth = localStorage.getItem('isAuthenticated');
-      const userData = localStorage.getItem('user');
+      const isRegistered = localStorage.getItem('user_registered') === 'true';
+      const userData = localStorage.getItem('user_data');
       
-      if (isAuth === 'true' && userData) {
+      if (isRegistered && userData) {
         setIsAuthenticated(true);
         try {
           const user = JSON.parse(userData);
@@ -34,8 +35,12 @@ const Header = ({ isMobileMenuOpen, setIsMobileMenuOpen, scrollToSection }: Head
 
     checkAuth();
     window.addEventListener('storage', checkAuth);
+    const interval = setInterval(checkAuth, 1000);
     
-    return () => window.removeEventListener('storage', checkAuth);
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      clearInterval(interval);
+    };
   }, []);
   return (
     <>
@@ -70,15 +75,9 @@ const Header = ({ isMobileMenuOpen, setIsMobileMenuOpen, scrollToSection }: Head
             
             <div className="flex items-center gap-4">
               {isAuthenticated ? (
-                <>
-                  <Button 
-                    onClick={() => navigate('/dashboard')}
-                    className="hidden md:flex bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-500 text-[#0f1729] font-bold transition-all duration-300"
-                  >
-                    <Icon name="User" className="mr-2" size={18} />
-                    {userName}
-                  </Button>
-                </>
+                <div className="hidden md:block">
+                  <UserProfile />
+                </div>
               ) : (
                 <>
                   <Button 
@@ -154,13 +153,9 @@ const Header = ({ isMobileMenuOpen, setIsMobileMenuOpen, scrollToSection }: Head
                 
                 <div className="pt-4 border-t border-cyan-500/20 space-y-2">
                   {isAuthenticated ? (
-                    <Button 
-                      onClick={() => navigate('/dashboard')}
-                      className="w-full bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-500 text-[#0f1729] font-bold"
-                    >
-                      <Icon name="User" className="mr-2" size={18} />
-                      {userName}
-                    </Button>
+                    <div className="flex justify-center">
+                      <UserProfile />
+                    </div>
                   ) : (
                     <>
                       <Button 
