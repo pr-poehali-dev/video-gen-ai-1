@@ -121,9 +121,60 @@ const Index = () => {
     simulateGeneration('video', videoPrompt);
   };
 
-  const handleTextGenerate = () => {
+  const handleTextGenerate = async () => {
+    if (!textPrompt.trim()) {
+      toast({
+        title: 'Ошибка',
+        description: 'Введите запрос для генерации текста',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsTextModalOpen(true);
-    simulateGeneration('text', textPrompt);
+    setIsGenerating(true);
+    setProgress(0);
+
+    const interval = setInterval(() => {
+      setProgress(prev => Math.min(prev + 10, 90));
+    }, 300);
+
+    try {
+      const response = await fetch('https://functions.poehali.dev/afb4ee36-6a99-4357-b02b-de653bf882bc', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: textPrompt,
+          max_tokens: 2000,
+          temperature: 0.7
+        })
+      });
+
+      const data = await response.json();
+      clearInterval(interval);
+      setProgress(100);
+
+      if (data.success) {
+        setGeneratedContent(data.text);
+        setIsGenerating(false);
+        toast({
+          title: 'Готово!',
+          description: 'Текст успешно сгенерирован нейросетью',
+        });
+      } else {
+        throw new Error(data.error || 'Ошибка генерации');
+      }
+    } catch (error) {
+      clearInterval(interval);
+      setIsGenerating(false);
+      toast({
+        title: 'Ошибка генерации',
+        description: error instanceof Error ? error.message : 'Попробуйте позже',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handlePresentationGenerate = () => {
