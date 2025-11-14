@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +13,7 @@ import Header from '@/components/Header';
 import GeneratorModals from '@/components/GeneratorModals';
 import ContactForm from '@/components/ContactForm';
 import OfferModal from '@/components/OfferModal';
+import AuthModal from '@/components/AuthModal';
 
 const Index = () => {
   const { toast } = useToast();
@@ -34,11 +35,40 @@ const Index = () => {
   const [progress, setProgress] = useState(0);
   const [generatedContent, setGeneratedContent] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [requestCount, setRequestCount] = useState(0);
+
+  useEffect(() => {
+    const count = parseInt(localStorage.getItem('request_count') || '0');
+    setRequestCount(count);
+  }, []);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     element?.scrollIntoView({ behavior: 'smooth' });
     setIsMobileMenuOpen(false);
+  };
+
+  const checkRequestLimit = () => {
+    const isRegistered = localStorage.getItem('user_registered') === 'true';
+    if (isRegistered) return true;
+
+    const count = parseInt(localStorage.getItem('request_count') || '0');
+    if (count >= 2) {
+      setIsAuthModalOpen(true);
+      return false;
+    }
+    return true;
+  };
+
+  const incrementRequestCount = () => {
+    const isRegistered = localStorage.getItem('user_registered') === 'true';
+    if (!isRegistered) {
+      const count = parseInt(localStorage.getItem('request_count') || '0');
+      const newCount = count + 1;
+      localStorage.setItem('request_count', newCount.toString());
+      setRequestCount(newCount);
+    }
   };
 
   const simulateGeneration = async (type: 'video' | 'text' | 'presentation', prompt: string) => {
@@ -117,6 +147,7 @@ const Index = () => {
   };
 
   const handleVideoGenerate = () => {
+    if (!checkRequestLimit()) return;
     setIsVideoModalOpen(true);
     simulateGeneration('video', videoPrompt);
   };
@@ -130,6 +161,8 @@ const Index = () => {
       });
       return;
     }
+
+    if (!checkRequestLimit()) return;
 
     setIsTextModalOpen(true);
     setIsGenerating(true);
@@ -159,6 +192,7 @@ const Index = () => {
       if (data.success) {
         setGeneratedContent(data.text);
         setIsGenerating(false);
+        incrementRequestCount();
         toast({
           title: 'Готово!',
           description: 'Текст успешно сгенерирован нейросетью',
@@ -178,6 +212,7 @@ const Index = () => {
   };
 
   const handlePresentationGenerate = () => {
+    if (!checkRequestLimit()) return;
     setIsPresentationModalOpen(true);
     simulateGeneration('presentation', presentationTopic);
   };
@@ -776,6 +811,17 @@ const Index = () => {
         onClose={() => setIsOfferModalOpen(false)}
         onAccept={handleOfferAccept}
         planName={selectedPlan}
+      />
+
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={() => {
+          toast({
+            title: 'Добро пожаловать!',
+            description: 'Теперь у вас неограниченный доступ ко всем функциям',
+          });
+        }}
       />
     </div>
   );
