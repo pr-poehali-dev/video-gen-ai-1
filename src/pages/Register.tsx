@@ -87,6 +87,7 @@ const Register = () => {
       localStorage.setItem('user_data', JSON.stringify(userData));
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('user_registered', 'true');
+      localStorage.setItem('auth_token', Math.random().toString(36).substring(2));
       
       toast({
         title: 'Успешная регистрация!',

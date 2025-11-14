@@ -49,7 +49,7 @@ const ForgotPasswordModal = ({ isOpen, onClose }: ForgotPasswordModalProps) => {
     }
 
     const user = JSON.parse(userData);
-    if (user.email !== email) {
+    if (user.email.toLowerCase() !== email.toLowerCase()) {
       toast({
         title: 'Пользователь не найден',
         description: 'Аккаунт с таким email не зарегистрирован',
@@ -114,6 +114,7 @@ const ForgotPasswordModal = ({ isOpen, onClose }: ForgotPasswordModalProps) => {
       const user = JSON.parse(userData);
       user.password = newPassword;
       localStorage.setItem('user_data', JSON.stringify(user));
+      localStorage.setItem('user', JSON.stringify(user));
     }
 
     toast({

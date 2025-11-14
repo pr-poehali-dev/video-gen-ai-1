@@ -68,7 +68,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
       }
 
       const userData = JSON.parse(storedUser);
-      if (userData.email !== email) {
+      if (userData.email.toLowerCase() !== email.toLowerCase()) {
         toast({
           title: 'Неверный email',
           description: 'Проверьте правильность введённого email',

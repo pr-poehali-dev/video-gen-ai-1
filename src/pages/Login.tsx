@@ -64,7 +64,7 @@ const Login = () => {
 
     const savedUserData = JSON.parse(storedUser);
     
-    if (savedUserData.email !== email) {
+    if (savedUserData.email.toLowerCase() !== email.toLowerCase()) {
       toast({
         title: 'Неверный email',
         description: 'Проверьте правильность введённого email',
