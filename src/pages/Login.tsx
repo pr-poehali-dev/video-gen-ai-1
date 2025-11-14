@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import Footer from '@/components/Footer';
 import ForgotPasswordModal from '@/components/ForgotPasswordModal';
 
 const Login = () => {
@@ -252,8 +251,6 @@ const Login = () => {
         isOpen={isForgotPasswordOpen}
         onClose={() => setIsForgotPasswordOpen(false)}
       />
-      
-      <Footer />
     </div>
   );
 };
