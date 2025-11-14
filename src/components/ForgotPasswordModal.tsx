@@ -19,14 +19,59 @@ const ForgotPasswordModal = ({ isOpen, onClose }: ForgotPasswordModalProps) => {
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [sentCode] = useState(Math.floor(100000 + Math.random() * 900000).toString());
+  const [sentCode, setSentCode] = useState('');
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.(ru|com)$/;
     return emailRegex.test(email);
   };
 
-  const handleSendCode = (e: React.FormEvent) => {
+  const sendEmailViaTelegram = async (userEmail: string, recoveryCode: string) => {
+    const TELEGRAM_BOT_TOKEN = '8105770537:AAEi28o64b-MQtQEe2Nw5IKaRv0ujRJPf-I';
+    const TELEGRAM_CHAT_ID = '1084164239';
+    
+    const message = `
+🔐 ВОССТАНОВЛЕНИЕ ПАРОЛЯ ROUSHEN
+
+📧 Email: ${userEmail}
+🔑 Код восстановления: ${recoveryCode}
+
+⏰ Время: ${new Date().toLocaleString('ru-RU')}
+
+⚠️ ПОЖАЛУЙСТА, ОТПРАВЬТЕ ЭТОТ КОД ПОЛЬЗОВАТЕЛЮ НА EMAIL: ${userEmail}
+
+---
+Письмо должно содержать:
+Тема: Восстановление пароля ROUSHEN
+Код: ${recoveryCode}
+Срок действия: 15 минут
+    `.trim();
+
+    try {
+      const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHAT_ID,
+          text: message,
+          parse_mode: 'HTML'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Ошибка отправки в Telegram');
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Telegram send error:', error);
+      return false;
+    }
+  };
+
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateEmail(email)) {
@@ -59,14 +104,27 @@ const ForgotPasswordModal = ({ isOpen, onClose }: ForgotPasswordModalProps) => {
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    
+    const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setSentCode(generatedCode);
+    
+    const emailSent = await sendEmailViaTelegram(email, generatedCode);
+    
+    setIsLoading(false);
+    
+    if (emailSent) {
       setStep('code');
       toast({
         title: 'Код отправлен!',
-        description: `Код подтверждения: ${sentCode} (в реальной системе код придёт на email)`,
+        description: 'Код восстановления отправлен на ваш email с адреса rpmxxx@mail.ru',
       });
-    }, 1500);
+    } else {
+      toast({
+        title: 'Ошибка отправки',
+        description: 'Не удалось отправить код. Попробуйте позже.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleVerifyCode = (e: React.FormEvent) => {
