@@ -64,23 +64,56 @@ const Index = () => {
       });
     }, 300);
 
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    try {
+      const requestType = type === 'presentation' ? 'image' : type;
+      
+      const response = await fetch('https://functions.poehali.dev/34147c53-3589-4dc6-9c1b-3170886e1a99', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: requestType,
+          prompt: prompt,
+          params: type === 'video' ? { num_frames: 25, fps: 6 } : 
+                  type === 'presentation' ? { provider: 'stability', width: 1024, height: 768 } :
+                  { model: 'gpt-4', max_tokens: 1000 }
+        })
+      });
 
-    setIsGenerating(false);
-    setProgress(100);
+      const result = await response.json();
 
-    if (type === 'video') {
-      setGeneratedContent('Ваше видео успешно создано! В реальном приложении здесь будет плеер с видео.');
-    } else if (type === 'text') {
-      setGeneratedContent(`# ${prompt}\n\nЭто демо-версия AI генератора текста. В полной версии здесь будет сгенерированный текст на основе вашего запроса.\n\nИскусственный интеллект анализирует ваш запрос и создает уникальный контент, соответствующий вашим требованиям. Текст будет структурированным, информативным и готовым к использованию.`);
-    } else if (type === 'presentation') {
-      setGeneratedContent('Ваша презентация готова! В реальном приложении здесь будет превью слайдов и возможность скачивания.');
+      if (!response.ok) {
+        throw new Error(result.error || 'Ошибка генерации');
+      }
+
+      clearInterval(interval);
+      setIsGenerating(false);
+      setProgress(100);
+
+      if (type === 'video') {
+        setGeneratedContent(result.status === 'processing' 
+          ? 'Видео обрабатывается. ID: ' + result.prediction_id 
+          : 'Видео успешно создано!');
+      } else if (type === 'text') {
+        setGeneratedContent(result.text || 'Текст сгенерирован успешно!');
+      } else if (type === 'presentation') {
+        setGeneratedContent(result.url ? 'Изображение для презентации создано!' : 'Презентация готова!');
+      }
+
+      toast({
+        title: 'Готово!',
+        description: 'Контент успешно сгенерирован',
+      });
+    } catch (error) {
+      clearInterval(interval);
+      setIsGenerating(false);
+      toast({
+        title: 'Ошибка',
+        description: error instanceof Error ? error.message : 'Не удалось сгенерировать контент',
+        variant: 'destructive',
+      });
     }
-
-    toast({
-      title: 'Готово!',
-      description: 'Контент успешно сгенерирован',
-    });
   };
 
   const handleVideoGenerate = () => {

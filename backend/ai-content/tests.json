@@ -1,0 +1,77 @@
+{
+  "tests": [
+    {
+      "name": "Generate image with OpenAI",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "type": "image",
+        "prompt": "A beautiful sunset over mountains",
+        "params": {
+          "provider": "openai",
+          "size": "1024x1024"
+        }
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "url": "string",
+        "type": "image",
+        "provider": "openai"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Generate video with Replicate",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "type": "video",
+        "prompt": "A person walking in the park",
+        "params": {
+          "num_frames": 25
+        }
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "type": "video",
+        "provider": "replicate",
+        "status": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Generate text with OpenAI",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "type": "text",
+        "prompt": "Write a short story about space",
+        "params": {
+          "model": "gpt-4",
+          "max_tokens": 500
+        }
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "text": "string",
+        "type": "text",
+        "provider": "openai"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Reject empty prompt",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "type": "image",
+        "prompt": ""
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "Prompt is required"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
