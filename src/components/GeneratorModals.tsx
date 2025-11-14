@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
@@ -26,6 +27,29 @@ const GeneratorModals = ({
   progress,
   generatedContent,
 }: GeneratorModalsProps) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+
+  useEffect(() => {
+    if (generatedContent && !isGenerating && isTextModalOpen) {
+      setDisplayedText('');
+      setIsTyping(true);
+      let currentIndex = 0;
+      
+      const typingInterval = setInterval(() => {
+        if (currentIndex < generatedContent.length) {
+          setDisplayedText(generatedContent.slice(0, currentIndex + 1));
+          currentIndex++;
+        } else {
+          setIsTyping(false);
+          clearInterval(typingInterval);
+        }
+      }, 20);
+
+      return () => clearInterval(typingInterval);
+    }
+  }, [generatedContent, isGenerating, isTextModalOpen]);
+
   return (
     <>
       <Dialog open={isVideoModalOpen} onOpenChange={setIsVideoModalOpen}>
@@ -123,12 +147,13 @@ const GeneratorModals = ({
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-purple-500 rounded-t-xl"></div>
                   <div className="absolute top-4 right-4">
                     <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-violet-200">
-                      <Icon name="Sparkles" className="text-violet-600" size={16} />
+                      <Icon name="Sparkles" className="text-violet-600 animate-pulse" size={16} />
                       <span className="text-xs font-semibold text-violet-700">AI Generated</span>
                     </div>
                   </div>
                   <div className="text-gray-900 text-base leading-relaxed whitespace-pre-wrap font-sans mt-8">
-                    {generatedContent}
+                    {displayedText}
+                    {isTyping && <span className="inline-block w-0.5 h-5 bg-violet-600 animate-pulse ml-0.5"></span>}
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -136,12 +161,17 @@ const GeneratorModals = ({
                     onClick={() => {
                       navigator.clipboard.writeText(generatedContent);
                     }}
-                    className="flex-1 bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:from-violet-700 hover:to-fuchsia-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+                    disabled={isTyping}
+                    className="flex-1 bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:from-violet-700 hover:to-fuchsia-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold disabled:opacity-50"
                   >
                     <Icon name="Copy" className="mr-2" size={18} />
-                    Копировать текст
+                    {isTyping ? 'Генерация...' : 'Копировать текст'}
                   </Button>
-                  <Button variant="outline" className="flex-1 border-violet-300 hover:border-violet-400 hover:bg-violet-50 transition-all duration-300">
+                  <Button 
+                    variant="outline" 
+                    disabled={isTyping}
+                    className="flex-1 border-violet-300 hover:border-violet-400 hover:bg-violet-50 transition-all duration-300 disabled:opacity-50"
+                  >
                     <Icon name="Download" className="mr-2" size={18} />
                     Скачать .txt
                   </Button>
