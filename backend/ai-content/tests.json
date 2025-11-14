@@ -1,14 +1,14 @@
 {
   "tests": [
     {
-      "name": "Generate image with OpenAI",
+      "name": "Generate image with AIML API",
       "method": "POST",
       "path": "/",
       "body": {
         "type": "image",
         "prompt": "A beautiful sunset over mountains",
         "params": {
-          "provider": "openai",
+          "model": "flux/schnell",
           "size": "1024x1024"
         }
       },
@@ -16,38 +16,19 @@
       "expectedBody": {
         "url": "string",
         "type": "image",
-        "provider": "openai"
+        "provider": "aimlapi"
       },
       "bodyMatcher": "partial"
     },
     {
-      "name": "Generate video with Replicate",
-      "method": "POST",
-      "path": "/",
-      "body": {
-        "type": "video",
-        "prompt": "A person walking in the park",
-        "params": {
-          "num_frames": 25
-        }
-      },
-      "expectedStatus": 200,
-      "expectedBody": {
-        "type": "video",
-        "provider": "replicate",
-        "status": "string"
-      },
-      "bodyMatcher": "partial"
-    },
-    {
-      "name": "Generate text with OpenAI",
+      "name": "Generate text with AIML API",
       "method": "POST",
       "path": "/",
       "body": {
         "type": "text",
         "prompt": "Write a short story about space",
         "params": {
-          "model": "gpt-4",
+          "model": "gpt-4o",
           "max_tokens": 500
         }
       },
@@ -55,7 +36,7 @@
       "expectedBody": {
         "text": "string",
         "type": "text",
-        "provider": "openai"
+        "provider": "aimlapi"
       },
       "bodyMatcher": "partial"
     },

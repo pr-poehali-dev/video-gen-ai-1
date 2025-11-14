@@ -5,7 +5,7 @@ from typing import Dict, Any
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
-    Business: Универсальная генерация контента через OpenAI, Replicate и Stability AI
+    Business: Универсальная генерация контента через aimlapi.com
     Args: event - dict с httpMethod, body (type: image/video/text, prompt, params)
           context - object с request_id, function_name
     Returns: HTTP response с URL контента или ошибкой
@@ -51,13 +51,25 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'body': json.dumps({'error': 'Prompt is required'})
         }
     
+    api_key = os.environ.get('AIMLAPI_KEY')
+    if not api_key:
+        return {
+            'statusCode': 500,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'isBase64Encoded': False,
+            'body': json.dumps({'error': 'AIMLAPI key not configured'})
+        }
+    
     try:
         if content_type == 'image':
-            result = generate_image(prompt, params, context)
+            result = generate_image(prompt, params, context, api_key)
         elif content_type == 'video':
-            result = generate_video(prompt, params, context)
+            result = generate_video(prompt, params, context, api_key)
         elif content_type == 'text':
-            result = generate_text(prompt, params, context)
+            result = generate_text(prompt, params, context, api_key)
         else:
             return {
                 'statusCode': 400,
@@ -90,127 +102,79 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
 
 
-def generate_image(prompt: str, params: Dict[str, Any], context: Any) -> Dict[str, Any]:
-    '''Генерация изображений через OpenAI DALL-E или Stability AI'''
-    provider = params.get('provider', 'openai')
-    
-    if provider == 'stability':
-        api_key = os.environ.get('STABILITY_API_KEY')
-        if not api_key:
-            raise Exception('Stability API key not configured')
-        
-        response = requests.post(
-            'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image',
-            headers={
-                'Authorization': f'Bearer {api_key}',
-                'Content-Type': 'application/json'
-            },
-            json={
-                'text_prompts': [{'text': prompt}],
-                'cfg_scale': params.get('cfg_scale', 7),
-                'height': params.get('height', 1024),
-                'width': params.get('width', 1024),
-                'samples': 1,
-                'steps': params.get('steps', 30)
-            }
-        )
-        
-        if response.status_code == 200:
-            data = response.json()
-            return {
-                'url': data['artifacts'][0]['base64'],
-                'type': 'image',
-                'provider': 'stability',
-                'prompt': prompt,
-                'request_id': context.request_id
-            }
-        else:
-            raise Exception(f'Stability API error: {response.text}')
-    
-    else:
-        api_key = os.environ.get('OPENAI_API_KEY')
-        if not api_key:
-            raise Exception('OpenAI API key not configured')
-        
-        response = requests.post(
-            'https://api.openai.com/v1/images/generations',
-            headers={
-                'Authorization': f'Bearer {api_key}',
-                'Content-Type': 'application/json'
-            },
-            json={
-                'model': 'dall-e-3',
-                'prompt': prompt,
-                'n': 1,
-                'size': params.get('size', '1024x1024'),
-                'quality': params.get('quality', 'standard'),
-                'style': params.get('style', 'vivid')
-            }
-        )
-        
-        if response.status_code == 200:
-            data = response.json()
-            return {
-                'url': data['data'][0]['url'],
-                'type': 'image',
-                'provider': 'openai',
-                'prompt': prompt,
-                'request_id': context.request_id
-            }
-        else:
-            raise Exception(f'OpenAI API error: {response.text}')
-
-
-def generate_video(prompt: str, params: Dict[str, Any], context: Any) -> Dict[str, Any]:
-    '''Генерация видео через Replicate'''
-    api_token = os.environ.get('REPLICATE_API_TOKEN')
-    if not api_token:
-        raise Exception('Replicate API token not configured')
+def generate_image(prompt: str, params: Dict[str, Any], context: Any, api_key: str) -> Dict[str, Any]:
+    '''Генерация изображений через AIML API (Flux, Stable Diffusion)'''
+    model = params.get('model', 'flux/schnell')
     
     response = requests.post(
-        'https://api.replicate.com/v1/predictions',
-        headers={
-            'Authorization': f'Token {api_token}',
-            'Content-Type': 'application/json'
-        },
-        json={
-            'version': 'stable-video-diffusion',
-            'input': {
-                'prompt': prompt,
-                'num_frames': params.get('num_frames', 25),
-                'fps': params.get('fps', 6)
-            }
-        }
-    )
-    
-    if response.status_code in [200, 201]:
-        data = response.json()
-        return {
-            'prediction_id': data.get('id'),
-            'status': data.get('status', 'processing'),
-            'type': 'video',
-            'provider': 'replicate',
-            'prompt': prompt,
-            'request_id': context.request_id
-        }
-    else:
-        raise Exception(f'Replicate API error: {response.text}')
-
-
-def generate_text(prompt: str, params: Dict[str, Any], context: Any) -> Dict[str, Any]:
-    '''Генерация текста через OpenAI GPT-4'''
-    api_key = os.environ.get('OPENAI_API_KEY')
-    if not api_key:
-        raise Exception('OpenAI API key not configured')
-    
-    response = requests.post(
-        'https://api.openai.com/v1/chat/completions',
+        'https://api.aimlapi.com/images/generations',
         headers={
             'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json'
         },
         json={
-            'model': params.get('model', 'gpt-4'),
+            'model': model,
+            'prompt': prompt,
+            'n': 1,
+            'size': params.get('size', '1024x1024')
+        }
+    )
+    
+    if response.status_code == 200:
+        data = response.json()
+        return {
+            'url': data['data'][0]['url'],
+            'type': 'image',
+            'provider': 'aimlapi',
+            'model': model,
+            'prompt': prompt,
+            'request_id': context.request_id
+        }
+    else:
+        raise Exception(f'AIML API error: {response.text}')
+
+
+def generate_video(prompt: str, params: Dict[str, Any], context: Any, api_key: str) -> Dict[str, Any]:
+    '''Генерация видео через AIML API'''
+    response = requests.post(
+        'https://api.aimlapi.com/v1/video/generation',
+        headers={
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        },
+        json={
+            'prompt': prompt,
+            'duration': params.get('duration', 5),
+            'resolution': params.get('resolution', '1024x576')
+        }
+    )
+    
+    if response.status_code in [200, 201, 202]:
+        data = response.json()
+        return {
+            'video_id': data.get('id', context.request_id),
+            'status': data.get('status', 'processing'),
+            'type': 'video',
+            'provider': 'aimlapi',
+            'prompt': prompt,
+            'request_id': context.request_id
+        }
+    else:
+        raise Exception(f'AIML API error: {response.text}')
+
+
+def generate_text(prompt: str, params: Dict[str, Any], context: Any, api_key: str) -> Dict[str, Any]:
+    '''Генерация текста через AIML API (GPT-4, Claude и др.)'''
+    model = params.get('model', 'gpt-4o')
+    
+    response = requests.post(
+        'https://api.aimlapi.com/chat/completions',
+        headers={
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        },
+        json={
+            'model': model,
             'messages': [{'role': 'user', 'content': prompt}],
             'temperature': params.get('temperature', 0.7),
             'max_tokens': params.get('max_tokens', 1000)
@@ -222,9 +186,10 @@ def generate_text(prompt: str, params: Dict[str, Any], context: Any) -> Dict[str
         return {
             'text': data['choices'][0]['message']['content'],
             'type': 'text',
-            'provider': 'openai',
+            'provider': 'aimlapi',
+            'model': model,
             'prompt': prompt,
             'request_id': context.request_id
         }
     else:
-        raise Exception(f'OpenAI API error: {response.text}')
+        raise Exception(f'AIML API error: {response.text}')
