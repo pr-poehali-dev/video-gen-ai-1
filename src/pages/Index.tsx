@@ -260,7 +260,7 @@ const Index = () => {
       description: `Вы приняли условия тарифа "${selectedPlan}". Сейчас откроется страница оплаты.`,
     });
     setTimeout(() => {
-      window.open('https://www.donationalerts.com/r/roushen', '_blank');
+      window.open('https://yoomoney.ru/to/410019573464131', '_blank');
     }, 1000);
   };
 

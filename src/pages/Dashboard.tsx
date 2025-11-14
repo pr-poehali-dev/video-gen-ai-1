@@ -86,7 +86,7 @@ const Dashboard = () => {
         description: `План "${selectedPlan}" будет активирован после оплаты`,
       });
       setIsPaymentModalOpen(false);
-      window.open('https://www.donationalerts.com/r/roushen', '_blank');
+      window.open('https://yoomoney.ru/to/410019573464131', '_blank');
       setIsProcessing(false);
     }, 1000);
   };
