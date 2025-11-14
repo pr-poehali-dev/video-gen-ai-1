@@ -44,7 +44,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 })
             }
         
-        body_data = json.loads(event.get('body', '{}'))
+        body_str = event.get('body', '{}')
+        if not body_str or body_str.strip() == '':
+            body_str = '{}'
+        body_data = json.loads(body_str)
         prompt = body_data.get('prompt', '')
         max_tokens = body_data.get('max_tokens', 2000)
         temperature = body_data.get('temperature', 0.7)
