@@ -1,0 +1,36 @@
+{
+  "tests": [
+    {
+      "name": "Generate video with valid prompt",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "prompt": "A beautiful sunset over the ocean",
+        "duration": 5,
+        "style": "realistic"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "video_url": "string",
+        "prompt": "string",
+        "duration": 5,
+        "style": "realistic",
+        "status": "generated"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Reject empty prompt",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "prompt": ""
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "Prompt is required"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
