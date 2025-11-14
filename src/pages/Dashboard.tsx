@@ -39,23 +39,24 @@ const Dashboard = () => {
   const loadProfile = async () => {
     const isAuth = localStorage.getItem('isAuthenticated');
     const userData = localStorage.getItem('user');
+    const userDataAlt = localStorage.getItem('user_data');
 
-    if (!isAuth || !userData) {
+    if (!isAuth || (!userData && !userDataAlt)) {
       navigate('/login');
       return;
     }
 
     try {
-      const user = JSON.parse(userData);
+      const user = JSON.parse(userData || userDataAlt || '{}');
       setProfile({
         user: {
           id: 1,
-          email: user.email,
-          name: user.name,
-          created_at: user.joinDate
+          email: user.email || '',
+          name: user.name || user.email?.split('@')[0] || 'Пользователь',
+          created_at: user.joinDate || user.registeredAt || new Date().toISOString()
         },
         subscription: {
-          plan: user.plan,
+          plan: user.plan || 'Старт',
           status: 'active',
           end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           auto_renew: true

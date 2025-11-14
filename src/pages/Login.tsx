@@ -7,6 +7,7 @@ import Icon from '@/components/ui/icon';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import Footer from '@/components/Footer';
+import ForgotPasswordModal from '@/components/ForgotPasswordModal';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.(ru|com)$/;
@@ -84,19 +86,26 @@ const Login = () => {
 
     setTimeout(() => {
       const userData = {
-        email,
+        email: savedUserData.email,
         name: savedUserData.name || email.split('@')[0],
-        plan: 'Старт',
-        joinDate: savedUserData.registeredAt || new Date().toISOString(),
+        password: savedUserData.password,
+        provider: savedUserData.provider || 'email',
+        plan: savedUserData.plan || 'Старт',
+        joinDate: savedUserData.registeredAt || savedUserData.joinDate || new Date().toISOString(),
+        registeredAt: savedUserData.registeredAt || new Date().toISOString(),
       };
       
       localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('user_data', JSON.stringify(userData));
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('user_registered', 'true');
+      if (!localStorage.getItem('auth_token')) {
+        localStorage.setItem('auth_token', Math.random().toString(36).substring(2));
+      }
       
       toast({
         title: 'Успешный вход!',
-        description: 'Добро пожаловать в ROUSHEN',
+        description: `Добро пожаловать, ${userData.name}!`,
       });
       
       setIsLoading(false);
@@ -171,12 +180,13 @@ const Login = () => {
               >
                 Создать аккаунт
               </button>
-              <a 
-                href="#" 
+              <button
+                type="button"
+                onClick={() => setIsForgotPasswordOpen(true)}
                 className="text-cyan-100/70 hover:text-cyan-400 transition-colors"
               >
                 Забыли пароль?
-              </a>
+              </button>
             </div>
 
             <Button
@@ -237,6 +247,11 @@ const Login = () => {
           </div>
         </CardContent>
       </Card>
+      
+      <ForgotPasswordModal 
+        isOpen={isForgotPasswordOpen}
+        onClose={() => setIsForgotPasswordOpen(false)}
+      />
       
       <Footer />
     </div>

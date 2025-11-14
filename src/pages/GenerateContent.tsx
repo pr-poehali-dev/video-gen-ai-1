@@ -27,8 +27,13 @@ const GenerateContent = () => {
       return;
     }
 
-    const token = localStorage.getItem('userToken');
-    if (!token) {
+    const isAuth = localStorage.getItem('isAuthenticated');
+    if (!isAuth) {
+      toast({
+        title: 'Требуется авторизация',
+        description: 'Войдите в аккаунт для генерации контента',
+        variant: 'destructive'
+      });
       navigate('/login');
       return;
     }
@@ -37,6 +42,7 @@ const GenerateContent = () => {
     setGeneratedContent(null);
 
     try {
+      const token = localStorage.getItem('auth_token') || 'demo';
       const response = await fetch('https://functions.poehali.dev/500cc697-682b-469a-b439-fa265e84c833?action=generate', {
         method: 'POST',
         headers: {
