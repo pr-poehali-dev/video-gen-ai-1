@@ -196,4 +196,4 @@ def generate_text(prompt: str, params: Dict[str, Any], context: Any, api_key: st
             'request_id': context.request_id
         }
     else:
-        raise Exception(f'AIML API error: {response.text}')
+        raise Exception(f'AIML API error [{response.status_code}]: {response.text}')
