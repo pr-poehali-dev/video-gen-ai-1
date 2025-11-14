@@ -5,7 +5,7 @@ from typing import Dict, Any
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
-    Business: Универсальная генерация контента через aimlapi.com
+    Business: Универсальная генерация контента через aimlapi.com (v1.1)
     Args: event - dict с httpMethod, body (type: image/video/text, prompt, params)
           context - object с request_id, function_name
     Returns: HTTP response с URL контента или ошибкой
