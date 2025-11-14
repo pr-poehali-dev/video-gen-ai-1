@@ -119,17 +119,31 @@ const GeneratorModals = ({
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="bg-white/80 p-6 rounded-lg min-h-[300px] whitespace-pre-wrap font-sans">
-                  {generatedContent}
+                <div className="relative bg-gradient-to-br from-violet-50 via-fuchsia-50 to-purple-50 p-8 rounded-xl border-2 border-violet-200 shadow-2xl min-h-[300px]">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-purple-500 rounded-t-xl"></div>
+                  <div className="absolute top-4 right-4">
+                    <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-violet-200">
+                      <Icon name="Sparkles" className="text-violet-600" size={16} />
+                      <span className="text-xs font-semibold text-violet-700">AI Generated</span>
+                    </div>
+                  </div>
+                  <div className="text-gray-900 text-base leading-relaxed whitespace-pre-wrap font-sans mt-8">
+                    {generatedContent}
+                  </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <Button className="flex-1 bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:from-violet-700 hover:to-fuchsia-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold">
+                  <Button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatedContent);
+                    }}
+                    className="flex-1 bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:from-violet-700 hover:to-fuchsia-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+                  >
                     <Icon name="Copy" className="mr-2" size={18} />
                     Копировать текст
                   </Button>
                   <Button variant="outline" className="flex-1 border-violet-300 hover:border-violet-400 hover:bg-violet-50 transition-all duration-300">
                     <Icon name="Download" className="mr-2" size={18} />
-                    Скачать .docx
+                    Скачать .txt
                   </Button>
                 </div>
               </div>
