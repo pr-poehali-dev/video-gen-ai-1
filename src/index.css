@@ -95,11 +95,16 @@
 @layer base {
   * {
     @apply border-border;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: "Inter", sans-serif;
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 
   h1,
@@ -336,6 +341,39 @@
 
   .animate-slide-up {
     animation: slide-in-up 0.6s ease-out;
+  }
+
+  @keyframes icon-pop {
+    0% {
+      opacity: 0;
+      transform: scale(0.3) rotate(-10deg);
+    }
+    50% {
+      transform: scale(1.1) rotate(5deg);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+
+  .animate-icon-pop {
+    animation: icon-pop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes smooth-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .animate-smooth-fade {
+    animation: smooth-fade-in 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 
   @keyframes scan-line {

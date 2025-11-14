@@ -145,30 +145,30 @@ const Index = () => {
             </div>
 
             <div className="mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
-              <Card className="bg-[#1a2332]/80 border border-cyan-500/20 hover:border-cyan-500/40 hover:shadow-cyan-500/20 hover:shadow-2xl transition-all duration-500 group backdrop-blur-xl hover:scale-105 animate-slide-up">
+              <Card className="bg-[#1a2332]/80 border border-cyan-500/20 hover:border-cyan-500/40 hover:shadow-cyan-500/20 hover:shadow-2xl transition-all duration-700 group backdrop-blur-xl hover:scale-105 animate-smooth-fade">
                 <CardHeader>
-                  <div className="w-16 h-16 bg-cyan-500/10 border border-cyan-500/30 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:bg-cyan-500/20 group-hover:border-cyan-500/50 transition-all duration-300 neon-glow group-hover:glow-pulse-cyan">
-                    <Icon name="Video" className="text-cyan-400" size={32} />
+                  <div className="w-16 h-16 bg-cyan-500/10 border border-cyan-500/30 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:bg-cyan-500/20 group-hover:border-cyan-500/50 transition-all duration-500 neon-glow group-hover:glow-pulse-cyan animate-icon-pop">
+                    <Icon name="Video" className="text-cyan-400 transition-transform duration-500 group-hover:scale-110" size={32} />
                   </div>
                   <CardTitle className="text-center font-bold text-cyan-100">Генерация видео</CardTitle>
                   <CardDescription className="text-center text-cyan-100/60">Создавайте профессиональные видео из текста</CardDescription>
                 </CardHeader>
               </Card>
 
-              <Card className="bg-[#1a2332]/80 border border-purple-500/20 hover:border-purple-500/40 hover:shadow-purple-500/20 hover:shadow-2xl transition-all duration-500 group backdrop-blur-xl hover:scale-105 animate-slide-up" style={{animationDelay: '0.1s'}}>
+              <Card className="bg-[#1a2332]/80 border border-purple-500/20 hover:border-purple-500/40 hover:shadow-purple-500/20 hover:shadow-2xl transition-all duration-700 group backdrop-blur-xl hover:scale-105 animate-smooth-fade" style={{animationDelay: '0.15s'}}>
                 <CardHeader>
-                  <div className="w-16 h-16 bg-purple-500/10 border border-purple-500/30 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:bg-purple-500/20 group-hover:border-purple-500/50 transition-all duration-300 neon-glow-purple group-hover:glow-pulse-purple">
-                    <Icon name="FileText" className="text-purple-400" size={32} />
+                  <div className="w-16 h-16 bg-purple-500/10 border border-purple-500/30 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:bg-purple-500/20 group-hover:border-purple-500/50 transition-all duration-500 neon-glow-purple group-hover:glow-pulse-purple animate-icon-pop" style={{animationDelay: '0.15s'}}>
+                    <Icon name="FileText" className="text-purple-400 transition-transform duration-500 group-hover:scale-110" size={32} />
                   </div>
                   <CardTitle className="text-center font-bold text-purple-100">Текстовый редактор</CardTitle>
                   <CardDescription className="text-center text-purple-100/60">Пишите статьи и доклады с AI-ассистентом</CardDescription>
                 </CardHeader>
               </Card>
 
-              <Card className="bg-[#1a2332]/80 border border-cyan-500/20 hover:border-cyan-500/40 hover:shadow-cyan-500/20 hover:shadow-2xl transition-all duration-500 group backdrop-blur-xl hover:scale-105 animate-slide-up" style={{animationDelay: '0.2s'}}>
+              <Card className="bg-[#1a2332]/80 border border-cyan-500/20 hover:border-cyan-500/40 hover:shadow-cyan-500/20 hover:shadow-2xl transition-all duration-700 group backdrop-blur-xl hover:scale-105 animate-smooth-fade" style={{animationDelay: '0.3s'}}>
                 <CardHeader>
-                  <div className="w-16 h-16 bg-cyan-500/10 border border-cyan-500/30 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:bg-cyan-500/20 group-hover:border-cyan-500/50 transition-all duration-300 neon-glow group-hover:glow-pulse-cyan">
-                    <Icon name="Presentation" className="text-cyan-400" size={32} />
+                  <div className="w-16 h-16 bg-cyan-500/10 border border-cyan-500/30 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:bg-cyan-500/20 group-hover:border-cyan-500/50 transition-all duration-500 neon-glow group-hover:glow-pulse-cyan animate-icon-pop" style={{animationDelay: '0.3s'}}>
+                    <Icon name="Presentation" className="text-cyan-400 transition-transform duration-500 group-hover:scale-110" size={32} />
                   </div>
                   <CardTitle className="text-center font-bold text-cyan-100">Презентации</CardTitle>
                   <CardDescription className="text-center text-cyan-100/60">Создавайте впечатляющие слайды за минуты</CardDescription>
@@ -229,20 +229,20 @@ const Index = () => {
                       </Button>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 pt-4">
-                      <div className="text-center p-3 md:p-4 bg-cyan-500/5 rounded-lg border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300">
-                        <Icon name="Film" className="mx-auto mb-2 text-cyan-400" size={20} />
+                      <div className="text-center p-3 md:p-4 bg-cyan-500/5 rounded-lg border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-500 hover:scale-105 animate-smooth-fade">
+                        <Icon name="Film" className="mx-auto mb-2 text-cyan-400 animate-icon-pop" size={20} />
                         <p className="text-xs md:text-sm font-semibold text-cyan-100">Full HD</p>
                       </div>
-                      <div className="text-center p-3 md:p-4 bg-purple-500/5 rounded-lg border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300">
-                        <Icon name="Music" className="mx-auto mb-2 text-purple-400" size={20} />
+                      <div className="text-center p-3 md:p-4 bg-purple-500/5 rounded-lg border border-purple-500/20 hover:border-purple-500/40 transition-all duration-500 hover:scale-105 animate-smooth-fade" style={{animationDelay: '0.1s'}}>
+                        <Icon name="Music" className="mx-auto mb-2 text-purple-400 animate-icon-pop" style={{animationDelay: '0.1s'}} size={20} />
                         <p className="text-xs md:text-sm font-semibold text-purple-100">Со звуком</p>
                       </div>
-                      <div className="text-center p-3 md:p-4 bg-cyan-500/5 rounded-lg border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300">
-                        <Icon name="Zap" className="mx-auto mb-2 text-cyan-400" size={20} />
+                      <div className="text-center p-3 md:p-4 bg-cyan-500/5 rounded-lg border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-500 hover:scale-105 animate-smooth-fade" style={{animationDelay: '0.2s'}}>
+                        <Icon name="Zap" className="mx-auto mb-2 text-cyan-400 animate-icon-pop" style={{animationDelay: '0.2s'}} size={20} />
                         <p className="text-xs md:text-sm font-semibold text-cyan-100">За 30 сек</p>
                       </div>
-                      <div className="text-center p-3 md:p-4 bg-purple-500/5 rounded-lg border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300">
-                        <Icon name="Sparkles" className="mx-auto mb-2 text-purple-400" size={20} />
+                      <div className="text-center p-3 md:p-4 bg-purple-500/5 rounded-lg border border-purple-500/20 hover:border-purple-500/40 transition-all duration-500 hover:scale-105 animate-smooth-fade" style={{animationDelay: '0.3s'}}>
+                        <Icon name="Sparkles" className="mx-auto mb-2 text-purple-400 animate-icon-pop" style={{animationDelay: '0.3s'}} size={20} />
                         <p className="text-xs md:text-sm font-semibold text-purple-100">AI эффекты</p>
                       </div>
                     </div>
