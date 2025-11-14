@@ -12,6 +12,7 @@ import GenerateContent from "./pages/GenerateContent";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import PersonalData from "./pages/PersonalData";
 import NotFound from "./pages/NotFound";
+import TestAI from "./pages/TestAI";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/generate" element={<GenerateContent />} />
+          <Route path="/test-ai" element={<TestAI />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/personal-data" element={<PersonalData />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
