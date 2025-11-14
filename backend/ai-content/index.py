@@ -171,6 +171,8 @@ def generate_text(prompt: str, params: Dict[str, Any], context: Any, api_key: st
     '''Генерация текста через AIML API (GPT-4, Claude и др.)'''
     model = params.get('model', 'gpt-4o')
     
+    print(f'[DEBUG] API Key present: {bool(api_key)}, Key prefix: {api_key[:10] if api_key else "None"}')
+    
     response = requests.post(
         'https://api.aimlapi.com/v1/chat/completions',
         headers={
@@ -184,6 +186,8 @@ def generate_text(prompt: str, params: Dict[str, Any], context: Any, api_key: st
             'max_tokens': params.get('max_tokens', 1000)
         }
     )
+    
+    print(f'[DEBUG] Response status: {response.status_code}, Response: {response.text[:200]}')
     
     if response.status_code == 200:
         data = response.json()
