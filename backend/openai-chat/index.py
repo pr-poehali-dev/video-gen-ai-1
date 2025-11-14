@@ -1,5 +1,5 @@
 '''
-Генерация текста через Groq API (Llama 3, Mixtral)
+Генерация текста через Hugging Face Router (бесплатные LLM модели)
 '''
 import json
 import os
@@ -8,7 +8,7 @@ import requests
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
-    Business: Генерация текста через Groq API
+    Business: Генерация текста через Hugging Face Router
     Args: event с httpMethod, body (prompt, max_tokens, temperature, model)
     Returns: Сгенерированный текст
     '''
@@ -28,7 +28,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
     
     if method == 'POST':
-        api_key = os.environ.get('GROQ_API_KEY')
+        api_key = os.environ.get('HF_TOKEN')
         
         if not api_key:
             return {
@@ -39,8 +39,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 },
                 'isBase64Encoded': False,
                 'body': json.dumps({
-                    'error': 'GROQ_API_KEY не настроен',
-                    'message': 'Добавьте ключ Groq в секреты проекта'
+                    'error': 'HF_TOKEN не настроен',
+                    'message': 'Добавьте токен Hugging Face в секреты проекта'
                 })
             }
         
@@ -51,7 +51,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         prompt = body_data.get('prompt', '')
         max_tokens = body_data.get('max_tokens', 2000)
         temperature = body_data.get('temperature', 0.7)
-        model = body_data.get('model', 'llama-3.1-70b-versatile')
+        model = body_data.get('model', 'openai/gpt-oss-120b:groq')
         
         if not prompt:
             return {
@@ -72,7 +72,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         payload = {
             'model': model,
             'messages': [
-                {'role': 'system', 'content': 'Ты полезный AI-помощник, который отвечает на русском языке.'},
                 {'role': 'user', 'content': prompt}
             ],
             'max_tokens': max_tokens,
@@ -80,7 +79,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
         
         response = requests.post(
-            'https://api.groq.com/openai/v1/chat/completions',
+            'https://router.huggingface.co/v1/chat/completions',
             json=payload,
             headers=headers,
             timeout=60
@@ -96,8 +95,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 },
                 'isBase64Encoded': False,
                 'body': json.dumps({
-                    'error': 'Ошибка Groq API',
-                    'details': error_data.get('error', {}).get('message', 'Неизвестная ошибка'),
+                    'error': 'Ошибка Hugging Face API',
+                    'details': error_data.get('error', {}).get('message', str(error_data)),
                     'status': response.status_code
                 })
             }
