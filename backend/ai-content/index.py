@@ -53,6 +53,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     
     api_key = os.environ.get('AIMLAPI_KEY')
     if not api_key:
+        available_keys = list(os.environ.keys())
         return {
             'statusCode': 500,
             'headers': {
@@ -60,7 +61,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'Access-Control-Allow-Origin': '*'
             },
             'isBase64Encoded': False,
-            'body': json.dumps({'error': 'AIMLAPI key not configured'})
+            'body': json.dumps({
+                'error': 'AIMLAPI key not configured',
+                'debug': f'Available env vars: {len(available_keys)} keys found'
+            })
         }
     
     try:
@@ -107,7 +111,7 @@ def generate_image(prompt: str, params: Dict[str, Any], context: Any, api_key: s
     model = params.get('model', 'flux/schnell')
     
     response = requests.post(
-        'https://api.aimlapi.com/images/generations',
+        'https://api.aimlapi.com/v1/images/generations',
         headers={
             'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json'
@@ -168,7 +172,7 @@ def generate_text(prompt: str, params: Dict[str, Any], context: Any, api_key: st
     model = params.get('model', 'gpt-4o')
     
     response = requests.post(
-        'https://api.aimlapi.com/chat/completions',
+        'https://api.aimlapi.com/v1/chat/completions',
         headers={
             'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json'
