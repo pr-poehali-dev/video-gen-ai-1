@@ -14,6 +14,12 @@ import GeneratorModals from '@/components/GeneratorModals';
 import ContactForm from '@/components/ContactForm';
 import OfferModal from '@/components/OfferModal';
 import AuthModal from '@/components/AuthModal';
+import { 
+  getDeviceFingerprint, 
+  getRequestCount, 
+  incrementRequestCount as incrementDeviceCount,
+  isUserRegistered 
+} from '@/utils/deviceFingerprint';
 
 const Index = () => {
   const { toast } = useToast();
@@ -37,17 +43,25 @@ const Index = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [requestCount, setRequestCount] = useState(0);
+  const [deviceId, setDeviceId] = useState<string>('');
 
   useEffect(() => {
-    const count = parseInt(localStorage.getItem('request_count') || '0');
+    const fingerprint = getDeviceFingerprint();
+    setDeviceId(fingerprint);
+    
+    const count = getRequestCount(fingerprint);
     setRequestCount(count);
 
-    const isRegistered = localStorage.getItem('user_registered') === 'true';
+    const isRegistered = isUserRegistered();
     const userData = localStorage.getItem('user_data');
     
     if (isRegistered && userData) {
       const user = JSON.parse(userData);
       console.log('Пользователь авторизован:', user);
+      console.log('Device ID:', fingerprint);
+    } else {
+      console.log('Незарегистрированное устройство:', fingerprint);
+      console.log('Использовано запросов:', count, '/ 2');
     }
   }, []);
 
@@ -58,24 +72,33 @@ const Index = () => {
   };
 
   const checkRequestLimit = () => {
-    const isRegistered = localStorage.getItem('user_registered') === 'true';
-    if (isRegistered) return true;
+    if (isUserRegistered()) return true;
 
-    const count = parseInt(localStorage.getItem('request_count') || '0');
+    const count = getRequestCount(deviceId);
     if (count >= 2) {
       setIsAuthModalOpen(true);
+      toast({
+        title: 'Лимит исчерпан',
+        description: `Вы использовали все ${count} бесплатных запроса с этого устройства. Зарегистрируйтесь для продолжения!`,
+        variant: 'destructive',
+      });
       return false;
     }
     return true;
   };
 
-  const incrementRequestCount = () => {
-    const isRegistered = localStorage.getItem('user_registered') === 'true';
-    if (!isRegistered) {
-      const count = parseInt(localStorage.getItem('request_count') || '0');
-      const newCount = count + 1;
-      localStorage.setItem('request_count', newCount.toString());
+  const handleIncrementRequest = () => {
+    if (!isUserRegistered()) {
+      const newCount = incrementDeviceCount(deviceId);
       setRequestCount(newCount);
+      
+      const remaining = 2 - newCount;
+      if (remaining > 0) {
+        toast({
+          title: 'Запрос выполнен',
+          description: `Осталось бесплатных запросов: ${remaining}`,
+        });
+      }
     }
   };
 
@@ -200,7 +223,7 @@ const Index = () => {
       if (data.success) {
         setGeneratedContent(data.text);
         setIsGenerating(false);
-        incrementRequestCount();
+        handleIncrementRequest();
         toast({
           title: 'Готово!',
           description: 'Текст успешно сгенерирован нейросетью',
@@ -265,6 +288,20 @@ const Index = () => {
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         scrollToSection={scrollToSection}
       />
+
+      {!isUserRegistered() && (
+        <div className="fixed top-20 right-6 z-50 animate-fade-in">
+          <div className="bg-gradient-to-r from-violet-600 to-fuchsia-500 rounded-full px-6 py-3 shadow-2xl border-2 border-white/20">
+            <div className="flex items-center gap-3">
+              <Icon name="Zap" className="text-white" size={20} />
+              <div className="text-white font-bold">
+                <span className="text-sm opacity-90">Бесплатных запросов:</span>
+                <div className="text-2xl">{2 - requestCount} / 2</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="relative z-10 pt-24">
         <section id="home" className="min-h-screen flex items-center justify-center px-6">

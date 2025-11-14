@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
+import { getDeviceFingerprint, resetRequestCount } from '@/utils/deviceFingerprint';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const deviceId = getDeviceFingerprint();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,13 +26,14 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
       email,
       name: isLogin ? email.split('@')[0] : name,
       provider: 'email',
+      deviceId,
       registeredAt: new Date().toISOString()
     };
 
     localStorage.setItem('user_registered', 'true');
     localStorage.setItem('user_data', JSON.stringify(userData));
     localStorage.setItem('auth_token', Math.random().toString(36).substring(2));
-    localStorage.removeItem('request_count');
+    resetRequestCount(deviceId);
     
     onSuccess();
     onClose();
@@ -41,13 +44,14 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
       email: `user@${provider}.com`,
       name: `${provider} User`,
       provider,
+      deviceId,
       registeredAt: new Date().toISOString()
     };
 
     localStorage.setItem('user_registered', 'true');
     localStorage.setItem('user_data', JSON.stringify(userData));
     localStorage.setItem('auth_token', Math.random().toString(36).substring(2));
-    localStorage.removeItem('request_count');
+    resetRequestCount(deviceId);
     
     onSuccess();
     onClose();
@@ -181,12 +185,23 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
           </div>
         </form>
 
-        <div className="mt-6 p-4 bg-violet-50 rounded-lg border border-violet-200">
-          <div className="flex items-start gap-2">
-            <Icon name="Info" className="text-violet-600 mt-0.5" size={18} />
-            <p className="text-xs text-gray-700">
-              После {isLogin ? 'входа' : 'регистрации'} вы автоматически останетесь в системе и получите неограниченный доступ ко всем функциям
-            </p>
+        <div className="space-y-3 mt-6">
+          <div className="p-4 bg-violet-50 rounded-lg border border-violet-200">
+            <div className="flex items-start gap-2">
+              <Icon name="Info" className="text-violet-600 mt-0.5" size={18} />
+              <p className="text-xs text-gray-700">
+                После {isLogin ? 'входа' : 'регистрации'} вы автоматически останетесь в системе и получите неограниченный доступ ко всем функциям
+              </p>
+            </div>
+          </div>
+          
+          <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex items-center gap-2">
+              <Icon name="Monitor" className="text-gray-600" size={16} />
+              <p className="text-xs text-gray-600">
+                ID устройства: <code className="bg-gray-200 px-1.5 py-0.5 rounded text-xs">{deviceId.slice(0, 16)}...</code>
+              </p>
+            </div>
           </div>
         </div>
       </DialogContent>
