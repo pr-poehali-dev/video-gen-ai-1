@@ -15,6 +15,11 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.(ru|com)$/;
+    return emailRegex.test(email);
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -27,18 +32,67 @@ const Login = () => {
       return;
     }
 
+    if (!validateEmail(email)) {
+      toast({
+        title: 'Неверный формат email',
+        description: 'Введите корректный email (например: example@mail.ru или example@gmail.com)',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: 'Слишком короткий пароль',
+        description: 'Пароль должен содержать минимум 6 символов',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const storedUser = localStorage.getItem('user_data');
+    if (!storedUser) {
+      toast({
+        title: 'Пользователь не найден',
+        description: 'Аккаунт с таким email не зарегистрирован. Создайте новый аккаунт.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const savedUserData = JSON.parse(storedUser);
+    
+    if (savedUserData.email !== email) {
+      toast({
+        title: 'Неверный email',
+        description: 'Проверьте правильность введённого email',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (savedUserData.password && savedUserData.password !== password) {
+      toast({
+        title: 'Неверный пароль',
+        description: 'Проверьте правильность введённого пароля',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     setTimeout(() => {
       const userData = {
         email,
-        name: email.split('@')[0],
+        name: savedUserData.name || email.split('@')[0],
         plan: 'Старт',
-        joinDate: new Date().toISOString(),
+        joinDate: savedUserData.registeredAt || new Date().toISOString(),
       };
       
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('user_registered', 'true');
       
       toast({
         title: 'Успешный вход!',

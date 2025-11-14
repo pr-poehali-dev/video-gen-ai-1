@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
+import { useToast } from '@/hooks/use-toast';
 import { getDeviceFingerprint, resetRequestCount } from '@/utils/deviceFingerprint';
 
 interface AuthModalProps {
@@ -13,18 +14,83 @@ interface AuthModalProps {
 }
 
 const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
+  const { toast } = useToast();
   const [isLogin, setIsLogin] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const deviceId = getDeviceFingerprint();
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.(ru|com)$/;
+    return emailRegex.test(email);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateEmail(email)) {
+      toast({
+        title: 'Неверный формат email',
+        description: 'Введите корректный email (например: example@mail.ru или example@gmail.com)',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!isLogin && name.trim().length < 2) {
+      toast({
+        title: 'Неверное имя',
+        description: 'Имя должно содержать минимум 2 символа',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: 'Слишком короткий пароль',
+        description: 'Пароль должен содержать минимум 6 символов',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (isLogin) {
+      const storedUser = localStorage.getItem('user_data');
+      if (!storedUser) {
+        toast({
+          title: 'Пользователь не найден',
+          description: 'Аккаунт с таким email не зарегистрирован',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const userData = JSON.parse(storedUser);
+      if (userData.email !== email) {
+        toast({
+          title: 'Неверный email',
+          description: 'Проверьте правильность введённого email',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (userData.password && userData.password !== password) {
+        toast({
+          title: 'Неверный пароль',
+          description: 'Проверьте правильность введённого пароля',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
     
     const userData = {
       email,
       name: isLogin ? email.split('@')[0] : name,
+      password,
       provider: 'email',
       deviceId,
       registeredAt: new Date().toISOString()
@@ -34,6 +100,11 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
     localStorage.setItem('user_data', JSON.stringify(userData));
     localStorage.setItem('auth_token', Math.random().toString(36).substring(2));
     resetRequestCount(deviceId);
+    
+    toast({
+      title: isLogin ? 'Вход выполнен!' : 'Регистрация успешна!',
+      description: isLogin ? 'Добро пожаловать обратно!' : 'Ваш аккаунт создан',
+    });
     
     onSuccess();
     onClose();

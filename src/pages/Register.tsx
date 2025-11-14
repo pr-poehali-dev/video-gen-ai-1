@@ -17,6 +17,11 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.(ru|com)$/;
+    return emailRegex.test(email);
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -24,6 +29,24 @@ const Register = () => {
       toast({
         title: 'Ошибка',
         description: 'Заполните все поля',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      toast({
+        title: 'Неверный формат email',
+        description: 'Введите корректный email (например: example@mail.ru или example@gmail.com)',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (name.trim().length < 2) {
+      toast({
+        title: 'Неверное имя',
+        description: 'Имя должно содержать минимум 2 символа',
         variant: 'destructive',
       });
       return;
@@ -53,12 +76,17 @@ const Register = () => {
       const userData = {
         email,
         name,
+        password,
+        provider: 'email',
         plan: 'Старт',
+        registeredAt: new Date().toISOString(),
         joinDate: new Date().toISOString(),
       };
       
       localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('user_data', JSON.stringify(userData));
       localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('user_registered', 'true');
       
       toast({
         title: 'Успешная регистрация!',
