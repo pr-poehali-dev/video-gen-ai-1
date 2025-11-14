@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
+import Footer from '@/components/Footer';
 
 const TestAI = () => {
   const { toast } = useToast();
@@ -117,6 +118,7 @@ const TestAI = () => {
           </Card>
         )}
       </div>
+      <Footer />
     </div>
   );
 };

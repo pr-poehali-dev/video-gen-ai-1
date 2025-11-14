@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import Icon from '@/components/ui/icon';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import Footer from '@/components/Footer';
 
 interface UserProfile {
   user: {
@@ -418,6 +419,7 @@ const Dashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+      <Footer />
     </div>
   );
 };

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 import { useNavigate } from 'react-router-dom';
+import Footer from '@/components/Footer';
 
 const GenerateContent = () => {
   const navigate = useNavigate();
@@ -243,6 +244,7 @@ const GenerateContent = () => {
           </CardContent>
         </Card>
       </div>
+      <Footer />
     </div>
   );
 };

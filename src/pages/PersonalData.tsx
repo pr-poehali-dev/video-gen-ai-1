@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { useNavigate } from 'react-router-dom';
+import Footer from '@/components/Footer';
 
 const PersonalData = () => {
   const navigate = useNavigate();
@@ -174,12 +175,16 @@ const PersonalData = () => {
 
                 <section>
                   <h2 className="text-2xl font-bold text-cyan-300 mb-3">11. Контактная информация Оператора</h2>
-                  <ul className="list-none space-y-2 ml-4">
-                    <li className="text-cyan-400">Наименование: ROUSHEN</li>
-                    <li className="text-cyan-400">Email: Rpmxxx@mail.ru</li>
-                    <li className="text-cyan-400">Телефон: +7 928 226-46-38</li>
-                    <li className="text-cyan-400">Адрес: г. Ростов-на-Дону, пер. Технологический, 8И</li>
-                  </ul>
+                  <div className="bg-[#0f1729]/50 border border-cyan-500/20 rounded-lg p-6 space-y-2">
+                    <p className="font-semibold text-cyan-300 text-lg">ИП ЗВЕРЕВ АЛЕКСЕЙ СЕРГЕЕВИЧ</p>
+                    <p className="text-cyan-100/80">ИНН: <span className="font-mono text-cyan-200">616116993432</span></p>
+                    <p className="text-cyan-100/80">ОГРНИП: <span className="font-mono text-cyan-200">311619329100203</span></p>
+                    <div className="pt-3 mt-3 border-t border-cyan-500/10">
+                      <p className="text-cyan-400">Email: Rpmxxx@mail.ru</p>
+                      <p className="text-cyan-400">Телефон: +7 928 226-46-38</p>
+                      <p className="text-cyan-400">Адрес: г. Ростов-на-Дону, пер. Технологический, 8И</p>
+                    </div>
+                  </div>
                 </section>
 
                 <section>
@@ -196,6 +201,7 @@ const PersonalData = () => {
           </Card>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };

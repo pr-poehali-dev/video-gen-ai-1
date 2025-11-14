@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import Footer from '@/components/Footer';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -199,6 +200,8 @@ const Register = () => {
           </div>
         </CardContent>
       </Card>
+      
+      <Footer />
     </div>
   );
 };

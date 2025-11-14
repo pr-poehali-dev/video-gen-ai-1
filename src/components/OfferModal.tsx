@@ -115,12 +115,15 @@ const OfferModal = ({ isOpen, onClose, onAccept, planName }: OfferModalProps) =>
             </p>
             
             <div className="mt-8 pt-6 border-t border-cyan-500/20">
-              <p className="font-semibold text-cyan-400">Реквизиты Исполнителя:</p>
-              <p className="mt-2">ROUSHEN</p>
-              <p>ИНН: [будет указан при регистрации]</p>
-              <p>Email: Rpmxxx@mail.ru</p>
-              <p>Телефон: +7 928 226-46-38</p>
-              <p>Адрес: г. Ростов-на-Дону, пер. Технологический, 8И</p>
+              <p className="font-semibold text-cyan-400 mb-3">Реквизиты Исполнителя:</p>
+              <div className="space-y-1.5 bg-[#0f1729]/30 p-4 rounded-lg border border-cyan-500/10">
+                <p className="font-semibold text-cyan-300">ИП ЗВЕРЕВ АЛЕКСЕЙ СЕРГЕЕВИЧ</p>
+                <p className="text-cyan-100/80">ИНН: <span className="font-mono text-cyan-200">616116993432</span></p>
+                <p className="text-cyan-100/80">ОГРНИП: <span className="font-mono text-cyan-200">311619329100203</span></p>
+                <p className="text-cyan-100/80 mt-3">Email: Rpmxxx@mail.ru</p>
+                <p className="text-cyan-100/80">Телефон: +7 928 226-46-38</p>
+                <p className="text-cyan-100/80">Адрес: г. Ростов-на-Дону, пер. Технологический, 8И</p>
+              </div>
             </div>
           </div>
         </ScrollArea>
