@@ -114,15 +114,19 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
             'Content-Type': 'application/json'
         }
         
+        enhanced_prompt = f'{prompt}, cinematic video, smooth motion, high quality, professional, detailed, 4k'
+        
         payload = {
             'version': 'fofr/cogvideox-5b:49a2b3e8b56a4861d2860c1ee66ee4e0e7e0aee1fb88d4f2df1cd0ede944e2f7',
             'input': {
-                'prompt': f'{prompt}, cinematic, high quality',
+                'prompt': enhanced_prompt,
                 'num_frames': num_frames,
                 'guidance_scale': 6,
                 'num_inference_steps': 50
             }
         }
+        
+        print(f'DEBUG: Enhanced prompt: {enhanced_prompt[:100]}')
         
         print(f'DEBUG: Calling Replicate API...')
         response = requests.post(
@@ -140,7 +144,8 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         prediction = response.json()
         prediction_id = prediction['id']
         
-        for _ in range(120):
+        max_attempts = 180
+        for attempt in range(max_attempts):
             time.sleep(3)
             status_response = requests.get(
                 f'https://api.replicate.com/v1/predictions/{prediction_id}',
@@ -148,18 +153,23 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
                 timeout=10
             )
             result = status_response.json()
+            current_status = result.get('status', 'unknown')
             
-            if result['status'] == 'succeeded':
+            if attempt % 10 == 0:
+                print(f'DEBUG: Attempt {attempt}/{max_attempts}, status: {current_status}')
+            
+            if current_status == 'succeeded':
                 video_url = result.get('output')
-                print(f'DEBUG: Video generated! URL={video_url[:100] if video_url else "None"}')
+                print(f'DEBUG: Video generated successfully! URL={video_url[:100] if video_url else "None"}')
                 return GenerationResult(
                     success=True,
                     content_url=video_url,
                     generation_id=prediction_id,
                     is_demo=False
                 )
-            elif result['status'] == 'failed':
-                print(f'DEBUG: Generation failed: {result.get("error")}')
+            elif current_status == 'failed':
+                error_msg = result.get('error', 'Unknown error')
+                print(f'DEBUG: Generation failed: {error_msg}')
                 return generate_video_free_api(prompt, duration)
         
         print('DEBUG: Timeout waiting for generation')
@@ -1007,7 +1017,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         if content_type == 'video':
             duration = body_data.get('duration', 5)
-            result = generate_video_free_api(prompt, duration)
+            result = generate_video_replicate_pro(prompt, duration)
         elif content_type == 'text':
             result = generate_text_openai(prompt)
         elif content_type == 'presentation':
