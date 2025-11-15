@@ -103,8 +103,8 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         return generate_video_free_api(prompt, duration)
     
     try:
-        translated_prompt = translate_to_english(prompt)
-        enhanced_prompt = f'{translated_prompt}, high quality, cinematic, 4k, smooth motion, professional camera work, detailed, masterpiece'
+        num_frames_map = {3: 25, 5: 49, 10: 81}
+        num_frames = num_frames_map.get(duration, 49)
         
         headers = {
             'Authorization': f'Token {api_token}',
@@ -114,8 +114,8 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         payload = {
             'version': 'fofr/cogvideox-5b:49a2b3e8b56a4861d2860c1ee66ee4e0e7e0aee1fb88d4f2df1cd0ede944e2f7',
             'input': {
-                'prompt': enhanced_prompt,
-                'num_frames': 49,
+                'prompt': f'{prompt}, cinematic, high quality',
+                'num_frames': num_frames,
                 'guidance_scale': 6,
                 'num_inference_steps': 50
             }
@@ -225,34 +225,29 @@ def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
         return generate_video_free_api(prompt, duration)
 
 def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
-    '''Fallback генерация через бесплатные стоковые видео'''
+    '''Быстрая генерация через стоковые видео'''
     try:
-        translated_prompt = translate_to_english(prompt)
+        pexels_response = requests.get(
+            'https://api.pexels.com/videos/search',
+            headers={'Authorization': 'Bearer 563492ad6f91700001000001298ee41a78dd46c9a8e0b0a9a9f7c88e'},
+            params={'query': prompt[:100], 'per_page': 5, 'orientation': 'landscape'},
+            timeout=5
+        )
         
-        try:
-            pexels_response = requests.get(
-                'https://api.pexels.com/videos/search',
-                headers={'Authorization': 'Bearer 563492ad6f91700001000001298ee41a78dd46c9a8e0b0a9a9f7c88e'},
-                params={'query': translated_prompt[:50], 'per_page': 3, 'orientation': 'landscape'},
-                timeout=5
-            )
-            
-            if pexels_response.status_code == 200:
-                data = pexels_response.json()
-                if data.get('videos') and len(data['videos']) > 0:
-                    video = data['videos'][0]
-                    video_files = video.get('video_files', [])
-                    hd_video = next((v for v in video_files if v.get('quality') == 'hd'), video_files[0] if video_files else None)
-                    
-                    if hd_video:
-                        return GenerationResult(
-                            success=True,
-                            content_url=hd_video['link'],
-                            generation_id='pexels-hd',
-                            is_demo=False
-                        )
-        except Exception:
-            pass
+        if pexels_response.status_code == 200:
+            data = pexels_response.json()
+            if data.get('videos') and len(data['videos']) > 0:
+                video = data['videos'][0]
+                video_files = video.get('video_files', [])
+                hd_video = next((v for v in video_files if v.get('quality') == 'hd'), video_files[0] if video_files else None)
+                
+                if hd_video:
+                    return GenerationResult(
+                        success=True,
+                        content_url=hd_video['link'],
+                        generation_id='pexels-hd',
+                        is_demo=False
+                    )
         
         video_url = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
         

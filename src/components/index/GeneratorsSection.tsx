@@ -8,6 +8,8 @@ import Icon from '@/components/ui/icon';
 interface GeneratorsSectionProps {
   videoPrompt: string;
   setVideoPrompt: (value: string) => void;
+  videoDuration: number;
+  setVideoDuration: (value: number) => void;
   textPrompt: string;
   setTextPrompt: (value: string) => void;
   presentationTopic: string;
@@ -31,6 +33,8 @@ interface GeneratorsSectionProps {
 const GeneratorsSection = ({
   videoPrompt,
   setVideoPrompt,
+  videoDuration,
+  setVideoDuration,
   textPrompt,
   setTextPrompt,
   presentationTopic,
@@ -93,22 +97,45 @@ const GeneratorsSection = ({
                   value={videoPrompt}
                   onChange={(e) => setVideoPrompt(e.target.value)}
                 />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs sm:text-sm font-medium mb-2 block text-cyan-100">Длительность</label>
-                    <select className="w-full h-10 px-3 rounded-md border bg-[#0f1729] border-cyan-500/30 text-cyan-100 text-sm">
-                      <option>3 секунды</option>
-                      <option>5 секунд</option>
-                      <option>10 секунд</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs sm:text-sm font-medium mb-2 block text-cyan-100">Качество</label>
-                    <select className="w-full h-10 px-3 rounded-md border bg-[#0f1729] border-cyan-500/30 text-cyan-100 text-sm">
-                      <option>HD (720p)</option>
-                      <option>Full HD (1080p)</option>
-                      <option>4K</option>
-                    </select>
+                <div>
+                  <label className="text-xs sm:text-sm font-medium mb-2 block text-cyan-100">Длительность видео</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setVideoDuration(3)}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        videoDuration === 3
+                          ? 'border-cyan-400 bg-cyan-500/20 text-cyan-100'
+                          : 'border-cyan-500/30 hover:border-cyan-500/50 text-cyan-100/70'
+                      }`}
+                    >
+                      <div className="text-2xl font-bold">3</div>
+                      <div className="text-xs">секунды</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVideoDuration(5)}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        videoDuration === 5
+                          ? 'border-cyan-400 bg-cyan-500/20 text-cyan-100'
+                          : 'border-cyan-500/30 hover:border-cyan-500/50 text-cyan-100/70'
+                      }`}
+                    >
+                      <div className="text-2xl font-bold">5</div>
+                      <div className="text-xs">секунд</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVideoDuration(10)}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        videoDuration === 10
+                          ? 'border-cyan-400 bg-cyan-500/20 text-cyan-100'
+                          : 'border-cyan-500/30 hover:border-cyan-500/50 text-cyan-100/70'
+                      }`}
+                    >
+                      <div className="text-2xl font-bold">10</div>
+                      <div className="text-xs">секунд</div>
+                    </button>
                   </div>
                 </div>
                 <Button onClick={handleVideoGenerate} className="w-full bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] border-0 font-bold neon-glow transition-all duration-300">

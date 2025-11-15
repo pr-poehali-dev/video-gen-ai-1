@@ -25,6 +25,7 @@ const Index = () => {
   const contactSection = useScrollAnimation(0.2);
   const typingText = useTypingAnimation('AI-решения с молодым драйвом и высоким качеством', 80);
   const [videoPrompt, setVideoPrompt] = useState('');
+  const [videoDuration, setVideoDuration] = useState(5);
   const [textPrompt, setTextPrompt] = useState('');
   const [presentationTopic, setPresentationTopic] = useState('');
   const [presentationSlides, setPresentationSlides] = useState(5);
@@ -106,7 +107,7 @@ const Index = () => {
     }
   };
 
-  const simulateGeneration = async (type: 'video' | 'text' | 'presentation', prompt: string) => {
+  const simulateGeneration = async (type: 'video' | 'text' | 'presentation', prompt: string, duration?: number) => {
     if (!prompt.trim()) {
       toast({
         title: 'Ошибка',
@@ -127,7 +128,7 @@ const Index = () => {
       const apiUrl = 'https://functions.poehali.dev/500cc697-682b-469a-b439-fa265e84c833';
       
       const body = type === 'video' 
-        ? { type: 'video', prompt, duration: 5 }
+        ? { type: 'video', prompt, duration: duration || 5 }
         : type === 'presentation'
         ? { type: 'presentation_image', prompt }
         : { type: 'text', prompt };
@@ -178,8 +179,18 @@ const Index = () => {
 
   const handleVideoGenerate = () => {
     if (!checkRequestLimit()) return;
+    
+    if (!videoPrompt.trim()) {
+      toast({
+        title: 'Ошибка',
+        description: 'Введите описание видео',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     setIsVideoModalOpen(true);
-    simulateGeneration('video', videoPrompt);
+    simulateGeneration('video', videoPrompt, videoDuration);
   };
 
   const handleTextGenerate = async () => {
@@ -435,6 +446,8 @@ const Index = () => {
         <GeneratorsSection
           videoPrompt={videoPrompt}
           setVideoPrompt={setVideoPrompt}
+          videoDuration={videoDuration}
+          setVideoDuration={setVideoDuration}
           textPrompt={textPrompt}
           setTextPrompt={setTextPrompt}
           presentationTopic={presentationTopic}
