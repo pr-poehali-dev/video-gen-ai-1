@@ -11,7 +11,7 @@ import Footer from '@/components/Footer';
 const GenerateContent = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'video' | 'text' | 'presentation'>('video');
+  const [activeTab, setActiveTab] = useState<'video' | 'text' | 'presentation' | 'photo'>('video');
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
@@ -50,7 +50,7 @@ const GenerateContent = () => {
           'X-User-Token': token
         },
         body: JSON.stringify({
-          type: activeTab,
+          type: activeTab === 'photo' ? 'image' : activeTab,
           prompt: prompt
         })
       });
@@ -91,7 +91,7 @@ const GenerateContent = () => {
 
 
 
-        <div className="grid gap-6 md:grid-cols-3 mb-8">
+        <div className="grid gap-6 md:grid-cols-4 mb-8">
           <Card 
             className={`cursor-pointer transition-all ${activeTab === 'video' ? 'border-purple-500 bg-purple-500/10' : 'border-slate-700'}`}
             onClick={() => setActiveTab('video')}
@@ -124,6 +124,17 @@ const GenerateContent = () => {
               <CardDescription>Изображения для слайдов</CardDescription>
             </CardHeader>
           </Card>
+
+          <Card 
+            className={`cursor-pointer transition-all ${activeTab === 'photo' ? 'border-green-500 bg-green-500/10' : 'border-slate-700'}`}
+            onClick={() => setActiveTab('photo')}
+          >
+            <CardHeader>
+              <Icon name="Image" className="mb-2 text-green-400" size={32} />
+              <CardTitle>Фото</CardTitle>
+              <CardDescription>Генерация изображений через AI</CardDescription>
+            </CardHeader>
+          </Card>
         </div>
 
         <Card className="border-slate-700">
@@ -132,11 +143,13 @@ const GenerateContent = () => {
               {activeTab === 'video' && 'Создать видео'}
               {activeTab === 'text' && 'Сгенерировать текст'}
               {activeTab === 'presentation' && 'Создать изображение для слайда'}
+              {activeTab === 'photo' && 'Создать фото'}
             </CardTitle>
             <CardDescription>
               {activeTab === 'video' && 'Опишите, какое видео вы хотите создать (сцены, стиль, настроение)'}
               {activeTab === 'text' && 'Опишите, какой текст нужен (тема, стиль, объем)'}
               {activeTab === 'presentation' && 'Опишите, что должно быть на изображении для слайда'}
+              {activeTab === 'photo' && 'Опишите, какое изображение вы хотите создать'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -149,6 +162,8 @@ const GenerateContent = () => {
                     ? 'Например: Космический корабль летит через туманность, неоновые цвета, кинематографичный стиль'
                     : activeTab === 'text'
                     ? 'Например: Напиши статью о пользе медитации, 500 слов, научный стиль'
+                    : activeTab === 'photo'
+                    ? 'Например: Красивый закат над океаном, фотореалистичный стиль, 4K качество'
                     : 'Например: Современный офис с командой за работой, профессиональный стиль'
                 }
                 value={prompt}
@@ -199,6 +214,14 @@ const GenerateContent = () => {
                   <img 
                     src={generatedContent} 
                     alt="Generated slide" 
+                    className="w-full rounded-lg"
+                  />
+                )}
+
+                {activeTab === 'photo' && (
+                  <img 
+                    src={generatedContent} 
+                    alt="Generated photo" 
                     className="w-full rounded-lg"
                   />
                 )}

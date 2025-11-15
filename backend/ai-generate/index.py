@@ -237,6 +237,21 @@ def generate_text_openai(prompt: str, max_tokens: int = 2000) -> GenerationResul
     except Exception:
         return generate_text_demo(prompt)
 
+def generate_image_demo(prompt: str) -> GenerationResult:
+    '''Демо-генерация изображения через бесплатный API'''
+    try:
+        safe_prompt = requests.utils.quote(prompt)
+        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1920&height=1080&nologo=true'
+        
+        return GenerationResult(
+            success=True,
+            content_url=image_url,
+            generation_id='demo',
+            is_demo=True
+        )
+    except Exception as e:
+        return GenerationResult(success=False, error=str(e))
+
 def generate_presentation_image_demo(slide_prompt: str) -> GenerationResult:
     '''Демо-генерация изображения через бесплатный API'''
     try:
@@ -458,11 +473,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = generate_presentation_creatomate(title, slides)
         elif content_type == 'presentation_image':
             result = generate_presentation_image(prompt)
+        elif content_type == 'image':
+            result = generate_image_demo(prompt)
         else:
             return {
                 'statusCode': 400,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'error': 'Неизвестный тип контента. Доступные: video, text, presentation, presentation_image'})
+                'body': json.dumps({'error': 'Неизвестный тип контента. Доступные: video, text, presentation, presentation_image, image'})
             }
         
         if result.success:
