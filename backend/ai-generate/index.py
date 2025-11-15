@@ -236,71 +236,105 @@ def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
         return generate_video_free_api(prompt, duration)
 
 def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
-    '''Быстрая генерация через стоковые видео Pexels'''
+    '''Быстрая генерация через стоковые видео (Pixabay + Pexels)'''
     try:
         translated_prompt = translate_to_english(prompt)
-        print(f'DEBUG: Pexels search - original: {prompt[:50]}, translated: {translated_prompt[:50]}')
-        
         search_query = translated_prompt if translated_prompt else prompt
+        print(f'DEBUG: Video search - query: {search_query[:50]}')
         
-        pexels_response = requests.get(
-            'https://api.pexels.com/videos/search',
-            headers={'Authorization': 'Bearer 563492ad6f91700001000001298ee41a78dd46c9a8e0b0a9a9f7c88e'},
-            params={
-                'query': search_query[:100], 
-                'per_page': 10,
-                'orientation': 'landscape',
-                'size': 'medium'
-            },
-            timeout=10
-        )
-        
-        print(f'DEBUG: Pexels response status: {pexels_response.status_code}')
-        
-        if pexels_response.status_code == 200:
-            data = pexels_response.json()
-            videos = data.get('videos', [])
-            print(f'DEBUG: Found {len(videos)} videos')
+        try:
+            pixabay_response = requests.get(
+                'https://pixabay.com/api/videos/',
+                params={
+                    'key': '47601283-09734f8c9ada90d7ea5ddc525',
+                    'q': search_query[:100],
+                    'per_page': 10,
+                    'video_type': 'all'
+                },
+                timeout=8
+            )
             
-            if videos:
-                for video in videos[:3]:
-                    video_files = video.get('video_files', [])
+            print(f'DEBUG: Pixabay response status: {pixabay_response.status_code}')
+            
+            if pixabay_response.status_code == 200:
+                data = pixabay_response.json()
+                videos = data.get('hits', [])
+                print(f'DEBUG: Pixabay found {len(videos)} videos')
+                
+                if videos:
+                    video = videos[0]
+                    video_files = video.get('videos', {})
                     
-                    for quality in ['hd', 'sd']:
-                        matching_video = next(
-                            (v for v in video_files 
-                             if v.get('quality') == quality and v.get('link')),
-                            None
-                        )
-                        if matching_video:
-                            video_url = matching_video['link']
-                            video_duration = video.get('duration', 0)
-                            
-                            print(f'DEBUG: Selected video: quality={quality}, duration={video_duration}s, url={video_url[:80]}')
+                    for quality in ['large', 'medium', 'small']:
+                        if quality in video_files:
+                            video_url = video_files[quality]['url']
+                            print(f'DEBUG: Selected Pixabay video: quality={quality}, url={video_url[:80]}')
                             
                             return GenerationResult(
                                 success=True,
                                 content_url=video_url,
-                                generation_id=f'pexels-{quality}',
+                                generation_id=f'pixabay-{quality}',
                                 is_demo=False
                             )
+        except Exception as e:
+            print(f'DEBUG: Pixabay failed: {str(e)}, trying Pexels...')
         
-        print('DEBUG: No suitable videos found, using fallback')
-        video_url = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+        try:
+            pexels_response = requests.get(
+                'https://api.pexels.com/videos/search',
+                headers={'Authorization': 'Bearer 563492ad6f91700001000001298ee41a78dd46c9a8e0b0a9a9f7c88e'},
+                params={
+                    'query': search_query[:100], 
+                    'per_page': 10,
+                    'orientation': 'landscape'
+                },
+                timeout=8
+            )
+            
+            print(f'DEBUG: Pexels response status: {pexels_response.status_code}')
+            
+            if pexels_response.status_code == 200:
+                data = pexels_response.json()
+                videos = data.get('videos', [])
+                print(f'DEBUG: Pexels found {len(videos)} videos')
+                
+                if videos:
+                    video = videos[0]
+                    video_files = video.get('video_files', [])
+                    
+                    hd_video = next((v for v in video_files if v.get('quality') == 'hd'), None)
+                    if not hd_video and video_files:
+                        hd_video = video_files[0]
+                    
+                    if hd_video and hd_video.get('link'):
+                        video_url = hd_video['link']
+                        print(f'DEBUG: Selected Pexels video: url={video_url[:80]}')
+                        
+                        return GenerationResult(
+                            success=True,
+                            content_url=video_url,
+                            generation_id='pexels-hd',
+                            is_demo=False
+                        )
+        except Exception as e:
+            print(f'DEBUG: Pexels failed: {str(e)}')
+        
+        print('DEBUG: All APIs failed, using short demo video')
+        short_demo_url = 'https://www.w3schools.com/html/mov_bbb.mp4'
         
         return GenerationResult(
             success=True,
-            content_url=video_url,
-            generation_id='fallback',
-            is_demo=False
+            content_url=short_demo_url,
+            generation_id='demo-short',
+            is_demo=True
         )
     except Exception as e:
-        print(f'DEBUG: Pexels API error: {str(e)}')
+        print(f'DEBUG: Critical error: {str(e)}')
         return GenerationResult(
             success=True,
-            content_url='https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+            content_url='https://www.w3schools.com/html/mov_bbb.mp4',
             generation_id='fallback-error',
-            is_demo=False
+            is_demo=True
         )
 
 def generate_video_demo(prompt: str) -> GenerationResult:
