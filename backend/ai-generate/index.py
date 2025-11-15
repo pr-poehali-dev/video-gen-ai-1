@@ -99,7 +99,9 @@ def generate_video_creatomate(prompt: str, duration: int = 5) -> GenerationResul
 def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationResult:
     '''Профессиональная генерация видео через Replicate CogVideoX'''
     api_token = os.environ.get('REPLICATE_API_TOKEN')
+    print(f'DEBUG: REPLICATE_API_TOKEN exists={bool(api_token)}, prompt={prompt[:50]}')
     if not api_token:
+        print('DEBUG: No API token - using fallback')
         return generate_video_free_api(prompt, duration)
     
     try:
@@ -121,6 +123,7 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
             }
         }
         
+        print(f'DEBUG: Calling Replicate API...')
         response = requests.post(
             'https://api.replicate.com/v1/predictions',
             json=payload,
@@ -128,7 +131,9 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
             timeout=10
         )
         
+        print(f'DEBUG: Replicate response status={response.status_code}')
         if response.status_code != 201:
+            print(f'DEBUG: API error: {response.text[:200]}')
             return generate_video_free_api(prompt, duration)
         
         prediction = response.json()
@@ -145,7 +150,7 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
             
             if result['status'] == 'succeeded':
                 video_url = result.get('output')
-                
+                print(f'DEBUG: Video generated! URL={video_url[:100] if video_url else "None"}')
                 return GenerationResult(
                     success=True,
                     content_url=video_url,
@@ -153,10 +158,15 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
                     is_demo=False
                 )
             elif result['status'] == 'failed':
+                print(f'DEBUG: Generation failed: {result.get("error")}')
                 return generate_video_free_api(prompt, duration)
         
+        print('DEBUG: Timeout waiting for generation')
         return generate_video_free_api(prompt, duration)
-    except Exception:
+    except Exception as e:
+        print(f'DEBUG: Exception: {str(e)}')
+        import traceback
+        traceback.print_exc()
         return generate_video_free_api(prompt, duration)
 
 def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
