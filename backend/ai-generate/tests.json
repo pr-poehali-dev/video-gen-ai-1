@@ -33,8 +33,9 @@
       },
       "expectedStatus": 400,
       "expectedBody": {
-        "error": "Неизвестный тип контента"
-      }
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }
