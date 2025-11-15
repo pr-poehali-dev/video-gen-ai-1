@@ -145,7 +145,8 @@ const Index = () => {
         ? { type: 'presentation_image', prompt }
         : { type: 'text', prompt };
 
-      console.log('🚀 Отправка запроса:', { type, body, url: `${apiUrl}?action=generate` });
+      console.log('🚀 Отправка запроса:', type);
+      console.log('📝 Body:', JSON.stringify(body, null, 2));
 
       const response = await fetch(`${apiUrl}?action=generate`, {
         method: 'POST',
@@ -156,7 +157,8 @@ const Index = () => {
       });
 
       const result = await response.json();
-      console.log('📦 Получен результат:', result);
+      console.log('📦 Статус ответа:', response.status);
+      console.log('📦 Результат:', JSON.stringify(result, null, 2));
 
       clearInterval(interval);
       setProgress(100);
