@@ -110,11 +110,13 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         num_frames = num_frames_map.get(duration, 49)
         
         headers = {
-            'Authorization': f'Token {api_token}',
-            'Content-Type': 'application/json'
+            'Authorization': f'Bearer {api_token}',
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0'
         }
         
         enhanced_prompt = f'{prompt}, cinematic video, smooth motion, high quality, professional, detailed, 4k'
+        print(f'DEBUG: Using authorization header: Bearer {api_token[:15]}...')
         
         payload = {
             'version': 'fofr/cogvideox-5b:49a2b3e8b56a4861d2860c1ee66ee4e0e7e0aee1fb88d4f2df1cd0ede944e2f7',
