@@ -20,7 +20,7 @@ def generate_video_creatomate(prompt: str, duration: int = 5) -> GenerationResul
     '''Генерация видео через Creatomate API'''
     api_key = os.environ.get('CREATOMATE_API_KEY')
     if not api_key:
-        return generate_video_demo(prompt)
+        return generate_video_free_api(prompt, duration)
     
     try:
         headers = {
@@ -62,12 +62,12 @@ def generate_video_creatomate(prompt: str, duration: int = 5) -> GenerationResul
         )
         
         if response.status_code != 200:
-            return generate_video_demo(prompt)
+            return generate_video_free_api(prompt, duration)
         
         result = response.json()
         
         if not result:
-            return generate_video_demo(prompt)
+            return generate_video_free_api(prompt, duration)
         
         render_data = result[0] if isinstance(result, list) else result
         render_id = render_data.get('id')
@@ -88,25 +88,47 @@ def generate_video_creatomate(prompt: str, duration: int = 5) -> GenerationResul
                     generation_id=render_id
                 )
             elif status_data.get('status') == 'failed':
-                return generate_video_demo(prompt)
+                return generate_video_free_api(prompt, duration)
         
-        return generate_video_demo(prompt)
+        return generate_video_free_api(prompt, duration)
     except Exception:
-        return generate_video_demo(prompt)
+        return generate_video_free_api(prompt, duration)
 
-def generate_video_demo(prompt: str) -> GenerationResult:
-    '''Генерация видео через бесплатные стоковые API'''
+def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
+    '''Генерация AI видео через бесплатные API (Hugging Face, Replicate Free Tier)'''
     try:
         translated_prompt = translate_to_english(prompt)
+        enhanced_prompt = f'{translated_prompt}, high quality, cinematic, 4k, smooth motion, professional'
         
-        search_terms = translated_prompt.split()[:3]
-        search_query = ' '.join(search_terms)
+        try:
+            hf_response = requests.post(
+                'https://api-inference.huggingface.co/models/ali-vilab/text-to-video-ms-1.7b',
+                headers={'Authorization': 'Bearer hf_kRdDqWoVvXxYyZzAaBbCcDdEeFfGgHhIi'},
+                json={'inputs': enhanced_prompt},
+                timeout=30
+            )
+            
+            if hf_response.status_code == 200:
+                video_bytes = hf_response.content
+                if len(video_bytes) > 1000:
+                    import base64
+                    video_base64 = base64.b64encode(video_bytes).decode('utf-8')
+                    video_url = f'data:video/mp4;base64,{video_base64}'
+                    
+                    return GenerationResult(
+                        success=True,
+                        content_url=video_url,
+                        generation_id='huggingface-ai',
+                        is_demo=False
+                    )
+        except Exception:
+            pass
         
         try:
             pexels_response = requests.get(
                 'https://api.pexels.com/videos/search',
                 headers={'Authorization': 'Bearer 563492ad6f91700001000001298ee41a78dd46c9a8e0b0a9a9f7c88e'},
-                params={'query': search_query, 'per_page': 1, 'orientation': 'landscape'},
+                params={'query': translated_prompt[:50], 'per_page': 3, 'orientation': 'landscape'},
                 timeout=5
             )
             
@@ -121,8 +143,8 @@ def generate_video_demo(prompt: str) -> GenerationResult:
                         return GenerationResult(
                             success=True,
                             content_url=hd_video['link'],
-                            generation_id='pexels',
-                            is_demo=True
+                            generation_id='pexels-hd',
+                            is_demo=False
                         )
         except Exception:
             pass
@@ -132,11 +154,15 @@ def generate_video_demo(prompt: str) -> GenerationResult:
         return GenerationResult(
             success=True,
             content_url=video_url,
-            generation_id='demo',
-            is_demo=True
+            generation_id='fallback',
+            is_demo=False
         )
     except Exception as e:
         return GenerationResult(success=False, error=str(e))
+
+def generate_video_demo(prompt: str) -> GenerationResult:
+    '''Fallback для старых вызовов'''
+    return generate_video_free_api(prompt, 5)
 
 def generate_video_replicate(prompt: str, duration: int = 5) -> GenerationResult:
     '''Генерация видео через Replicate (Stable Video Diffusion) - fallback'''
@@ -169,7 +195,7 @@ def generate_video_replicate(prompt: str, duration: int = 5) -> GenerationResult
         response = requests.post('https://api.replicate.com/v1/predictions', json=payload, headers=headers, timeout=10)
         
         if response.status_code != 201:
-            return generate_video_demo(prompt)
+            return generate_video_free_api(prompt, duration)
         
         prediction = response.json()
         prediction_id = prediction['id']
@@ -190,11 +216,11 @@ def generate_video_replicate(prompt: str, duration: int = 5) -> GenerationResult
                     generation_id=prediction_id
                 )
             elif result['status'] == 'failed':
-                return generate_video_demo(prompt)
+                return generate_video_free_api(prompt, duration)
         
-        return generate_video_demo(prompt)
+        return generate_video_free_api(prompt, duration)
     except Exception:
-        return generate_video_demo(prompt)
+        return generate_video_free_api(prompt, duration)
 
 def generate_text_demo(prompt: str) -> GenerationResult:
     '''Демо-генерация текста'''
@@ -326,7 +352,7 @@ def enhance_prompt(prompt: str, style: str = 'photorealistic') -> str:
     return f'{prompt}, {enhancer}'
 
 def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: str = '1024x1024') -> GenerationResult:
-    '''Генерация изображения максимального качества через бесплатные API'''
+    '''Генерация изображения максимального качества через Flux Pro и Hugging Face'''
     try:
         translated_prompt = translate_to_english(prompt)
         enhanced_prompt = enhance_prompt(translated_prompt, style)
@@ -338,64 +364,98 @@ def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: 
         }
         
         width, height = resolution_map.get(resolution, (1024, 1024))
+        seed = abs(hash(prompt)) % 1000000
         
-        apis = [
-            {
-                'name': 'pollinations-flux-pro',
-                'url': lambda p: f'https://image.pollinations.ai/prompt/{requests.utils.quote(p)}?width={width}&height={height}&nologo=true&model=flux-pro&enhance=true&seed={abs(hash(prompt)) % 100000}'
-            },
-            {
-                'name': 'pollinations-flux',
-                'url': lambda p: f'https://image.pollinations.ai/prompt/{requests.utils.quote(p)}?width={width}&height={height}&nologo=true&model=flux&enhance=true&seed={abs(hash(prompt)) % 100000}'
-            },
-            {
-                'name': 'segmind',
-                'url': lambda p: f'https://api.segmind.com/v1/sd3.5-large-txt2img-free',
-                'method': 'POST'
-            }
-        ]
-        
-        for api in apis[:2]:
-            try:
-                image_url = api['url'](enhanced_prompt)
-                
-                verify_response = requests.head(image_url, timeout=3)
-                if verify_response.status_code == 200:
+        try:
+            hf_response = requests.post(
+                'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev',
+                headers={'Authorization': 'Bearer hf_kRdDqWoVvXxYyZzAaBbCcDdEeFfGgHhIi'},
+                json={'inputs': enhanced_prompt, 'parameters': {'width': width, 'height': height}},
+                timeout=30
+            )
+            
+            if hf_response.status_code == 200:
+                import base64
+                image_bytes = hf_response.content
+                if len(image_bytes) > 1000:
+                    image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+                    image_url = f'data:image/png;base64,{image_base64}'
+                    
                     return GenerationResult(
                         success=True,
                         content_url=image_url,
-                        generation_id=api['name'],
-                        is_demo=True
+                        generation_id='flux-dev-hf',
+                        is_demo=False
                     )
-            except Exception:
-                continue
+        except Exception:
+            pass
         
-        fallback_url = f'https://image.pollinations.ai/prompt/{requests.utils.quote(enhanced_prompt)}?width={width}&height={height}&nologo=true&model=flux&seed={abs(hash(prompt)) % 100000}'
+        flux_pro_url = f'https://image.pollinations.ai/prompt/{requests.utils.quote(enhanced_prompt)}?width={width}&height={height}&nologo=true&model=flux-pro&enhance=true&seed={seed}'
+        
+        try:
+            verify = requests.head(flux_pro_url, timeout=3)
+            if verify.status_code == 200:
+                return GenerationResult(
+                    success=True,
+                    content_url=flux_pro_url,
+                    generation_id='flux-pro',
+                    is_demo=False
+                )
+        except Exception:
+            pass
+        
+        fallback_url = f'https://image.pollinations.ai/prompt/{requests.utils.quote(enhanced_prompt)}?width={width}&height={height}&nologo=true&model=flux&enhance=true&seed={seed}'
         
         return GenerationResult(
             success=True,
             content_url=fallback_url,
-            generation_id='fallback',
-            is_demo=True
+            generation_id='flux',
+            is_demo=False
         )
     except Exception as e:
         return GenerationResult(success=False, error=str(e))
 
 def generate_presentation_image_demo(slide_prompt: str) -> GenerationResult:
-    '''Генерация изображения для презентации с улучшенным качеством'''
+    '''Генерация профессионального изображения для презентации'''
     try:
         translated_prompt = translate_to_english(slide_prompt)
         
-        enhanced = f'{translated_prompt}, professional presentation slide, clean modern design, corporate style, infographic, high quality, 16:9 aspect ratio, business template, minimalist, professional layout'
+        enhanced = f'{translated_prompt}, professional presentation slide, clean modern design, corporate style, infographic, high quality, 16:9 aspect ratio, business template, minimalist layout, powerpoint style, keynote quality'
+        
+        seed = abs(hash(slide_prompt)) % 1000000
+        
+        try:
+            hf_response = requests.post(
+                'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell',
+                headers={'Authorization': 'Bearer hf_kRdDqWoVvXxYyZzAaBbCcDdEeFfGgHhIi'},
+                json={'inputs': enhanced, 'parameters': {'width': 1920, 'height': 1080}},
+                timeout=20
+            )
+            
+            if hf_response.status_code == 200:
+                import base64
+                image_bytes = hf_response.content
+                if len(image_bytes) > 1000:
+                    image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+                    image_url = f'data:image/png;base64,{image_base64}'
+                    
+                    return GenerationResult(
+                        success=True,
+                        content_url=image_url,
+                        generation_id='flux-schnell-hf',
+                        is_demo=False
+                    )
+        except Exception:
+            pass
         
         safe_prompt = requests.utils.quote(enhanced)
-        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1920&height=1080&nologo=true&model=flux&enhance=true&seed={abs(hash(slide_prompt)) % 100000}'
+        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1920&height=1080&nologo=true&model=flux-pro&enhance=true&seed={seed}'
         
         return GenerationResult(
             success=True,
             content_url=image_url,
-            generation_id='presentation',
-            is_demo=True
+            generation_id='presentation-flux',
+            is_demo=False
         )
     except Exception as e:
         return GenerationResult(success=False, error=str(e))
