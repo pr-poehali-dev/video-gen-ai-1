@@ -90,19 +90,40 @@ const GeneratorModals = ({
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="aspect-video bg-gradient-to-br from-purple-100 via-pink-100 to-violet-100 rounded-lg flex items-center justify-center border-2 border-purple-200">
-                  <div className="text-center">
-                    <Icon name="Video" className="mx-auto mb-4 text-purple-600" size={64} />
-                    <p className="text-lg font-bold text-gray-700">Видео плеер</p>
-                    <p className="text-sm text-gray-500 mt-2">{generatedContent}</p>
-                  </div>
+                <div className="aspect-video bg-black rounded-lg overflow-hidden border-2 border-purple-200">
+                  {generatedContent ? (
+                    <video 
+                      src={generatedContent} 
+                      controls 
+                      autoPlay
+                      loop
+                      className="w-full h-full object-contain"
+                    >
+                      Ваш браузер не поддерживает видео
+                    </video>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-100 via-pink-100 to-violet-100">
+                      <div className="text-center">
+                        <Icon name="Video" className="mx-auto mb-4 text-purple-600" size={64} />
+                        <p className="text-lg font-bold text-gray-700">Видео готовится...</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <Button className="flex-1 bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold">
+                  <Button 
+                    onClick={() => window.open(generatedContent, '_blank')}
+                    disabled={!generatedContent}
+                    className="flex-1 bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold disabled:opacity-50"
+                  >
                     <Icon name="Download" className="mr-2" size={18} />
                     Скачать видео
                   </Button>
-                  <Button variant="outline" className="flex-1 border-purple-300 hover:border-purple-400 hover:bg-purple-50 transition-all duration-300">
+                  <Button 
+                    variant="outline" 
+                    disabled={!generatedContent}
+                    className="flex-1 border-purple-300 hover:border-purple-400 hover:bg-purple-50 transition-all duration-300 disabled:opacity-50"
+                  >
                     <Icon name="Share2" className="mr-2" size={18} />
                     Поделиться
                   </Button>
@@ -220,25 +241,47 @@ const GeneratorModals = ({
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
-                  {[1, 2, 3, 4, 5, 6].map((slide) => (
-                    <div key={slide} className="aspect-video bg-gradient-to-br from-pink-100 via-purple-100 to-violet-100 rounded-lg p-2 sm:p-4 flex flex-col items-center justify-center border-2 border-pink-200">
-                      <Icon name="FileText" className="text-pink-600 mb-1 sm:mb-2" size={20} />
-                      <p className="text-xs font-semibold">Слайд {slide}</p>
+                <div className="aspect-video bg-gradient-to-br from-pink-100 via-purple-100 to-violet-100 rounded-lg overflow-hidden border-2 border-pink-200">
+                  {generatedContent ? (
+                    <img 
+                      src={generatedContent} 
+                      alt="Презентация" 
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-center">
+                        <Icon name="Presentation" className="mx-auto mb-4 text-pink-600" size={64} />
+                        <p className="text-lg font-bold text-gray-700">Презентация готовится...</p>
+                      </div>
                     </div>
-                  ))}
+                  )}
                 </div>
                 <div className="bg-white/60 p-4 rounded-lg">
-                  <p className="text-sm text-gray-700">{generatedContent}</p>
+                  <p className="text-sm text-gray-700 font-semibold">✨ Профессиональный слайд презентации готов!</p>
+                  <p className="text-xs text-gray-600 mt-1">Вы можете скачать изображение и использовать в своей презентации</p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <Button className="flex-1 bg-gradient-to-r from-pink-600 to-purple-500 hover:from-pink-700 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold">
+                  <Button 
+                    onClick={() => window.open(generatedContent, '_blank')}
+                    disabled={!generatedContent}
+                    className="flex-1 bg-gradient-to-r from-pink-600 to-purple-500 hover:from-pink-700 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold disabled:opacity-50"
+                  >
                     <Icon name="Download" className="mr-2" size={18} />
-                    Скачать PPT
+                    Скачать слайд
                   </Button>
-                  <Button variant="outline" className="flex-1 border-pink-300 hover:border-pink-400 hover:bg-pink-50 transition-all duration-300">
-                    <Icon name="FileText" className="mr-2" size={18} />
-                    Скачать PDF
+                  <Button 
+                    variant="outline"
+                    disabled={!generatedContent}
+                    onClick={() => {
+                      if (generatedContent) {
+                        navigator.clipboard.writeText(generatedContent);
+                      }
+                    }}
+                    className="flex-1 border-pink-300 hover:border-pink-400 hover:bg-pink-50 transition-all duration-300 disabled:opacity-50"
+                  >
+                    <Icon name="Link" className="mr-2" size={18} />
+                    Скопировать ссылку
                   </Button>
                 </div>
               </div>
