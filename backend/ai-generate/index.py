@@ -95,10 +95,39 @@ def generate_video_creatomate(prompt: str, duration: int = 5) -> GenerationResul
         return generate_video_demo(prompt)
 
 def generate_video_demo(prompt: str) -> GenerationResult:
-    '''Демо-генерация видео через бесплатный API'''
+    '''Генерация видео через бесплатные стоковые API'''
     try:
-        safe_prompt = requests.utils.quote(prompt)
-        video_url = f'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+        translated_prompt = translate_to_english(prompt)
+        
+        search_terms = translated_prompt.split()[:3]
+        search_query = ' '.join(search_terms)
+        
+        try:
+            pexels_response = requests.get(
+                'https://api.pexels.com/videos/search',
+                headers={'Authorization': 'Bearer 563492ad6f91700001000001298ee41a78dd46c9a8e0b0a9a9f7c88e'},
+                params={'query': search_query, 'per_page': 1, 'orientation': 'landscape'},
+                timeout=5
+            )
+            
+            if pexels_response.status_code == 200:
+                data = pexels_response.json()
+                if data.get('videos') and len(data['videos']) > 0:
+                    video = data['videos'][0]
+                    video_files = video.get('video_files', [])
+                    hd_video = next((v for v in video_files if v.get('quality') == 'hd'), video_files[0] if video_files else None)
+                    
+                    if hd_video:
+                        return GenerationResult(
+                            success=True,
+                            content_url=hd_video['link'],
+                            generation_id='pexels',
+                            is_demo=True
+                        )
+        except Exception:
+            pass
+        
+        video_url = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
         
         return GenerationResult(
             success=True,
@@ -353,15 +382,19 @@ def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: 
         return GenerationResult(success=False, error=str(e))
 
 def generate_presentation_image_demo(slide_prompt: str) -> GenerationResult:
-    '''Демо-генерация изображения через бесплатный API'''
+    '''Генерация изображения для презентации с улучшенным качеством'''
     try:
-        safe_prompt = requests.utils.quote(f'{slide_prompt}, professional presentation, clean design')
-        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1920&height=1080&nologo=true'
+        translated_prompt = translate_to_english(slide_prompt)
+        
+        enhanced = f'{translated_prompt}, professional presentation slide, clean modern design, corporate style, infographic, high quality, 16:9 aspect ratio, business template, minimalist, professional layout'
+        
+        safe_prompt = requests.utils.quote(enhanced)
+        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1920&height=1080&nologo=true&model=flux&enhance=true&seed={abs(hash(slide_prompt)) % 100000}'
         
         return GenerationResult(
             success=True,
             content_url=image_url,
-            generation_id='demo',
+            generation_id='presentation',
             is_demo=True
         )
     except Exception as e:

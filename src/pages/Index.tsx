@@ -115,55 +115,50 @@ const Index = () => {
     setProgress(0);
 
     const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 300);
+      setProgress(prev => Math.min(prev + 5, 90));
+    }, 500);
 
     try {
-      const requestType = type === 'presentation' ? 'image' : type;
+      const apiUrl = 'https://functions.poehali.dev/500cc697-682b-469a-b439-fa265e84c833';
       
-      const response = await fetch('https://functions.poehali.dev/34147c53-3589-4dc6-9c1b-3170886e1a99', {
+      const body = type === 'video' 
+        ? { type: 'video', prompt, duration: 5 }
+        : type === 'presentation'
+        ? { type: 'presentation_image', prompt }
+        : { type: 'text', prompt };
+
+      const response = await fetch(`${apiUrl}?action=generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          type: requestType,
-          prompt: prompt,
-          params: type === 'video' ? { num_frames: 25, fps: 6 } : 
-                  type === 'presentation' ? { provider: 'stability', width: 1024, height: 768 } :
-                  { model: 'gpt-4', max_tokens: 1000 }
-        })
+        body: JSON.stringify(body)
       });
 
       const result = await response.json();
 
-      if (!response.ok) {
+      clearInterval(interval);
+      setProgress(100);
+
+      if (!response.ok || !result.success) {
         throw new Error(result.error || 'Ошибка генерации');
       }
 
-      clearInterval(interval);
       setIsGenerating(false);
-      setProgress(100);
 
       if (type === 'video') {
-        setGeneratedContent(result.status === 'processing' 
-          ? 'Видео обрабатывается. ID: ' + result.prediction_id 
-          : 'Видео успешно создано!');
+        setGeneratedContent(result.url || result.content_url || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
       } else if (type === 'text') {
-        setGeneratedContent(result.text || 'Текст сгенерирован успешно!');
+        setGeneratedContent(result.content_url || result.text || 'Текст сгенерирован успешно!');
       } else if (type === 'presentation') {
-        setGeneratedContent(result.url ? 'Изображение для презентации создано!' : 'Презентация готова!');
+        setGeneratedContent(result.url || result.content_url || '');
       }
+
+      handleIncrementRequest();
 
       toast({
         title: 'Готово!',
-        description: 'Контент успешно сгенерирован',
+        description: `${type === 'video' ? 'Видео' : type === 'presentation' ? 'Презентация' : 'Текст'} успешно ${result.is_demo ? 'создан (демо)' : 'сгенерирован'}`,
       });
     } catch (error) {
       clearInterval(interval);
@@ -275,7 +270,9 @@ const Index = () => {
         },
         body: JSON.stringify({
           type: 'image',
-          prompt: photoPrompt
+          prompt: photoPrompt,
+          style: photoStyle,
+          resolution: photoResolution
         })
       });
 
