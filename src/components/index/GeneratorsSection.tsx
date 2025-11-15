@@ -197,6 +197,16 @@ const GeneratorsSection = ({
                   </div>
                 </div>
                 
+                <div className="bg-cyan-500/10 border border-cyan-400/30 rounded-lg p-4 mb-4">
+                  <div className="flex items-start gap-3">
+                    <Icon name="Clock" className="text-cyan-400 mt-0.5 flex-shrink-0" size={20} />
+                    <div className="text-sm text-cyan-100">
+                      <p className="font-semibold mb-1">⏱️ Генерация займёт 2-3 минуты</p>
+                      <p className="text-xs text-cyan-100/70">AI создаёт уникальное видео по вашему запросу. Не закрывайте страницу во время генерации.</p>
+                    </div>
+                  </div>
+                </div>
+                
                 <Button onClick={handleVideoGenerate} className="w-full bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] border-0 font-bold neon-glow transition-all duration-300">
                   <Icon name="Sparkles" className="mr-2" size={18} />
                   Создать видео
