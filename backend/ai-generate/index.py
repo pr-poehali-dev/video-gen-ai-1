@@ -814,7 +814,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         elif content_type == 'image':
             style = body_data.get('style', 'photorealistic')
             resolution = body_data.get('resolution', '1024x1024')
-            result = generate_image_replicate_pro(prompt, style, resolution)
+            result = generate_image_demo(prompt, style, resolution)
         else:
             return {
                 'statusCode': 400,
