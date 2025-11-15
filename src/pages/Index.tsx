@@ -27,10 +27,12 @@ const Index = () => {
   const [videoPrompt, setVideoPrompt] = useState('');
   const [textPrompt, setTextPrompt] = useState('');
   const [presentationTopic, setPresentationTopic] = useState('');
+  const [photoPrompt, setPhotoPrompt] = useState('');
   
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [isTextModalOpen, setIsTextModalOpen] = useState(false);
   const [isPresentationModalOpen, setIsPresentationModalOpen] = useState(false);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('');
   
@@ -245,6 +247,64 @@ const Index = () => {
     simulateGeneration('presentation', presentationTopic);
   };
 
+  const handlePhotoGenerate = async () => {
+    if (!photoPrompt.trim()) {
+      toast({
+        title: 'Ошибка',
+        description: 'Введите описание для генерации фото',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!checkRequestLimit()) return;
+
+    setIsPhotoModalOpen(true);
+    setIsGenerating(true);
+    setProgress(0);
+
+    const interval = setInterval(() => {
+      setProgress(prev => Math.min(prev + 10, 90));
+    }, 200);
+
+    try {
+      const response = await fetch('https://functions.poehali.dev/500cc697-682b-469a-b439-fa265e84c833?action=generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'image',
+          prompt: photoPrompt
+        })
+      });
+
+      const data = await response.json();
+      clearInterval(interval);
+      setProgress(100);
+
+      if (data.success) {
+        setGeneratedContent(data.content_url);
+        setIsGenerating(false);
+        handleIncrementRequest();
+        toast({
+          title: 'Готово!',
+          description: 'Фото успешно сгенерировано',
+        });
+      } else {
+        throw new Error(data.error || 'Ошибка генерации');
+      }
+    } catch (error) {
+      clearInterval(interval);
+      setIsGenerating(false);
+      toast({
+        title: 'Ошибка генерации',
+        description: error instanceof Error ? error.message : 'Попробуйте позже',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handlePlanClick = (planName: string) => {
     setSelectedPlan(planName);
     setIsOfferModalOpen(true);
@@ -313,9 +373,12 @@ const Index = () => {
           setTextPrompt={setTextPrompt}
           presentationTopic={presentationTopic}
           setPresentationTopic={setPresentationTopic}
+          photoPrompt={photoPrompt}
+          setPhotoPrompt={setPhotoPrompt}
           handleVideoGenerate={handleVideoGenerate}
           handleTextGenerate={handleTextGenerate}
           handlePresentationGenerate={handlePresentationGenerate}
+          handlePhotoGenerate={handlePhotoGenerate}
         />
 
         <AboutPricingSection
@@ -336,6 +399,8 @@ const Index = () => {
         setIsTextModalOpen={setIsTextModalOpen}
         isPresentationModalOpen={isPresentationModalOpen}
         setIsPresentationModalOpen={setIsPresentationModalOpen}
+        isPhotoModalOpen={isPhotoModalOpen}
+        setIsPhotoModalOpen={setIsPhotoModalOpen}
         isGenerating={isGenerating}
         progress={progress}
         generatedContent={generatedContent}

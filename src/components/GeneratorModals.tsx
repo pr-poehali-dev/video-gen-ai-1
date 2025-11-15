@@ -11,6 +11,8 @@ interface GeneratorModalsProps {
   setIsTextModalOpen: (open: boolean) => void;
   isPresentationModalOpen: boolean;
   setIsPresentationModalOpen: (open: boolean) => void;
+  isPhotoModalOpen?: boolean;
+  setIsPhotoModalOpen?: (open: boolean) => void;
   isGenerating: boolean;
   progress: number;
   generatedContent: string;
@@ -23,6 +25,8 @@ const GeneratorModals = ({
   setIsTextModalOpen,
   isPresentationModalOpen,
   setIsPresentationModalOpen,
+  isPhotoModalOpen,
+  setIsPhotoModalOpen,
   isGenerating,
   progress,
   generatedContent,
@@ -242,6 +246,71 @@ const GeneratorModals = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      {isPhotoModalOpen !== undefined && setIsPhotoModalOpen && (
+        <Dialog open={isPhotoModalOpen} onOpenChange={setIsPhotoModalOpen}>
+          <DialogContent className="max-w-3xl w-[95vw] sm:w-full gradient-blur border-white/40">
+            <DialogHeader>
+              <DialogTitle className="text-xl sm:text-2xl bg-gradient-to-r from-green-600 via-emerald-500 to-teal-600 bg-clip-text text-transparent font-bold">
+                Генерация фото
+              </DialogTitle>
+              <DialogDescription>
+                {isGenerating ? 'Создаем ваше фото с помощью AI...' : 'Ваше фото готово!'}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {isGenerating ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center py-12">
+                    <div className="relative">
+                      <div className="w-24 h-24 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
+                      <Icon name="Image" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-green-600" size={32} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Прогресс</span>
+                      <span>{progress}%</span>
+                    </div>
+                    <Progress value={progress} className="h-2" />
+                  </div>
+                  <div className="text-center text-sm text-gray-600">
+                    <p>Создаем уникальное изображение на основе вашего описания...</p>
+                    <p className="mt-2 text-xs">Это может занять несколько секунд</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="aspect-video bg-gradient-to-br from-green-100 via-emerald-100 to-teal-100 rounded-lg flex items-center justify-center border-2 border-green-200 overflow-hidden">
+                    {generatedContent ? (
+                      <img src={generatedContent} alt="Generated photo" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-center">
+                        <Icon name="Image" className="mx-auto mb-4 text-green-600" size={64} />
+                        <p className="text-lg font-bold text-gray-700">Фото генератор</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button 
+                      onClick={() => window.open(generatedContent, '_blank')}
+                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+                    >
+                      <Icon name="Download" className="mr-2" size={18} />
+                      Скачать фото
+                    </Button>
+                    <Button variant="outline" className="flex-1 border-green-300 hover:border-green-400 hover:bg-green-50 transition-all duration-300">
+                      <Icon name="Share2" className="mr-2" size={18} />
+                      Поделиться
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 };

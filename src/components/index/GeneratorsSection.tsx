@@ -12,9 +12,12 @@ interface GeneratorsSectionProps {
   setTextPrompt: (value: string) => void;
   presentationTopic: string;
   setPresentationTopic: (value: string) => void;
+  photoPrompt: string;
+  setPhotoPrompt: (value: string) => void;
   handleVideoGenerate: () => void;
   handleTextGenerate: () => void;
   handlePresentationGenerate: () => void;
+  handlePhotoGenerate: () => void;
 }
 
 const GeneratorsSection = ({
@@ -24,9 +27,12 @@ const GeneratorsSection = ({
   setTextPrompt,
   presentationTopic,
   setPresentationTopic,
+  photoPrompt,
+  setPhotoPrompt,
   handleVideoGenerate,
   handleTextGenerate,
   handlePresentationGenerate,
+  handlePhotoGenerate,
 }: GeneratorsSectionProps) => {
   return (
     <section id="generators" className="min-h-screen py-20 px-6">
@@ -39,7 +45,7 @@ const GeneratorsSection = ({
         </div>
 
         <Tabs defaultValue="video" className="max-w-5xl mx-auto">
-          <TabsList className="grid w-full grid-cols-3 mb-8 bg-[#1a2332]/60 backdrop-blur-xl border border-cyan-500/20 p-1">
+          <TabsList className="grid w-full grid-cols-4 mb-8 bg-[#1a2332]/60 backdrop-blur-xl border border-cyan-500/20 p-1">
             <TabsTrigger value="video" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300 text-cyan-100/60 font-semibold transition-all duration-300">
               <Icon name="Video" className="mr-2" size={18} />
               Видео
@@ -51,6 +57,10 @@ const GeneratorsSection = ({
             <TabsTrigger value="presentation" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300 text-cyan-100/60 font-semibold transition-all duration-300">
               <Icon name="Presentation" className="mr-2" size={18} />
               Презентация
+            </TabsTrigger>
+            <TabsTrigger value="photo" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-300 text-green-100/60 font-semibold transition-all duration-300">
+              <Icon name="Image" className="mr-2" size={18} />
+              Фото
             </TabsTrigger>
           </TabsList>
 
@@ -203,6 +213,60 @@ const GeneratorsSection = ({
                   <div className="text-center p-3 md:p-4 bg-cyan-500/5 rounded-lg border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-500 hover:scale-105 animate-smooth-fade" style={{animationDelay: '0.3s'}}>
                     <Icon name="Users" className="mx-auto mb-2 text-cyan-400 animate-icon-pop" style={{animationDelay: '0.3s'}} size={20} />
                     <p className="text-xs md:text-sm font-semibold text-cyan-100">Совместная работа</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="photo" className="animate-fade-in">
+            <Card className="bg-[#1a2332]/60 border border-green-500/20 backdrop-blur-xl">
+              <CardHeader>
+                <CardTitle className="text-xl md:text-2xl text-green-100">Генератор фото AI</CardTitle>
+                <CardDescription className="text-sm md:text-base text-green-100/60">Создайте уникальное изображение из текста</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 p-4 sm:p-6">
+                <Textarea 
+                  placeholder="Например: Красивый закат над океаном, фотореалистичный стиль, 4K качество"
+                  className="min-h-32 resize-none bg-[#0f1729] border-green-500/30 text-green-100 placeholder:text-green-100/30"
+                  value={photoPrompt}
+                  onChange={(e) => setPhotoPrompt(e.target.value)}
+                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs sm:text-sm font-medium mb-2 block text-green-100">Стиль</label>
+                    <select className="w-full h-10 px-3 rounded-md border bg-[#0f1729] border-green-500/30 text-green-100 text-sm">
+                      <option>Фотореалистичный</option>
+                      <option>Художественный</option>
+                      <option>Мультяшный</option>
+                      <option>Абстрактный</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs sm:text-sm font-medium mb-2 block text-green-100">Разрешение</label>
+                    <select className="w-full h-10 px-3 rounded-md border bg-[#0f1729] border-green-500/30 text-green-100 text-sm">
+                      <option>1024x1024</option>
+                      <option>1920x1080 (Full HD)</option>
+                      <option>2560x1440 (2K)</option>
+                    </select>
+                  </div>
+                </div>
+                <Button onClick={handlePhotoGenerate} className="w-full bg-green-500 hover:bg-green-400 text-[#0f1729] border-0 font-bold neon-glow transition-all duration-300">
+                  <Icon name="Sparkles" className="mr-2" size={18} />
+                  Создать фото
+                </Button>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 pt-4">
+                  <div className="text-center p-3 md:p-4 bg-green-500/5 rounded-lg border border-green-500/20 hover:border-green-500/40 transition-all duration-300">
+                    <Icon name="Palette" className="mx-auto mb-2 text-green-400" size={20} />
+                    <p className="text-xs md:text-sm font-semibold text-green-100">Любой стиль</p>
+                  </div>
+                  <div className="text-center p-3 md:p-4 bg-green-500/5 rounded-lg border border-green-500/20 hover:border-green-500/40 transition-all duration-300">
+                    <Icon name="Zap" className="mx-auto mb-2 text-green-400" size={20} />
+                    <p className="text-xs md:text-sm font-semibold text-green-100">Моментально</p>
+                  </div>
+                  <div className="text-center p-3 md:p-4 bg-green-500/5 rounded-lg border border-green-500/20 hover:border-green-500/40 transition-all duration-300">
+                    <Icon name="Sparkles" className="mx-auto mb-2 text-green-400" size={20} />
+                    <p className="text-xs md:text-sm font-semibold text-green-100">HD качество</p>
                   </div>
                 </div>
               </CardContent>
