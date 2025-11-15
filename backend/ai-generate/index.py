@@ -588,11 +588,8 @@ def generate_image_segmind(prompt: str, style: str = 'photorealistic', resolutio
         return generate_image_demo(prompt, style, resolution)
 
 def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: str = '1024x1024') -> GenerationResult:
-    '''Fallback генерация через бесплатные API'''
+    '''Быстрая генерация через Pollinations API'''
     try:
-        translated_prompt = translate_to_english(prompt)
-        enhanced_prompt = enhance_prompt(translated_prompt, style)
-        
         resolution_map = {
             '1024x1024': (1024, 1024),
             '1920x1080': (1920, 1080),
@@ -602,12 +599,13 @@ def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: 
         width, height = resolution_map.get(resolution, (1024, 1024))
         seed = abs(hash(prompt)) % 1000000
         
-        fallback_url = f'https://image.pollinations.ai/prompt/{requests.utils.quote(enhanced_prompt)}?width={width}&height={height}&nologo=true&model=flux-pro&enhance=true&seed={seed}'
+        safe_prompt = requests.utils.quote(prompt)
+        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width={width}&height={height}&nologo=true&model=flux&seed={seed}'
         
         return GenerationResult(
             success=True,
-            content_url=fallback_url,
-            generation_id='flux-pro-free',
+            content_url=image_url,
+            generation_id='flux-fast',
             is_demo=False
         )
     except Exception as e:
