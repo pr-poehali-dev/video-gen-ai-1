@@ -96,6 +96,42 @@ def generate_video_creatomate(prompt: str, duration: int = 5) -> GenerationResul
     except Exception:
         return generate_video_free_api(prompt, duration)
 
+def generate_video_huggingface(prompt: str, duration: int = 5) -> GenerationResult:
+    '''Генерация видео через Hugging Face (бесплатно)'''
+    try:
+        import base64
+        
+        translated_prompt = translate_to_english(prompt)
+        enhanced_prompt = f'{translated_prompt}, cinematic video, high quality, smooth motion'
+        
+        print(f'DEBUG: HF video generation - prompt: {enhanced_prompt[:80]}')
+        
+        hf_response = requests.post(
+            'https://api-inference.huggingface.co/models/stabilityai/stable-video-diffusion-img2vid-xt',
+            headers={'Content-Type': 'application/json'},
+            json={'inputs': enhanced_prompt},
+            timeout=30
+        )
+        
+        if hf_response.status_code == 200:
+            video_bytes = hf_response.content
+            if len(video_bytes) > 10000:
+                video_base64 = base64.b64encode(video_bytes).decode('utf-8')
+                video_url = f'data:video/mp4;base64,{video_base64}'
+                print(f'DEBUG: HF video generated successfully, size: {len(video_bytes)} bytes')
+                return GenerationResult(
+                    success=True,
+                    content_url=video_url,
+                    generation_id='huggingface-svd',
+                    is_demo=False
+                )
+        
+        print(f'DEBUG: HF failed: status={hf_response.status_code}')
+    except Exception as e:
+        print(f'DEBUG: HF exception: {str(e)}')
+    
+    return generate_video_free_api(prompt, duration)
+
 def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationResult:
     '''Профессиональная генерация видео через Replicate CogVideoX'''
     api_token = os.environ.get('REPLICATE_API_TOKEN_NEW') or os.environ.get('REPLICATE_API_TOKEN')
@@ -1019,7 +1055,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         if content_type == 'video':
             duration = body_data.get('duration', 5)
-            result = generate_video_replicate_pro(prompt, duration)
+            result = generate_video_huggingface(prompt, duration)
         elif content_type == 'text':
             result = generate_text_openai(prompt)
         elif content_type == 'presentation':
