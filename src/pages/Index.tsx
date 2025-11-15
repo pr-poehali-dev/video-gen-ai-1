@@ -145,6 +145,8 @@ const Index = () => {
         ? { type: 'presentation_image', prompt }
         : { type: 'text', prompt };
 
+      console.log('🚀 Отправка запроса:', { type, body, url: `${apiUrl}?action=generate` });
+
       const response = await fetch(`${apiUrl}?action=generate`, {
         method: 'POST',
         headers: {
@@ -154,6 +156,7 @@ const Index = () => {
       });
 
       const result = await response.json();
+      console.log('📦 Получен результат:', result);
 
       clearInterval(interval);
       setProgress(100);
