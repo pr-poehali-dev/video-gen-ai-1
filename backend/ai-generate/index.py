@@ -261,24 +261,46 @@ def translate_to_english(text: str) -> str:
         return text
 
 def enhance_prompt(prompt: str, style: str = 'photorealistic') -> str:
-    '''Улучшение промпта для генерации изображений'''
+    '''Улучшение промпта для максимального качества генерации'''
     style_enhancers = {
-        'photorealistic': 'RAW photo, photorealistic, ultra detailed, 8k uhd, high resolution, DSLR, professional photography, natural lighting, sharp focus, depth of field, realistic skin texture, film grain, Fujifilm XT3, masterpiece, best quality, highly detailed, ultra realistic',
-        'artistic': 'digital art masterpiece, detailed painting, vibrant colors, trending on artstation, concept art, professional illustration, award winning, highly detailed, beautiful composition',
-        'cartoon': '3D render, pixar style, disney quality, vibrant colors, cartoon style, clean lines, professional animation, highly detailed, studio lighting, octane render',
-        'abstract': 'abstract art, creative composition, unique style, modern art, bold colors, artistic expression, trending on behance, award winning design'
+        'photorealistic': (
+            'masterpiece, best quality, ultra high res, RAW photo, 8k uhd, dslr, '
+            'professional photography, soft lighting, film grain, photorealistic, '
+            'highly detailed, sharp focus, bokeh, natural skin texture, subsurface scattering, '
+            'perfect composition, award-winning photograph'
+        ),
+        'artistic': (
+            'masterpiece, best quality, highly detailed, digital art, concept art, '
+            'trending on artstation, award winning, beautiful composition, '
+            'vivid colors, professional illustration, intricate details'
+        ),
+        'cartoon': (
+            'masterpiece, best quality, 3D render, pixar style, disney animation quality, '
+            'vibrant colors, clean lines, professional animation, octane render, '
+            'studio lighting, detailed textures, cartoon style'
+        ),
+        'abstract': (
+            'masterpiece, best quality, abstract art, creative composition, modern art, '
+            'bold colors, unique style, award-winning design, trending on behance, '
+            'professional artwork, intricate patterns'
+        )
     }
     
+    negative_prompts = (
+        'nsfw, lowres, bad anatomy, bad hands, text, error, missing fingers, '
+        'extra digit, fewer digits, cropped, worst quality, low quality, normal quality, '
+        'jpeg artifacts, signature, watermark, username, blurry, artist name, '
+        'deformed, disfigured, poorly drawn, bad proportions, gross proportions'
+    )
+    
     enhancer = style_enhancers.get(style, style_enhancers['photorealistic'])
-    negative_prompt = ', low quality, blurry, distorted, deformed, bad anatomy, watermark, text, signature'
-    return f'{prompt}, {enhancer}{negative_prompt}'
+    return f'{prompt}, {enhancer}'
 
 def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: str = '1024x1024') -> GenerationResult:
-    '''Демо-генерация изображения через бесплатный API с переводом и улучшением'''
+    '''Генерация изображения максимального качества через бесплатные API'''
     try:
         translated_prompt = translate_to_english(prompt)
         enhanced_prompt = enhance_prompt(translated_prompt, style)
-        safe_prompt = requests.utils.quote(enhanced_prompt)
         
         resolution_map = {
             '1024x1024': (1024, 1024),
@@ -288,12 +310,43 @@ def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: 
         
         width, height = resolution_map.get(resolution, (1024, 1024))
         
-        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width={width}&height={height}&nologo=true&model=flux&enhance=true&seed={hash(prompt) % 10000}'
+        apis = [
+            {
+                'name': 'pollinations-flux-pro',
+                'url': lambda p: f'https://image.pollinations.ai/prompt/{requests.utils.quote(p)}?width={width}&height={height}&nologo=true&model=flux-pro&enhance=true&seed={abs(hash(prompt)) % 100000}'
+            },
+            {
+                'name': 'pollinations-flux',
+                'url': lambda p: f'https://image.pollinations.ai/prompt/{requests.utils.quote(p)}?width={width}&height={height}&nologo=true&model=flux&enhance=true&seed={abs(hash(prompt)) % 100000}'
+            },
+            {
+                'name': 'segmind',
+                'url': lambda p: f'https://api.segmind.com/v1/sd3.5-large-txt2img-free',
+                'method': 'POST'
+            }
+        ]
+        
+        for api in apis[:2]:
+            try:
+                image_url = api['url'](enhanced_prompt)
+                
+                verify_response = requests.head(image_url, timeout=3)
+                if verify_response.status_code == 200:
+                    return GenerationResult(
+                        success=True,
+                        content_url=image_url,
+                        generation_id=api['name'],
+                        is_demo=True
+                    )
+            except Exception:
+                continue
+        
+        fallback_url = f'https://image.pollinations.ai/prompt/{requests.utils.quote(enhanced_prompt)}?width={width}&height={height}&nologo=true&model=flux&seed={abs(hash(prompt)) % 100000}'
         
         return GenerationResult(
             success=True,
-            content_url=image_url,
-            generation_id='demo',
+            content_url=fallback_url,
+            generation_id='fallback',
             is_demo=True
         )
     except Exception as e:
