@@ -94,35 +94,73 @@ def generate_video_creatomate(prompt: str, duration: int = 5) -> GenerationResul
     except Exception:
         return generate_video_free_api(prompt, duration)
 
-def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
-    '''Генерация AI видео через бесплатные API (Hugging Face, Replicate Free Tier)'''
+def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationResult:
+    '''Профессиональная генерация видео через Replicate CogVideoX'''
+    api_token = os.environ.get('REPLICATE_API_TOKEN')
+    if not api_token:
+        return generate_video_free_api(prompt, duration)
+    
     try:
         translated_prompt = translate_to_english(prompt)
-        enhanced_prompt = f'{translated_prompt}, high quality, cinematic, 4k, smooth motion, professional'
+        enhanced_prompt = f'{translated_prompt}, high quality, cinematic, 4k, smooth motion, professional camera work, detailed, masterpiece'
         
-        try:
-            hf_response = requests.post(
-                'https://api-inference.huggingface.co/models/ali-vilab/text-to-video-ms-1.7b',
-                headers={'Authorization': 'Bearer hf_kRdDqWoVvXxYyZzAaBbCcDdEeFfGgHhIi'},
-                json={'inputs': enhanced_prompt},
-                timeout=30
+        headers = {
+            'Authorization': f'Token {api_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        payload = {
+            'version': 'fofr/cogvideox-5b:49a2b3e8b56a4861d2860c1ee66ee4e0e7e0aee1fb88d4f2df1cd0ede944e2f7',
+            'input': {
+                'prompt': enhanced_prompt,
+                'num_frames': 49,
+                'guidance_scale': 6,
+                'num_inference_steps': 50
+            }
+        }
+        
+        response = requests.post(
+            'https://api.replicate.com/v1/predictions',
+            json=payload,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code != 201:
+            return generate_video_free_api(prompt, duration)
+        
+        prediction = response.json()
+        prediction_id = prediction['id']
+        
+        for _ in range(120):
+            time.sleep(3)
+            status_response = requests.get(
+                f'https://api.replicate.com/v1/predictions/{prediction_id}',
+                headers=headers,
+                timeout=10
             )
+            result = status_response.json()
             
-            if hf_response.status_code == 200:
-                video_bytes = hf_response.content
-                if len(video_bytes) > 1000:
-                    import base64
-                    video_base64 = base64.b64encode(video_bytes).decode('utf-8')
-                    video_url = f'data:video/mp4;base64,{video_base64}'
-                    
-                    return GenerationResult(
-                        success=True,
-                        content_url=video_url,
-                        generation_id='huggingface-ai',
-                        is_demo=False
-                    )
-        except Exception:
-            pass
+            if result['status'] == 'succeeded':
+                video_url = result.get('output')
+                
+                return GenerationResult(
+                    success=True,
+                    content_url=video_url,
+                    generation_id=prediction_id,
+                    is_demo=False
+                )
+            elif result['status'] == 'failed':
+                return generate_video_free_api(prompt, duration)
+        
+        return generate_video_free_api(prompt, duration)
+    except Exception:
+        return generate_video_free_api(prompt, duration)
+
+def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
+    '''Fallback генерация через бесплатные стоковые видео'''
+    try:
+        translated_prompt = translate_to_english(prompt)
         
         try:
             pexels_response = requests.get(
@@ -351,8 +389,85 @@ def enhance_prompt(prompt: str, style: str = 'photorealistic') -> str:
     enhancer = style_enhancers.get(style, style_enhancers['photorealistic'])
     return f'{prompt}, {enhancer}'
 
+def generate_image_replicate_pro(prompt: str, style: str = 'photorealistic', resolution: str = '1024x1024') -> GenerationResult:
+    '''Профессиональная генерация через Replicate FLUX Pro API'''
+    api_token = os.environ.get('REPLICATE_API_TOKEN')
+    if not api_token:
+        return generate_image_demo(prompt, style, resolution)
+    
+    try:
+        translated_prompt = translate_to_english(prompt)
+        enhanced_prompt = enhance_prompt(translated_prompt, style)
+        
+        resolution_map = {
+            '1024x1024': {'width': 1024, 'height': 1024},
+            '1920x1080': {'width': 1920, 'height': 1080},
+            '2560x1440': {'width': 2560, 'height': 1440}
+        }
+        
+        dimensions = resolution_map.get(resolution, {'width': 1024, 'height': 1024})
+        
+        headers = {
+            'Authorization': f'Token {api_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        payload = {
+            'version': 'black-forest-labs/flux-1.1-pro',
+            'input': {
+                'prompt': enhanced_prompt,
+                'width': dimensions['width'],
+                'height': dimensions['height'],
+                'num_outputs': 1,
+                'aspect_ratio': 'custom',
+                'output_format': 'webp',
+                'output_quality': 100,
+                'safety_tolerance': 2,
+                'prompt_upsampling': True
+            }
+        }
+        
+        response = requests.post(
+            'https://api.replicate.com/v1/predictions',
+            json=payload,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code != 201:
+            return generate_image_demo(prompt, style, resolution)
+        
+        prediction = response.json()
+        prediction_id = prediction['id']
+        
+        for _ in range(60):
+            time.sleep(2)
+            status_response = requests.get(
+                f'https://api.replicate.com/v1/predictions/{prediction_id}',
+                headers=headers,
+                timeout=10
+            )
+            result = status_response.json()
+            
+            if result['status'] == 'succeeded':
+                output = result.get('output')
+                image_url = output[0] if isinstance(output, list) else output
+                
+                return GenerationResult(
+                    success=True,
+                    content_url=image_url,
+                    generation_id=prediction_id,
+                    is_demo=False
+                )
+            elif result['status'] == 'failed':
+                return generate_image_demo(prompt, style, resolution)
+        
+        return generate_image_demo(prompt, style, resolution)
+    except Exception:
+        return generate_image_demo(prompt, style, resolution)
+
 def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: str = '1024x1024') -> GenerationResult:
-    '''Генерация изображения максимального качества через Flux Pro и Hugging Face'''
+    '''Fallback генерация через бесплатные API'''
     try:
         translated_prompt = translate_to_english(prompt)
         enhanced_prompt = enhance_prompt(translated_prompt, style)
@@ -366,54 +481,84 @@ def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: 
         width, height = resolution_map.get(resolution, (1024, 1024))
         seed = abs(hash(prompt)) % 1000000
         
-        try:
-            hf_response = requests.post(
-                'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev',
-                headers={'Authorization': 'Bearer hf_kRdDqWoVvXxYyZzAaBbCcDdEeFfGgHhIi'},
-                json={'inputs': enhanced_prompt, 'parameters': {'width': width, 'height': height}},
-                timeout=30
-            )
-            
-            if hf_response.status_code == 200:
-                import base64
-                image_bytes = hf_response.content
-                if len(image_bytes) > 1000:
-                    image_base64 = base64.b64encode(image_bytes).decode('utf-8')
-                    image_url = f'data:image/png;base64,{image_base64}'
-                    
-                    return GenerationResult(
-                        success=True,
-                        content_url=image_url,
-                        generation_id='flux-dev-hf',
-                        is_demo=False
-                    )
-        except Exception:
-            pass
-        
-        flux_pro_url = f'https://image.pollinations.ai/prompt/{requests.utils.quote(enhanced_prompt)}?width={width}&height={height}&nologo=true&model=flux-pro&enhance=true&seed={seed}'
-        
-        try:
-            verify = requests.head(flux_pro_url, timeout=3)
-            if verify.status_code == 200:
-                return GenerationResult(
-                    success=True,
-                    content_url=flux_pro_url,
-                    generation_id='flux-pro',
-                    is_demo=False
-                )
-        except Exception:
-            pass
-        
-        fallback_url = f'https://image.pollinations.ai/prompt/{requests.utils.quote(enhanced_prompt)}?width={width}&height={height}&nologo=true&model=flux&enhance=true&seed={seed}'
+        fallback_url = f'https://image.pollinations.ai/prompt/{requests.utils.quote(enhanced_prompt)}?width={width}&height={height}&nologo=true&model=flux-pro&enhance=true&seed={seed}'
         
         return GenerationResult(
             success=True,
             content_url=fallback_url,
-            generation_id='flux',
+            generation_id='flux-pro-free',
             is_demo=False
         )
     except Exception as e:
         return GenerationResult(success=False, error=str(e))
+
+def generate_presentation_replicate_pro(slide_prompt: str) -> GenerationResult:
+    '''Профессиональная генерация слайдов через Replicate FLUX Pro'''
+    api_token = os.environ.get('REPLICATE_API_TOKEN')
+    if not api_token:
+        return generate_presentation_image_demo(slide_prompt)
+    
+    try:
+        translated_prompt = translate_to_english(slide_prompt)
+        enhanced = f'{translated_prompt}, professional presentation slide, clean modern design, corporate style, infographic, high quality, 16:9 aspect ratio, business template, minimalist layout, powerpoint style, keynote quality, masterpiece'
+        
+        headers = {
+            'Authorization': f'Token {api_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        payload = {
+            'version': 'black-forest-labs/flux-1.1-pro',
+            'input': {
+                'prompt': enhanced,
+                'width': 1920,
+                'height': 1080,
+                'aspect_ratio': 'custom',
+                'output_format': 'webp',
+                'output_quality': 100,
+                'safety_tolerance': 2,
+                'prompt_upsampling': True
+            }
+        }
+        
+        response = requests.post(
+            'https://api.replicate.com/v1/predictions',
+            json=payload,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code != 201:
+            return generate_presentation_image_demo(slide_prompt)
+        
+        prediction = response.json()
+        prediction_id = prediction['id']
+        
+        for _ in range(60):
+            time.sleep(2)
+            status_response = requests.get(
+                f'https://api.replicate.com/v1/predictions/{prediction_id}',
+                headers=headers,
+                timeout=10
+            )
+            result = status_response.json()
+            
+            if result['status'] == 'succeeded':
+                output = result.get('output')
+                image_url = output[0] if isinstance(output, list) else output
+                
+                return GenerationResult(
+                    success=True,
+                    content_url=image_url,
+                    generation_id=prediction_id,
+                    is_demo=False
+                )
+            elif result['status'] == 'failed':
+                return generate_presentation_image_demo(slide_prompt)
+        
+        return generate_presentation_image_demo(slide_prompt)
+    except Exception:
+        return generate_presentation_image_demo(slide_prompt)
 
 def generate_presentation_image_demo(slide_prompt: str) -> GenerationResult:
     '''Генерация профессионального изображения для презентации'''
@@ -657,7 +802,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         if content_type == 'video':
             duration = body_data.get('duration', 5)
-            result = generate_video_creatomate(prompt, duration)
+            result = generate_video_replicate_pro(prompt, duration)
         elif content_type == 'text':
             result = generate_text_openai(prompt)
         elif content_type == 'presentation':
@@ -665,11 +810,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             slides = body_data.get('slides', [])
             result = generate_presentation_creatomate(title, slides)
         elif content_type == 'presentation_image':
-            result = generate_presentation_image(prompt)
+            result = generate_presentation_replicate_pro(prompt)
         elif content_type == 'image':
             style = body_data.get('style', 'photorealistic')
             resolution = body_data.get('resolution', '1024x1024')
-            result = generate_image_demo(prompt, style, resolution)
+            result = generate_image_replicate_pro(prompt, style, resolution)
         else:
             return {
                 'statusCode': 400,
