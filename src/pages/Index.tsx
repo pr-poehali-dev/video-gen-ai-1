@@ -26,6 +26,7 @@ const Index = () => {
   const typingText = useTypingAnimation('AI-решения с молодым драйвом и высоким качеством', 80);
   const [videoPrompt, setVideoPrompt] = useState('');
   const [videoDuration, setVideoDuration] = useState(5);
+  const [videoStyle, setVideoStyle] = useState('cinematic');
   const [textPrompt, setTextPrompt] = useState('');
   const [presentationTopic, setPresentationTopic] = useState('');
   const [presentationSlides, setPresentationSlides] = useState(5);
@@ -107,7 +108,7 @@ const Index = () => {
     }
   };
 
-  const simulateGeneration = async (type: 'video' | 'text' | 'presentation', prompt: string, duration?: number) => {
+  const simulateGeneration = async (type: 'video' | 'text' | 'presentation', prompt: string, duration?: number, style?: string) => {
     if (!prompt.trim()) {
       toast({
         title: 'Ошибка',
@@ -127,8 +128,19 @@ const Index = () => {
     try {
       const apiUrl = 'https://functions.poehali.dev/500cc697-682b-469a-b439-fa265e84c833';
       
+      const styleMap: Record<string, string> = {
+        cinematic: 'cinematic camera work, film grain, movie quality, dramatic lighting',
+        realistic: 'photorealistic, natural lighting, real world footage, documentary style',
+        animated: '3D animation, cartoon style, smooth motion, vibrant colors',
+        artistic: 'artistic style, creative visuals, expressive, stylized'
+      };
+
       const body = type === 'video' 
-        ? { type: 'video', prompt, duration: duration || 5 }
+        ? { 
+            type: 'video', 
+            prompt: style ? `${prompt}, ${styleMap[style] || ''}` : prompt, 
+            duration: duration || 5 
+          }
         : type === 'presentation'
         ? { type: 'presentation_image', prompt }
         : { type: 'text', prompt };
@@ -190,7 +202,7 @@ const Index = () => {
     }
     
     setIsVideoModalOpen(true);
-    simulateGeneration('video', videoPrompt, videoDuration);
+    simulateGeneration('video', videoPrompt, videoDuration, videoStyle);
   };
 
   const handleTextGenerate = async () => {
@@ -448,6 +460,8 @@ const Index = () => {
           setVideoPrompt={setVideoPrompt}
           videoDuration={videoDuration}
           setVideoDuration={setVideoDuration}
+          videoStyle={videoStyle}
+          setVideoStyle={setVideoStyle}
           textPrompt={textPrompt}
           setTextPrompt={setTextPrompt}
           presentationTopic={presentationTopic}

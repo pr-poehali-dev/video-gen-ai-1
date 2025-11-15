@@ -10,6 +10,8 @@ interface GeneratorsSectionProps {
   setVideoPrompt: (value: string) => void;
   videoDuration: number;
   setVideoDuration: (value: number) => void;
+  videoStyle: string;
+  setVideoStyle: (value: string) => void;
   textPrompt: string;
   setTextPrompt: (value: string) => void;
   presentationTopic: string;
@@ -35,6 +37,8 @@ const GeneratorsSection = ({
   setVideoPrompt,
   videoDuration,
   setVideoDuration,
+  videoStyle,
+  setVideoStyle,
   textPrompt,
   setTextPrompt,
   presentationTopic,
@@ -138,6 +142,61 @@ const GeneratorsSection = ({
                     </button>
                   </div>
                 </div>
+                
+                <div>
+                  <label className="text-xs sm:text-sm font-medium mb-2 block text-cyan-100">Стиль видео</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setVideoStyle('cinematic')}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        videoStyle === 'cinematic'
+                          ? 'border-cyan-400 bg-cyan-500/20'
+                          : 'border-cyan-500/30 hover:border-cyan-500/50'
+                      }`}
+                    >
+                      <Icon name="Film" className="mx-auto mb-1 text-cyan-300" size={18} />
+                      <div className="text-xs font-semibold text-cyan-100">Кино</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVideoStyle('realistic')}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        videoStyle === 'realistic'
+                          ? 'border-cyan-400 bg-cyan-500/20'
+                          : 'border-cyan-500/30 hover:border-cyan-500/50'
+                      }`}
+                    >
+                      <Icon name="Camera" className="mx-auto mb-1 text-cyan-300" size={18} />
+                      <div className="text-xs font-semibold text-cyan-100">Реализм</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVideoStyle('animated')}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        videoStyle === 'animated'
+                          ? 'border-cyan-400 bg-cyan-500/20'
+                          : 'border-cyan-500/30 hover:border-cyan-500/50'
+                      }`}
+                    >
+                      <Icon name="Wand2" className="mx-auto mb-1 text-cyan-300" size={18} />
+                      <div className="text-xs font-semibold text-cyan-100">Анимация</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVideoStyle('artistic')}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        videoStyle === 'artistic'
+                          ? 'border-cyan-400 bg-cyan-500/20'
+                          : 'border-cyan-500/30 hover:border-cyan-500/50'
+                      }`}
+                    >
+                      <Icon name="Paintbrush" className="mx-auto mb-1 text-cyan-300" size={18} />
+                      <div className="text-xs font-semibold text-cyan-100">Арт</div>
+                    </button>
+                  </div>
+                </div>
+                
                 <Button onClick={handleVideoGenerate} className="w-full bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] border-0 font-bold neon-glow transition-all duration-300">
                   <Icon name="Sparkles" className="mr-2" size={18} />
                   Создать видео
