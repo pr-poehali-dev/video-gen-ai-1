@@ -12,6 +12,8 @@ interface GeneratorsSectionProps {
   setTextPrompt: (value: string) => void;
   presentationTopic: string;
   setPresentationTopic: (value: string) => void;
+  presentationSlides: number;
+  setPresentationSlides: (value: number) => void;
   photoPrompt: string;
   setPhotoPrompt: (value: string) => void;
   photoStyle: string;
@@ -31,6 +33,8 @@ const GeneratorsSection = ({
   setTextPrompt,
   presentationTopic,
   setPresentationTopic,
+  presentationSlides,
+  setPresentationSlides,
   photoPrompt,
   setPhotoPrompt,
   photoStyle,
@@ -185,7 +189,14 @@ const GeneratorsSection = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs sm:text-sm font-medium mb-2 block text-cyan-100">Количество слайдов</label>
-                    <Input type="number" defaultValue="10" className="bg-[#0f1729] border-cyan-500/30 text-cyan-100" />
+                    <Input 
+                      type="number" 
+                      min="1" 
+                      max="10" 
+                      value={presentationSlides} 
+                      onChange={(e) => setPresentationSlides(Number(e.target.value))}
+                      className="bg-[#0f1729] border-cyan-500/30 text-cyan-100" 
+                    />
                   </div>
                   <div>
                     <label className="text-xs sm:text-sm font-medium mb-2 block text-cyan-100">Стиль</label>

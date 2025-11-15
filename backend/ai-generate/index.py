@@ -618,9 +618,6 @@ def generate_presentation_replicate_pro(slide_prompt: str) -> GenerationResult:
         return generate_presentation_image_demo(slide_prompt)
     
     try:
-        translated_prompt = translate_to_english(slide_prompt)
-        enhanced = f'{translated_prompt}, professional presentation slide, clean modern design, corporate style, infographic, high quality, 16:9 aspect ratio, business template, minimalist layout, powerpoint style, keynote quality, masterpiece'
-        
         headers = {
             'Authorization': f'Token {api_token}',
             'Content-Type': 'application/json'
@@ -629,14 +626,14 @@ def generate_presentation_replicate_pro(slide_prompt: str) -> GenerationResult:
         payload = {
             'version': 'black-forest-labs/flux-1.1-pro',
             'input': {
-                'prompt': enhanced,
+                'prompt': f'{slide_prompt}, professional presentation slide, 16:9, high quality, detailed',
                 'width': 1920,
                 'height': 1080,
                 'aspect_ratio': 'custom',
-                'output_format': 'webp',
+                'output_format': 'png',
                 'output_quality': 100,
                 'safety_tolerance': 2,
-                'prompt_upsampling': True
+                'prompt_upsampling': False
             }
         }
         
@@ -728,43 +725,14 @@ def generate_presentation_segmind(slide_prompt: str) -> GenerationResult:
 def generate_presentation_image_demo(slide_prompt: str) -> GenerationResult:
     '''Генерация профессионального изображения для презентации'''
     try:
-        translated_prompt = translate_to_english(slide_prompt)
-        
-        enhanced = f'{translated_prompt}, professional presentation slide, clean modern design, corporate style, infographic, high quality, 16:9 aspect ratio, business template, minimalist layout, powerpoint style, keynote quality'
-        
         seed = abs(hash(slide_prompt)) % 1000000
-        
-        try:
-            hf_response = requests.post(
-                'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell',
-                headers={'Authorization': 'Bearer hf_kRdDqWoVvXxYyZzAaBbCcDdEeFfGgHhIi'},
-                json={'inputs': enhanced, 'parameters': {'width': 1920, 'height': 1080}},
-                timeout=20
-            )
-            
-            if hf_response.status_code == 200:
-                import base64
-                image_bytes = hf_response.content
-                if len(image_bytes) > 1000:
-                    image_base64 = base64.b64encode(image_bytes).decode('utf-8')
-                    image_url = f'data:image/png;base64,{image_base64}'
-                    
-                    return GenerationResult(
-                        success=True,
-                        content_url=image_url,
-                        generation_id='flux-schnell-hf',
-                        is_demo=False
-                    )
-        except Exception:
-            pass
-        
-        safe_prompt = requests.utils.quote(enhanced)
-        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1920&height=1080&nologo=true&model=flux-pro&enhance=true&seed={seed}'
+        safe_prompt = requests.utils.quote(f'{slide_prompt}, presentation slide, 16:9')
+        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1920&height=1080&nologo=true&model=flux&seed={seed}'
         
         return GenerationResult(
             success=True,
             content_url=image_url,
-            generation_id='presentation-flux',
+            generation_id='flux-fast',
             is_demo=False
         )
     except Exception as e:

@@ -16,6 +16,7 @@ interface GeneratorModalsProps {
   isGenerating: boolean;
   progress: number;
   generatedContent: string;
+  generatedSlides?: string[];
 }
 
 const GeneratorModals = ({
@@ -30,6 +31,7 @@ const GeneratorModals = ({
   isGenerating,
   progress,
   generatedContent,
+  generatedSlides = [],
 }: GeneratorModalsProps) => {
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -214,7 +216,7 @@ const GeneratorModals = ({
               Генерация презентации
             </DialogTitle>
             <DialogDescription>
-              {isGenerating ? 'Создаем профессиональную презентацию...' : 'Ваша презентация готова!'}
+              {isGenerating ? `Создаю слайды... ${generatedSlides && generatedSlides.length > 0 ? `${generatedSlides.length} готово` : ''}` : `Презентация готова! ${generatedSlides && generatedSlides.length > 0 ? `${generatedSlides.length} слайдов` : ''}`}
             </DialogDescription>
           </DialogHeader>
           
@@ -241,49 +243,50 @@ const GeneratorModals = ({
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="aspect-video bg-gradient-to-br from-pink-100 via-purple-100 to-violet-100 rounded-lg overflow-hidden border-2 border-pink-200">
-                  {generatedContent ? (
-                    <img 
-                      src={generatedContent} 
-                      alt="Презентация" 
-                      className="w-full h-full object-contain"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <div className="text-center">
-                        <Icon name="Presentation" className="mx-auto mb-4 text-pink-600" size={64} />
-                        <p className="text-lg font-bold text-gray-700">Презентация готовится...</p>
-                      </div>
+                {generatedSlides && generatedSlides.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {generatedSlides.map((slide, index) => (
+                        <div key={index} className="relative group">
+                          <div className="absolute top-2 left-2 bg-pink-600 text-white px-3 py-1 rounded-full text-sm font-bold z-10">
+                            Слайд {index + 1}
+                          </div>
+                          <img 
+                            src={slide} 
+                            alt={`Слайд ${index + 1}`} 
+                            className="w-full aspect-video object-cover rounded-lg border-2 border-pink-200 hover:border-pink-400 transition-all cursor-pointer"
+                            onClick={() => window.open(slide, '_blank')}
+                          />
+                          <Button
+                            onClick={() => window.open(slide, '_blank')}
+                            className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-pink-600 hover:bg-pink-700"
+                            size="sm"
+                          >
+                            <Icon name="Download" size={16} />
+                          </Button>
+                        </div>
+                      ))}
                     </div>
-                  )}
-                </div>
-                <div className="bg-white/60 p-4 rounded-lg">
-                  <p className="text-sm text-gray-700 font-semibold">✨ Профессиональный слайд презентации готов!</p>
-                  <p className="text-xs text-gray-600 mt-1">Вы можете скачать изображение и использовать в своей презентации</p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button 
-                    onClick={() => window.open(generatedContent, '_blank')}
-                    disabled={!generatedContent}
-                    className="flex-1 bg-gradient-to-r from-pink-600 to-purple-500 hover:from-pink-700 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold disabled:opacity-50"
-                  >
-                    <Icon name="Download" className="mr-2" size={18} />
-                    Скачать слайд
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    disabled={!generatedContent}
-                    onClick={() => {
-                      if (generatedContent) {
-                        navigator.clipboard.writeText(generatedContent);
-                      }
-                    }}
-                    className="flex-1 border-pink-300 hover:border-pink-400 hover:bg-pink-50 transition-all duration-300 disabled:opacity-50"
-                  >
-                    <Icon name="Link" className="mr-2" size={18} />
-                    Скопировать ссылку
-                  </Button>
-                </div>
+                    <div className="bg-white/60 p-4 rounded-lg">
+                      <p className="text-sm text-gray-700 font-semibold">✨ Презентация из {generatedSlides.length} слайдов готова!</p>
+                      <p className="text-xs text-gray-600 mt-1">Нажмите на слайд для просмотра в полном размере</p>
+                    </div>
+                    <Button 
+                      onClick={() => generatedSlides.forEach(url => window.open(url, '_blank'))}
+                      className="w-full bg-gradient-to-r from-pink-600 to-purple-500 hover:from-pink-700 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+                    >
+                      <Icon name="Download" className="mr-2" size={18} />
+                      Скачать все слайды
+                    </Button>
+                  </>
+                ) : (
+                  <div className="w-full h-64 flex items-center justify-center bg-gradient-to-br from-pink-100 via-purple-100 to-violet-100 rounded-lg">
+                    <div className="text-center">
+                      <Icon name="Presentation" className="mx-auto mb-4 text-pink-600" size={64} />
+                      <p className="text-lg font-bold text-gray-700">Презентация готовится...</p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

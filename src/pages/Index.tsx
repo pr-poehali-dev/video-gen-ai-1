@@ -27,6 +27,8 @@ const Index = () => {
   const [videoPrompt, setVideoPrompt] = useState('');
   const [textPrompt, setTextPrompt] = useState('');
   const [presentationTopic, setPresentationTopic] = useState('');
+  const [presentationSlides, setPresentationSlides] = useState(5);
+  const [generatedSlides, setGeneratedSlides] = useState<string[]>([]);
   const [photoPrompt, setPhotoPrompt] = useState('');
   const [photoStyle, setPhotoStyle] = useState('photorealistic');
   const [photoResolution, setPhotoResolution] = useState('1024x1024');
@@ -238,10 +240,63 @@ const Index = () => {
     }
   };
 
-  const handlePresentationGenerate = () => {
+  const handlePresentationGenerate = async () => {
     if (!checkRequestLimit()) return;
+    
+    if (!presentationTopic.trim()) {
+      toast({
+        title: 'Ошибка',
+        description: 'Введите тему презентации',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsPresentationModalOpen(true);
-    simulateGeneration('presentation', presentationTopic);
+    setIsGenerating(true);
+    setProgress(0);
+    setGeneratedSlides([]);
+
+    try {
+      const apiUrl = 'https://functions.poehali.dev/500cc697-682b-469a-b439-fa265e84c833';
+      const slides: string[] = [];
+      
+      for (let i = 0; i < presentationSlides; i++) {
+        const slidePrompt = `${presentationTopic} - слайд ${i + 1} из ${presentationSlides}`;
+        
+        const response = await fetch(`${apiUrl}?action=generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            type: 'presentation_image', 
+            prompt: slidePrompt 
+          })
+        });
+
+        const result = await response.json();
+        
+        if (result.success && result.content_url) {
+          slides.push(result.content_url);
+          setGeneratedSlides([...slides]);
+          setProgress(Math.round((i + 1) / presentationSlides * 100));
+        }
+      }
+
+      setIsGenerating(false);
+      handleIncrementRequest();
+      
+      toast({
+        title: 'Готово!',
+        description: `Создано ${slides.length} слайдов`,
+      });
+    } catch (error) {
+      setIsGenerating(false);
+      toast({
+        title: 'Ошибка',
+        description: error instanceof Error ? error.message : 'Не удалось создать презентацию',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handlePhotoGenerate = async () => {
@@ -372,6 +427,8 @@ const Index = () => {
           setTextPrompt={setTextPrompt}
           presentationTopic={presentationTopic}
           setPresentationTopic={setPresentationTopic}
+          presentationSlides={presentationSlides}
+          setPresentationSlides={setPresentationSlides}
           photoPrompt={photoPrompt}
           setPhotoPrompt={setPhotoPrompt}
           photoStyle={photoStyle}
@@ -405,6 +462,7 @@ const Index = () => {
         isPhotoModalOpen={isPhotoModalOpen}
         setIsPhotoModalOpen={setIsPhotoModalOpen}
         isGenerating={isGenerating}
+        generatedSlides={generatedSlides}
         progress={progress}
         generatedContent={generatedContent}
       />
