@@ -263,14 +263,15 @@ def translate_to_english(text: str) -> str:
 def enhance_prompt(prompt: str, style: str = 'photorealistic') -> str:
     '''Улучшение промпта для генерации изображений'''
     style_enhancers = {
-        'photorealistic': 'professional photo, highly detailed, 8k uhd, dslr, soft lighting, high quality, film grain, realistic',
-        'artistic': 'digital art, detailed painting, vibrant colors, trending on artstation, concept art, professional illustration',
-        'cartoon': 'cartoon style, animated, colorful, clean lines, professional animation, pixar style, vibrant',
-        'abstract': 'abstract art, creative, unique composition, modern art, bold colors, artistic expression'
+        'photorealistic': 'RAW photo, photorealistic, ultra detailed, 8k uhd, high resolution, DSLR, professional photography, natural lighting, sharp focus, depth of field, realistic skin texture, film grain, Fujifilm XT3, masterpiece, best quality, highly detailed, ultra realistic',
+        'artistic': 'digital art masterpiece, detailed painting, vibrant colors, trending on artstation, concept art, professional illustration, award winning, highly detailed, beautiful composition',
+        'cartoon': '3D render, pixar style, disney quality, vibrant colors, cartoon style, clean lines, professional animation, highly detailed, studio lighting, octane render',
+        'abstract': 'abstract art, creative composition, unique style, modern art, bold colors, artistic expression, trending on behance, award winning design'
     }
     
     enhancer = style_enhancers.get(style, style_enhancers['photorealistic'])
-    return f'{prompt}, {enhancer}'
+    negative_prompt = ', low quality, blurry, distorted, deformed, bad anatomy, watermark, text, signature'
+    return f'{prompt}, {enhancer}{negative_prompt}'
 
 def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: str = '1024x1024') -> GenerationResult:
     '''Демо-генерация изображения через бесплатный API с переводом и улучшением'''
@@ -279,9 +280,15 @@ def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: 
         enhanced_prompt = enhance_prompt(translated_prompt, style)
         safe_prompt = requests.utils.quote(enhanced_prompt)
         
-        width, height = resolution.split('x') if 'x' in resolution else ('1024', '1024')
+        resolution_map = {
+            '1024x1024': (1024, 1024),
+            '1920x1080': (1920, 1080),
+            '2560x1440': (2560, 1440)
+        }
         
-        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width={width}&height={height}&nologo=true&model=flux'
+        width, height = resolution_map.get(resolution, (1024, 1024))
+        
+        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width={width}&height={height}&nologo=true&model=flux&enhance=true&seed={hash(prompt) % 10000}'
         
         return GenerationResult(
             success=True,
