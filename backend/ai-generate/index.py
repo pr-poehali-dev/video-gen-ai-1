@@ -1055,7 +1055,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         if content_type == 'video':
             duration = body_data.get('duration', 5)
-            result = generate_video_huggingface(prompt, duration)
+            result = generate_video_replicate_pro(prompt, duration)
         elif content_type == 'text':
             result = generate_text_openai(prompt)
         elif content_type == 'presentation':
