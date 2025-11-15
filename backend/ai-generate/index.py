@@ -100,6 +100,7 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
     '''Профессиональная генерация видео через Replicate CogVideoX'''
     api_token = os.environ.get('REPLICATE_API_TOKEN')
     print(f'DEBUG: REPLICATE_API_TOKEN exists={bool(api_token)}, prompt={prompt[:50]}')
+    print(f'DEBUG: Token first 10 chars: {api_token[:10] if api_token else "None"}')
     if not api_token:
         print('DEBUG: No API token - using fallback')
         return generate_video_free_api(prompt, duration)
