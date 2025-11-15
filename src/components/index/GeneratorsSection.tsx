@@ -218,6 +218,58 @@ const GeneratorsSection = ({
                     </select>
                   </div>
                 </div>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-[#0f1729]/50 rounded-lg border border-cyan-500/20">
+                  <div 
+                    onClick={() => setPresentationStyle('minimalist')}
+                    className={`cursor-pointer p-3 rounded-lg border-2 transition-all ${presentationStyle === 'minimalist' ? 'border-cyan-400 bg-cyan-500/10' : 'border-cyan-500/20 hover:border-cyan-500/40'}`}
+                  >
+                    <Icon name="Square" className="mb-2 text-cyan-300" size={20} />
+                    <p className="text-xs font-semibold text-cyan-100">Минимализм</p>
+                    <p className="text-[10px] text-cyan-100/60 mt-1">Чистый дизайн</p>
+                  </div>
+                  <div 
+                    onClick={() => setPresentationStyle('business')}
+                    className={`cursor-pointer p-3 rounded-lg border-2 transition-all ${presentationStyle === 'business' ? 'border-cyan-400 bg-cyan-500/10' : 'border-cyan-500/20 hover:border-cyan-500/40'}`}
+                  >
+                    <Icon name="Briefcase" className="mb-2 text-cyan-300" size={20} />
+                    <p className="text-xs font-semibold text-cyan-100">Бизнес</p>
+                    <p className="text-[10px] text-cyan-100/60 mt-1">Корпоративный</p>
+                  </div>
+                  <div 
+                    onClick={() => setPresentationStyle('creative')}
+                    className={`cursor-pointer p-3 rounded-lg border-2 transition-all ${presentationStyle === 'creative' ? 'border-cyan-400 bg-cyan-500/10' : 'border-cyan-500/20 hover:border-cyan-500/40'}`}
+                  >
+                    <Icon name="Palette" className="mb-2 text-cyan-300" size={20} />
+                    <p className="text-xs font-semibold text-cyan-100">Креативный</p>
+                    <p className="text-[10px] text-cyan-100/60 mt-1">Яркий, смелый</p>
+                  </div>
+                  <div 
+                    onClick={() => setPresentationStyle('academic')}
+                    className={`cursor-pointer p-3 rounded-lg border-2 transition-all ${presentationStyle === 'academic' ? 'border-cyan-400 bg-cyan-500/10' : 'border-cyan-500/20 hover:border-cyan-500/40'}`}
+                  >
+                    <Icon name="GraduationCap" className="mb-2 text-cyan-300" size={20} />
+                    <p className="text-xs font-semibold text-cyan-100">Академический</p>
+                    <p className="text-[10px] text-cyan-100/60 mt-1">Научный стиль</p>
+                  </div>
+                  <div 
+                    onClick={() => setPresentationStyle('modern')}
+                    className={`cursor-pointer p-3 rounded-lg border-2 transition-all ${presentationStyle === 'modern' ? 'border-cyan-400 bg-cyan-500/10' : 'border-cyan-500/20 hover:border-cyan-500/40'}`}
+                  >
+                    <Icon name="Zap" className="mb-2 text-cyan-300" size={20} />
+                    <p className="text-xs font-semibold text-cyan-100">Современный</p>
+                    <p className="text-[10px] text-cyan-100/60 mt-1">Трендовый</p>
+                  </div>
+                  <div 
+                    onClick={() => setPresentationStyle('elegant')}
+                    className={`cursor-pointer p-3 rounded-lg border-2 transition-all ${presentationStyle === 'elegant' ? 'border-cyan-400 bg-cyan-500/10' : 'border-cyan-500/20 hover:border-cyan-500/40'}`}
+                  >
+                    <Icon name="Sparkles" className="mb-2 text-cyan-300" size={20} />
+                    <p className="text-xs font-semibold text-cyan-100">Элегантный</p>
+                    <p className="text-[10px] text-cyan-100/60 mt-1">Премиум</p>
+                  </div>
+                </div>
+                
                 <Textarea 
                   placeholder="Основные пункты презентации..."
                   className="min-h-32 resize-none bg-[#0f1729] border-cyan-500/30 text-cyan-100 placeholder:text-cyan-100/30"
