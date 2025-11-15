@@ -969,7 +969,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         if content_type == 'video':
             duration = body_data.get('duration', 5)
-            result = generate_video_segmind(prompt, duration)
+            result = generate_video_free_api(prompt, duration)
         elif content_type == 'text':
             result = generate_text_openai(prompt)
         elif content_type == 'presentation':
@@ -977,11 +977,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             slides = body_data.get('slides', [])
             result = generate_presentation_creatomate(title, slides)
         elif content_type == 'presentation_image':
-            result = generate_presentation_segmind(prompt)
+            result = generate_presentation_image_demo(prompt)
         elif content_type == 'image':
             style = body_data.get('style', 'photorealistic')
             resolution = body_data.get('resolution', '1024x1024')
-            result = generate_image_segmind(prompt, style, resolution)
+            result = generate_image_demo(prompt, style, resolution)
         else:
             return {
                 'statusCode': 400,
