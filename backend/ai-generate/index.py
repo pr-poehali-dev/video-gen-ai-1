@@ -160,66 +160,65 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         return generate_video_free_api(prompt, duration)
 
 def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
-    '''Генерация видео через Segmind API (Stable Video Diffusion)'''
+    '''Генерация видео через Segmind API (SVD xt)'''
     try:
         translated_prompt = translate_to_english(prompt)
-        enhanced_prompt = f'{translated_prompt}, high quality, cinematic, 4k, professional'
+        enhanced_prompt = f'{translated_prompt}, high quality, cinematic, professional'
         
         headers = {
-            'x-api-key': SEGMIND_API_KEY,
-            'Content-Type': 'application/json'
+            'x-api-key': SEGMIND_API_KEY
         }
         
-        first_frame_payload = {
+        first_frame_data = {
             'prompt': enhanced_prompt,
-            'negative_prompt': 'low quality, blurry, distorted',
-            'samples': 1,
-            'scheduler': 'DPM++ 2M',
-            'num_inference_steps': 25,
-            'guidance_scale': 7.5,
+            'steps': 4,
             'seed': abs(hash(prompt)) % 2147483647,
-            'img_width': 1024,
-            'img_height': 576,
-            'base64': False
+            'scheduler': 'simple',
+            'sampler_name': 'euler',
+            'width': 1024,
+            'height': 576
         }
         
         frame_response = requests.post(
-            'https://api.segmind.com/v1/sd2.1-txt2img',
-            json=first_frame_payload,
+            'https://api.segmind.com/v1/flux-schnell',
             headers=headers,
+            data=first_frame_data,
             timeout=60
         )
         
         if frame_response.status_code == 200:
-            frame_result = frame_response.json()
-            frame_url = frame_result.get('image') or frame_result.get('output')
+            import base64
+            frame_bytes = frame_response.content
+            frame_base64 = base64.b64encode(frame_bytes).decode('utf-8')
             
-            if frame_url:
-                video_payload = {
-                    'image': frame_url,
-                    'seed': abs(hash(prompt)) % 2147483647,
-                    'fps': 6,
-                    'motion_bucket_id': 127
-                }
-                
-                video_response = requests.post(
-                    'https://api.segmind.com/v1/svd',
-                    json=video_payload,
-                    headers=headers,
-                    timeout=120
-                )
-                
-                if video_response.status_code == 200:
-                    video_result = video_response.json()
-                    video_url = video_result.get('video') or video_result.get('output')
+            video_data = {
+                'image': frame_base64,
+                'seed': abs(hash(prompt)) % 2147483647,
+                'decoding_t': 14,
+                'fps': 6,
+                'motion_bucket_id': 127,
+                'base64': False
+            }
+            
+            video_response = requests.post(
+                'https://api.segmind.com/v1/svd-xt',
+                headers=headers,
+                data=video_data,
+                timeout=120
+            )
+            
+            if video_response.status_code == 200:
+                video_bytes = video_response.content
+                if len(video_bytes) > 10000:
+                    video_base64 = base64.b64encode(video_bytes).decode('utf-8')
+                    video_url = f'data:video/mp4;base64,{video_base64}'
                     
-                    if video_url:
-                        return GenerationResult(
-                            success=True,
-                            content_url=video_url,
-                            generation_id='segmind-svd',
-                            is_demo=False
-                        )
+                    return GenerationResult(
+                        success=True,
+                        content_url=video_url,
+                        generation_id='segmind-svd-xt',
+                        is_demo=False
+                    )
         
         return generate_video_free_api(prompt, duration)
     except Exception:
@@ -535,7 +534,7 @@ def generate_image_replicate_pro(prompt: str, style: str = 'photorealistic', res
         return generate_image_demo(prompt, style, resolution)
 
 def generate_image_segmind(prompt: str, style: str = 'photorealistic', resolution: str = '1024x1024') -> GenerationResult:
-    '''Профессиональная генерация через Segmind API (Flux, SD 3.5)'''
+    '''Профессиональная генерация через Segmind API (Flux Schnell)'''
     try:
         translated_prompt = translate_to_english(prompt)
         enhanced_prompt = enhance_prompt(translated_prompt, style)
@@ -549,39 +548,38 @@ def generate_image_segmind(prompt: str, style: str = 'photorealistic', resolutio
         dimensions = resolution_map.get(resolution, {'width': 1024, 'height': 1024})
         
         headers = {
-            'x-api-key': SEGMIND_API_KEY,
-            'Content-Type': 'application/json'
+            'x-api-key': SEGMIND_API_KEY
         }
         
-        payload = {
+        data = {
             'prompt': enhanced_prompt,
-            'negative_prompt': 'nsfw, lowres, bad anatomy, bad hands, text, error, missing fingers, cropped, worst quality, low quality, jpeg artifacts, signature, watermark, blurry',
-            'samples': 1,
-            'scheduler': 'DPM++ 2M',
-            'num_inference_steps': 30,
-            'guidance_scale': 7.5,
+            'steps': 4,
             'seed': abs(hash(prompt)) % 2147483647,
-            'img_width': dimensions['width'],
-            'img_height': dimensions['height'],
-            'base64': False
+            'scheduler': 'simple',
+            'sampler_name': 'euler',
+            'width': dimensions['width'],
+            'height': dimensions['height']
         }
         
         response = requests.post(
-            'https://api.segmind.com/v1/flux-realism',
-            json=payload,
+            'https://api.segmind.com/v1/flux-schnell',
             headers=headers,
+            data=data,
             timeout=60
         )
         
         if response.status_code == 200:
-            result = response.json()
-            image_url = result.get('image') or result.get('output') or result
+            import base64
+            image_bytes = response.content
             
-            if isinstance(image_url, str) and (image_url.startswith('http') or image_url.startswith('data:image')):
+            if len(image_bytes) > 1000:
+                image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+                image_url = f'data:image/jpeg;base64,{image_base64}'
+                
                 return GenerationResult(
                     success=True,
                     content_url=image_url,
-                    generation_id='segmind-flux',
+                    generation_id='segmind-flux-schnell',
                     is_demo=False
                 )
         
@@ -690,35 +688,34 @@ def generate_presentation_segmind(slide_prompt: str) -> GenerationResult:
         enhanced = f'{translated_prompt}, professional presentation slide, clean modern design, corporate style, infographic, 16:9, business template, minimalist, powerpoint style'
         
         headers = {
-            'x-api-key': SEGMIND_API_KEY,
-            'Content-Type': 'application/json'
+            'x-api-key': SEGMIND_API_KEY
         }
         
-        payload = {
+        data = {
             'prompt': enhanced,
-            'negative_prompt': 'low quality, blurry, text, watermark, cluttered, messy',
-            'samples': 1,
-            'scheduler': 'DPM++ 2M',
-            'num_inference_steps': 30,
-            'guidance_scale': 7.5,
+            'steps': 4,
             'seed': abs(hash(slide_prompt)) % 2147483647,
-            'img_width': 1920,
-            'img_height': 1080,
-            'base64': False
+            'scheduler': 'simple',
+            'sampler_name': 'euler',
+            'width': 1920,
+            'height': 1080
         }
         
         response = requests.post(
-            'https://api.segmind.com/v1/flux-realism',
-            json=payload,
+            'https://api.segmind.com/v1/flux-schnell',
             headers=headers,
+            data=data,
             timeout=60
         )
         
         if response.status_code == 200:
-            result = response.json()
-            image_url = result.get('image') or result.get('output')
+            import base64
+            image_bytes = response.content
             
-            if image_url and isinstance(image_url, str):
+            if len(image_bytes) > 1000:
+                image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+                image_url = f'data:image/jpeg;base64,{image_base64}'
+                
                 return GenerationResult(
                     success=True,
                     content_url=image_url,
