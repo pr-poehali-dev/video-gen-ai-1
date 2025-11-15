@@ -98,7 +98,7 @@ def generate_video_creatomate(prompt: str, duration: int = 5) -> GenerationResul
 
 def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationResult:
     '''Профессиональная генерация видео через Replicate CogVideoX'''
-    api_token = os.environ.get('REPLICATE_API_TOKEN')
+    api_token = os.environ.get('REPLICATE_API_TOKEN', 'ak_PtHOYHjGOJPxYXUg6bXEDCeyEWT-l6xVFAWPjwXcedc')
     print(f'DEBUG: REPLICATE_API_TOKEN exists={bool(api_token)}, prompt={prompt[:50]}')
     print(f'DEBUG: Token first 10 chars: {api_token[:10] if api_token else "None"}')
     if not api_token:
