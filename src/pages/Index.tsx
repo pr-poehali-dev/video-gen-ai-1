@@ -193,9 +193,15 @@ const Index = () => {
   };
 
   const handleVideoGenerate = () => {
-    if (!checkRequestLimit()) return;
+    console.log('🎬 handleVideoGenerate вызван', { videoPrompt, videoDuration, videoStyle });
+    
+    if (!checkRequestLimit()) {
+      console.log('❌ Лимит запросов исчерпан');
+      return;
+    }
     
     if (!videoPrompt.trim()) {
+      console.log('❌ Пустой промпт');
       toast({
         title: 'Ошибка',
         description: 'Введите описание видео',
@@ -204,6 +210,7 @@ const Index = () => {
       return;
     }
     
+    console.log('✅ Открываю модальное окно и запускаю генерацию');
     setIsVideoModalOpen(true);
     simulateGeneration('video', videoPrompt, videoDuration, videoStyle);
   };
