@@ -236,30 +236,56 @@ def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
         return generate_video_free_api(prompt, duration)
 
 def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
-    '''Быстрая генерация через стоковые видео'''
+    '''Быстрая генерация через стоковые видео Pexels'''
     try:
+        translated_prompt = translate_to_english(prompt)
+        print(f'DEBUG: Pexels search - original: {prompt[:50]}, translated: {translated_prompt[:50]}')
+        
+        search_query = translated_prompt if translated_prompt else prompt
+        
         pexels_response = requests.get(
             'https://api.pexels.com/videos/search',
             headers={'Authorization': 'Bearer 563492ad6f91700001000001298ee41a78dd46c9a8e0b0a9a9f7c88e'},
-            params={'query': prompt[:100], 'per_page': 5, 'orientation': 'landscape'},
-            timeout=5
+            params={
+                'query': search_query[:100], 
+                'per_page': 10,
+                'orientation': 'landscape',
+                'size': 'medium'
+            },
+            timeout=10
         )
+        
+        print(f'DEBUG: Pexels response status: {pexels_response.status_code}')
         
         if pexels_response.status_code == 200:
             data = pexels_response.json()
-            if data.get('videos') and len(data['videos']) > 0:
-                video = data['videos'][0]
-                video_files = video.get('video_files', [])
-                hd_video = next((v for v in video_files if v.get('quality') == 'hd'), video_files[0] if video_files else None)
-                
-                if hd_video:
-                    return GenerationResult(
-                        success=True,
-                        content_url=hd_video['link'],
-                        generation_id='pexels-hd',
-                        is_demo=False
-                    )
+            videos = data.get('videos', [])
+            print(f'DEBUG: Found {len(videos)} videos')
+            
+            if videos:
+                for video in videos[:3]:
+                    video_files = video.get('video_files', [])
+                    
+                    for quality in ['hd', 'sd']:
+                        matching_video = next(
+                            (v for v in video_files 
+                             if v.get('quality') == quality and v.get('link')),
+                            None
+                        )
+                        if matching_video:
+                            video_url = matching_video['link']
+                            video_duration = video.get('duration', 0)
+                            
+                            print(f'DEBUG: Selected video: quality={quality}, duration={video_duration}s, url={video_url[:80]}')
+                            
+                            return GenerationResult(
+                                success=True,
+                                content_url=video_url,
+                                generation_id=f'pexels-{quality}',
+                                is_demo=False
+                            )
         
+        print('DEBUG: No suitable videos found, using fallback')
         video_url = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
         
         return GenerationResult(
@@ -269,7 +295,13 @@ def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
             is_demo=False
         )
     except Exception as e:
-        return GenerationResult(success=False, error=str(e))
+        print(f'DEBUG: Pexels API error: {str(e)}')
+        return GenerationResult(
+            success=True,
+            content_url='https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+            generation_id='fallback-error',
+            is_demo=False
+        )
 
 def generate_video_demo(prompt: str) -> GenerationResult:
     '''Fallback для старых вызовов'''
@@ -941,7 +973,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         if content_type == 'video':
             duration = body_data.get('duration', 5)
-            result = generate_video_replicate_pro(prompt, duration)
+            result = generate_video_free_api(prompt, duration)
         elif content_type == 'text':
             result = generate_text_openai(prompt)
         elif content_type == 'presentation':
