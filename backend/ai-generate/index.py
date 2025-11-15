@@ -237,11 +237,51 @@ def generate_text_openai(prompt: str, max_tokens: int = 2000) -> GenerationResul
     except Exception:
         return generate_text_demo(prompt)
 
-def generate_image_demo(prompt: str) -> GenerationResult:
-    '''Демо-генерация изображения через бесплатный API'''
+def translate_to_english(text: str) -> str:
+    '''Перевод русского текста на английский для улучшения генерации'''
     try:
-        safe_prompt = requests.utils.quote(prompt)
-        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1920&height=1080&nologo=true'
+        response = requests.get(
+            'https://translate.googleapis.com/translate_a/single',
+            params={
+                'client': 'gtx',
+                'sl': 'ru',
+                'tl': 'en',
+                'dt': 't',
+                'q': text
+            },
+            timeout=5
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            translated = ''.join([item[0] for item in result[0] if item[0]])
+            return translated
+        return text
+    except Exception:
+        return text
+
+def enhance_prompt(prompt: str, style: str = 'photorealistic') -> str:
+    '''Улучшение промпта для генерации изображений'''
+    style_enhancers = {
+        'photorealistic': 'professional photo, highly detailed, 8k uhd, dslr, soft lighting, high quality, film grain, realistic',
+        'artistic': 'digital art, detailed painting, vibrant colors, trending on artstation, concept art, professional illustration',
+        'cartoon': 'cartoon style, animated, colorful, clean lines, professional animation, pixar style, vibrant',
+        'abstract': 'abstract art, creative, unique composition, modern art, bold colors, artistic expression'
+    }
+    
+    enhancer = style_enhancers.get(style, style_enhancers['photorealistic'])
+    return f'{prompt}, {enhancer}'
+
+def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: str = '1024x1024') -> GenerationResult:
+    '''Демо-генерация изображения через бесплатный API с переводом и улучшением'''
+    try:
+        translated_prompt = translate_to_english(prompt)
+        enhanced_prompt = enhance_prompt(translated_prompt, style)
+        safe_prompt = requests.utils.quote(enhanced_prompt)
+        
+        width, height = resolution.split('x') if 'x' in resolution else ('1024', '1024')
+        
+        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width={width}&height={height}&nologo=true&model=flux'
         
         return GenerationResult(
             success=True,
@@ -474,7 +514,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         elif content_type == 'presentation_image':
             result = generate_presentation_image(prompt)
         elif content_type == 'image':
-            result = generate_image_demo(prompt)
+            style = body_data.get('style', 'photorealistic')
+            resolution = body_data.get('resolution', '1024x1024')
+            result = generate_image_demo(prompt, style, resolution)
         else:
             return {
                 'statusCode': 400,
