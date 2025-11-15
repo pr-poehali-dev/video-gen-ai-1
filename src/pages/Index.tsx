@@ -28,6 +28,8 @@ const Index = () => {
   const [textPrompt, setTextPrompt] = useState('');
   const [presentationTopic, setPresentationTopic] = useState('');
   const [photoPrompt, setPhotoPrompt] = useState('');
+  const [photoStyle, setPhotoStyle] = useState('photorealistic');
+  const [photoResolution, setPhotoResolution] = useState('1024x1024');
   
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [isTextModalOpen, setIsTextModalOpen] = useState(false);
@@ -372,6 +374,10 @@ const Index = () => {
           setPresentationTopic={setPresentationTopic}
           photoPrompt={photoPrompt}
           setPhotoPrompt={setPhotoPrompt}
+          photoStyle={photoStyle}
+          setPhotoStyle={setPhotoStyle}
+          photoResolution={photoResolution}
+          setPhotoResolution={setPhotoResolution}
           handleVideoGenerate={handleVideoGenerate}
           handleTextGenerate={handleTextGenerate}
           handlePresentationGenerate={handlePresentationGenerate}

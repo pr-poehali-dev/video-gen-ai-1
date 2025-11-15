@@ -14,6 +14,10 @@ interface GeneratorsSectionProps {
   setPresentationTopic: (value: string) => void;
   photoPrompt: string;
   setPhotoPrompt: (value: string) => void;
+  photoStyle: string;
+  setPhotoStyle: (value: string) => void;
+  photoResolution: string;
+  setPhotoResolution: (value: string) => void;
   handleVideoGenerate: () => void;
   handleTextGenerate: () => void;
   handlePresentationGenerate: () => void;
@@ -29,6 +33,10 @@ const GeneratorsSection = ({
   setPresentationTopic,
   photoPrompt,
   setPhotoPrompt,
+  photoStyle,
+  setPhotoStyle,
+  photoResolution,
+  setPhotoResolution,
   handleVideoGenerate,
   handleTextGenerate,
   handlePresentationGenerate,
@@ -235,19 +243,27 @@ const GeneratorsSection = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs sm:text-sm font-medium mb-2 block text-green-100">Стиль</label>
-                    <select className="w-full h-10 px-3 rounded-md border bg-[#0f1729] border-green-500/30 text-green-100 text-sm">
-                      <option>Фотореалистичный</option>
-                      <option>Художественный</option>
-                      <option>Мультяшный</option>
-                      <option>Абстрактный</option>
+                    <select 
+                      className="w-full h-10 px-3 rounded-md border bg-[#0f1729] border-green-500/30 text-green-100 text-sm"
+                      value={photoStyle}
+                      onChange={(e) => setPhotoStyle(e.target.value)}
+                    >
+                      <option value="photorealistic">Фотореалистичный</option>
+                      <option value="artistic">Художественный</option>
+                      <option value="cartoon">Мультяшный</option>
+                      <option value="abstract">Абстрактный</option>
                     </select>
                   </div>
                   <div>
                     <label className="text-xs sm:text-sm font-medium mb-2 block text-green-100">Разрешение</label>
-                    <select className="w-full h-10 px-3 rounded-md border bg-[#0f1729] border-green-500/30 text-green-100 text-sm">
-                      <option>1024x1024</option>
-                      <option>1920x1080 (Full HD)</option>
-                      <option>2560x1440 (2K)</option>
+                    <select 
+                      className="w-full h-10 px-3 rounded-md border bg-[#0f1729] border-green-500/30 text-green-100 text-sm"
+                      value={photoResolution}
+                      onChange={(e) => setPhotoResolution(e.target.value)}
+                    >
+                      <option value="1024x1024">1024x1024</option>
+                      <option value="1920x1080">1920x1080 (Full HD)</option>
+                      <option value="2560x1440">2560x1440 (2K)</option>
                     </select>
                   </div>
                 </div>
