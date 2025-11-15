@@ -28,6 +28,7 @@ const Index = () => {
   const [textPrompt, setTextPrompt] = useState('');
   const [presentationTopic, setPresentationTopic] = useState('');
   const [presentationSlides, setPresentationSlides] = useState(5);
+  const [presentationStyle, setPresentationStyle] = useState('minimalist');
   const [generatedSlides, setGeneratedSlides] = useState<string[]>([]);
   const [photoPrompt, setPhotoPrompt] = useState('');
   const [photoStyle, setPhotoStyle] = useState('photorealistic');
@@ -261,8 +262,19 @@ const Index = () => {
       const apiUrl = 'https://functions.poehali.dev/500cc697-682b-469a-b439-fa265e84c833';
       const slides: string[] = [];
       
+      const styleMap: Record<string, string> = {
+        minimalist: 'minimalist clean design, white background, simple',
+        business: 'professional business style, corporate colors, charts',
+        creative: 'creative colorful design, bold typography, artistic',
+        academic: 'academic scientific style, diagrams, formal',
+        modern: 'modern trendy design, gradients, dynamic',
+        elegant: 'elegant luxury design, sophisticated, premium'
+      };
+      
+      const styleDesc = styleMap[presentationStyle] || styleMap.minimalist;
+      
       for (let i = 0; i < presentationSlides; i++) {
-        const slidePrompt = `${presentationTopic} - слайд ${i + 1} из ${presentationSlides}`;
+        const slidePrompt = `${presentationTopic} - slide ${i + 1} of ${presentationSlides}, ${styleDesc}`;
         
         const response = await fetch(`${apiUrl}?action=generate`, {
           method: 'POST',
@@ -429,6 +441,8 @@ const Index = () => {
           setPresentationTopic={setPresentationTopic}
           presentationSlides={presentationSlides}
           setPresentationSlides={setPresentationSlides}
+          presentationStyle={presentationStyle}
+          setPresentationStyle={setPresentationStyle}
           photoPrompt={photoPrompt}
           setPhotoPrompt={setPhotoPrompt}
           photoStyle={photoStyle}

@@ -14,6 +14,8 @@ interface GeneratorsSectionProps {
   setPresentationTopic: (value: string) => void;
   presentationSlides: number;
   setPresentationSlides: (value: number) => void;
+  presentationStyle: string;
+  setPresentationStyle: (value: string) => void;
   photoPrompt: string;
   setPhotoPrompt: (value: string) => void;
   photoStyle: string;
@@ -35,6 +37,8 @@ const GeneratorsSection = ({
   setPresentationTopic,
   presentationSlides,
   setPresentationSlides,
+  presentationStyle,
+  setPresentationStyle,
   photoPrompt,
   setPhotoPrompt,
   photoStyle,
@@ -200,11 +204,17 @@ const GeneratorsSection = ({
                   </div>
                   <div>
                     <label className="text-xs sm:text-sm font-medium mb-2 block text-cyan-100">Стиль</label>
-                    <select className="w-full h-10 px-3 rounded-md border bg-[#0f1729] border-cyan-500/30 text-cyan-100 text-sm">
-                      <option>Минимализм</option>
-                      <option>Бизнес</option>
-                      <option>Креативный</option>
-                      <option>Академический</option>
+                    <select 
+                      value={presentationStyle}
+                      onChange={(e) => setPresentationStyle(e.target.value)}
+                      className="w-full h-10 px-3 rounded-md border bg-[#0f1729] border-cyan-500/30 text-cyan-100 text-sm"
+                    >
+                      <option value="minimalist">Минимализм</option>
+                      <option value="business">Бизнес</option>
+                      <option value="creative">Креативный</option>
+                      <option value="academic">Академический</option>
+                      <option value="modern">Современный</option>
+                      <option value="elegant">Элегантный</option>
                     </select>
                   </div>
                 </div>
