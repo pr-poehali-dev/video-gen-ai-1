@@ -8,6 +8,8 @@ from typing import Dict, Any, Optional
 import requests
 from dataclasses import dataclass
 
+SEGMIND_API_KEY = 'ak_HGq9NyADKoBGtr86IrAGu6_PlJfAP0Ubz0TL1yzHvS4'
+
 @dataclass
 class GenerationResult:
     success: bool
@@ -152,6 +154,72 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
                 )
             elif result['status'] == 'failed':
                 return generate_video_free_api(prompt, duration)
+        
+        return generate_video_free_api(prompt, duration)
+    except Exception:
+        return generate_video_free_api(prompt, duration)
+
+def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
+    '''Генерация видео через Segmind API (Stable Video Diffusion)'''
+    try:
+        translated_prompt = translate_to_english(prompt)
+        enhanced_prompt = f'{translated_prompt}, high quality, cinematic, 4k, professional'
+        
+        headers = {
+            'x-api-key': SEGMIND_API_KEY,
+            'Content-Type': 'application/json'
+        }
+        
+        first_frame_payload = {
+            'prompt': enhanced_prompt,
+            'negative_prompt': 'low quality, blurry, distorted',
+            'samples': 1,
+            'scheduler': 'DPM++ 2M',
+            'num_inference_steps': 25,
+            'guidance_scale': 7.5,
+            'seed': abs(hash(prompt)) % 2147483647,
+            'img_width': 1024,
+            'img_height': 576,
+            'base64': False
+        }
+        
+        frame_response = requests.post(
+            'https://api.segmind.com/v1/sd2.1-txt2img',
+            json=first_frame_payload,
+            headers=headers,
+            timeout=60
+        )
+        
+        if frame_response.status_code == 200:
+            frame_result = frame_response.json()
+            frame_url = frame_result.get('image') or frame_result.get('output')
+            
+            if frame_url:
+                video_payload = {
+                    'image': frame_url,
+                    'seed': abs(hash(prompt)) % 2147483647,
+                    'fps': 6,
+                    'motion_bucket_id': 127
+                }
+                
+                video_response = requests.post(
+                    'https://api.segmind.com/v1/svd',
+                    json=video_payload,
+                    headers=headers,
+                    timeout=120
+                )
+                
+                if video_response.status_code == 200:
+                    video_result = video_response.json()
+                    video_url = video_result.get('video') or video_result.get('output')
+                    
+                    if video_url:
+                        return GenerationResult(
+                            success=True,
+                            content_url=video_url,
+                            generation_id='segmind-svd',
+                            is_demo=False
+                        )
         
         return generate_video_free_api(prompt, duration)
     except Exception:
@@ -466,6 +534,61 @@ def generate_image_replicate_pro(prompt: str, style: str = 'photorealistic', res
     except Exception:
         return generate_image_demo(prompt, style, resolution)
 
+def generate_image_segmind(prompt: str, style: str = 'photorealistic', resolution: str = '1024x1024') -> GenerationResult:
+    '''Профессиональная генерация через Segmind API (Flux, SD 3.5)'''
+    try:
+        translated_prompt = translate_to_english(prompt)
+        enhanced_prompt = enhance_prompt(translated_prompt, style)
+        
+        resolution_map = {
+            '1024x1024': {'width': 1024, 'height': 1024},
+            '1920x1080': {'width': 1920, 'height': 1080},
+            '2560x1440': {'width': 1440, 'height': 1440}
+        }
+        
+        dimensions = resolution_map.get(resolution, {'width': 1024, 'height': 1024})
+        
+        headers = {
+            'x-api-key': SEGMIND_API_KEY,
+            'Content-Type': 'application/json'
+        }
+        
+        payload = {
+            'prompt': enhanced_prompt,
+            'negative_prompt': 'nsfw, lowres, bad anatomy, bad hands, text, error, missing fingers, cropped, worst quality, low quality, jpeg artifacts, signature, watermark, blurry',
+            'samples': 1,
+            'scheduler': 'DPM++ 2M',
+            'num_inference_steps': 30,
+            'guidance_scale': 7.5,
+            'seed': abs(hash(prompt)) % 2147483647,
+            'img_width': dimensions['width'],
+            'img_height': dimensions['height'],
+            'base64': False
+        }
+        
+        response = requests.post(
+            'https://api.segmind.com/v1/flux-realism',
+            json=payload,
+            headers=headers,
+            timeout=60
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            image_url = result.get('image') or result.get('output') or result
+            
+            if isinstance(image_url, str) and (image_url.startswith('http') or image_url.startswith('data:image')):
+                return GenerationResult(
+                    success=True,
+                    content_url=image_url,
+                    generation_id='segmind-flux',
+                    is_demo=False
+                )
+        
+        return generate_image_demo(prompt, style, resolution)
+    except Exception:
+        return generate_image_demo(prompt, style, resolution)
+
 def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: str = '1024x1024') -> GenerationResult:
     '''Fallback генерация через бесплатные API'''
     try:
@@ -555,6 +678,53 @@ def generate_presentation_replicate_pro(slide_prompt: str) -> GenerationResult:
                 )
             elif result['status'] == 'failed':
                 return generate_presentation_image_demo(slide_prompt)
+        
+        return generate_presentation_image_demo(slide_prompt)
+    except Exception:
+        return generate_presentation_image_demo(slide_prompt)
+
+def generate_presentation_segmind(slide_prompt: str) -> GenerationResult:
+    '''Генерация слайдов презентации через Segmind API'''
+    try:
+        translated_prompt = translate_to_english(slide_prompt)
+        enhanced = f'{translated_prompt}, professional presentation slide, clean modern design, corporate style, infographic, 16:9, business template, minimalist, powerpoint style'
+        
+        headers = {
+            'x-api-key': SEGMIND_API_KEY,
+            'Content-Type': 'application/json'
+        }
+        
+        payload = {
+            'prompt': enhanced,
+            'negative_prompt': 'low quality, blurry, text, watermark, cluttered, messy',
+            'samples': 1,
+            'scheduler': 'DPM++ 2M',
+            'num_inference_steps': 30,
+            'guidance_scale': 7.5,
+            'seed': abs(hash(slide_prompt)) % 2147483647,
+            'img_width': 1920,
+            'img_height': 1080,
+            'base64': False
+        }
+        
+        response = requests.post(
+            'https://api.segmind.com/v1/flux-realism',
+            json=payload,
+            headers=headers,
+            timeout=60
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            image_url = result.get('image') or result.get('output')
+            
+            if image_url and isinstance(image_url, str):
+                return GenerationResult(
+                    success=True,
+                    content_url=image_url,
+                    generation_id='segmind-presentation',
+                    is_demo=False
+                )
         
         return generate_presentation_image_demo(slide_prompt)
     except Exception:
@@ -802,7 +972,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         if content_type == 'video':
             duration = body_data.get('duration', 5)
-            result = generate_video_replicate_pro(prompt, duration)
+            result = generate_video_segmind(prompt, duration)
         elif content_type == 'text':
             result = generate_text_openai(prompt)
         elif content_type == 'presentation':
@@ -810,11 +980,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             slides = body_data.get('slides', [])
             result = generate_presentation_creatomate(title, slides)
         elif content_type == 'presentation_image':
-            result = generate_presentation_replicate_pro(prompt)
+            result = generate_presentation_segmind(prompt)
         elif content_type == 'image':
             style = body_data.get('style', 'photorealistic')
             resolution = body_data.get('resolution', '1024x1024')
-            result = generate_image_demo(prompt, style, resolution)
+            result = generate_image_segmind(prompt, style, resolution)
         else:
             return {
                 'statusCode': 400,
