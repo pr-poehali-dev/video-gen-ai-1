@@ -1,5 +1,5 @@
 '''
-Генерация текста через OpenAI GPT-4
+Генерация текста через OpenRouter (универсальный доступ к GPT-4, Claude, Gemini)
 '''
 import json
 import os
@@ -8,7 +8,7 @@ import requests
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
-    Business: Генерация текста через OpenAI GPT-4
+    Business: Генерация текста через OpenRouter
     Args: event с httpMethod, body (prompt, max_tokens, temperature, model)
     Returns: Сгенерированный текст
     '''
@@ -28,7 +28,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
     
     if method == 'POST':
-        api_key = os.environ.get('OPENAI_API_KEY')
+        api_key = os.environ.get('OPENROUTER_API_KEY')
         
         if not api_key:
             return {
@@ -39,8 +39,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 },
                 'isBase64Encoded': False,
                 'body': json.dumps({
-                    'error': 'OPENAI_API_KEY не настроен',
-                    'message': 'Добавьте ключ OpenAI в секреты проекта'
+                    'error': 'OPENROUTER_API_KEY не настроен',
+                    'message': 'Добавьте ключ OpenRouter в секреты проекта'
                 })
             }
         
@@ -51,7 +51,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         prompt = body_data.get('prompt', '')
         max_tokens = body_data.get('max_tokens', 2000)
         temperature = body_data.get('temperature', 0.7)
-        model = body_data.get('model', 'gpt-4o-mini')
+        model = body_data.get('model', 'openai/gpt-3.5-turbo')
         
         if not prompt:
             return {
@@ -66,7 +66,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         headers = {
             'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://poehali.dev',
+            'X-Title': 'Poehali AI Generator'
         }
         
         payload = {
@@ -79,7 +81,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
         
         response = requests.post(
-            'https://api.openai.com/v1/chat/completions',
+            'https://openrouter.ai/api/v1/chat/completions',
             json=payload,
             headers=headers,
             timeout=60
@@ -95,7 +97,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 },
                 'isBase64Encoded': False,
                 'body': json.dumps({
-                    'error': 'Ошибка OpenAI API',
+                    'error': 'Ошибка OpenRouter API',
                     'details': error_data.get('error', {}).get('message', str(error_data)),
                     'status': response.status_code
                 })
@@ -114,9 +116,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'body': json.dumps({
                 'success': True,
                 'text': text_content,
-                'model': result['model'],
+                'model': result.get('model', model),
                 'usage': result.get('usage', {}),
-                'id': result['id']
+                'id': result.get('id', '')
             })
         }
     
