@@ -708,7 +708,7 @@ def generate_image_segmind(prompt: str, style: str = 'photorealistic', resolutio
         return generate_image_demo(prompt, style, resolution)
 
 def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: str = '1024x1024') -> GenerationResult:
-    '''Быстрая генерация через Pollinations API'''
+    '''Генерация через Pollinations AI (Flux) - быстрая и качественная'''
     try:
         resolution_map = {
             '1024x1024': (1024, 1024),
@@ -717,15 +717,28 @@ def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: 
         }
         
         width, height = resolution_map.get(resolution, (1024, 1024))
+        
+        # Улучшаем промпт в зависимости от стиля
+        style_enhancements = {
+            'photorealistic': 'professional photography, highly detailed, 8k, sharp focus',
+            'artistic': 'digital art, concept art, vibrant colors, professional illustration',
+            'cartoon': '3D render, pixar style, vibrant colors, professional animation',
+            'abstract': 'abstract art, creative composition, modern art, bold colors'
+        }
+        
+        enhancement = style_enhancements.get(style, style_enhancements['photorealistic'])
+        enhanced_prompt = f'{prompt}, {enhancement}'
+        
+        # Используем seed для стабильности результата
         seed = abs(hash(prompt)) % 1000000
         
-        safe_prompt = requests.utils.quote(prompt)
-        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width={width}&height={height}&nologo=true&model=flux&seed={seed}'
+        safe_prompt = requests.utils.quote(enhanced_prompt)
+        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width={width}&height={height}&nologo=true&model=flux&seed={seed}&enhance=true'
         
         return GenerationResult(
             success=True,
             content_url=image_url,
-            generation_id='flux-fast',
+            generation_id=f'flux-{seed}',
             is_demo=False
         )
     except Exception as e:
@@ -843,16 +856,27 @@ def generate_presentation_segmind(slide_prompt: str) -> GenerationResult:
         return generate_presentation_image_demo(slide_prompt)
 
 def generate_presentation_image_demo(slide_prompt: str) -> GenerationResult:
-    '''Генерация профессионального изображения для презентации'''
+    '''Генерация профессионального изображения для презентации через AI'''
     try:
+        # Переводим на английский для лучшей генерации
+        translated_prompt = translate_to_english(slide_prompt)
+        
+        # Добавляем профессиональные модификаторы для презентаций
+        enhanced_prompt = (
+            f'{translated_prompt}, professional presentation slide, '
+            'clean modern design, corporate style, business template, '
+            'minimalist, powerpoint style, professional graphics, '
+            'infographic style, high quality, detailed, 16:9 aspect ratio'
+        )
+        
         seed = abs(hash(slide_prompt)) % 1000000
-        safe_prompt = requests.utils.quote(f'{slide_prompt}, presentation slide, 16:9')
-        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1920&height=1080&nologo=true&model=flux&seed={seed}'
+        safe_prompt = requests.utils.quote(enhanced_prompt)
+        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1920&height=1080&nologo=true&model=flux&seed={seed}&enhance=true'
         
         return GenerationResult(
             success=True,
             content_url=image_url,
-            generation_id='flux-fast',
+            generation_id=f'flux-presentation-{seed}',
             is_demo=False
         )
     except Exception as e:
