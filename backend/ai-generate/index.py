@@ -8,6 +8,14 @@ from typing import Dict, Any, Optional
 import requests
 from dataclasses import dataclass
 
+def get_replicate_key():
+    '''Получить API ключ Replicate из переменных окружения'''
+    return os.environ.get('REPLICATE_API_TOKEN', '')
+
+def has_replicate_access():
+    '''Проверить наличие API ключа Replicate'''
+    return bool(get_replicate_key())
+
 SEGMIND_API_KEY = 'ak_HGq9NyADKoBGtr86IrAGu6_PlJfAP0Ubz0TL1yzHvS4'
 
 @dataclass
@@ -133,11 +141,11 @@ def generate_video_huggingface(prompt: str, duration: int = 5) -> GenerationResu
     return generate_video_pollinations_free(prompt, duration)
 
 def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationResult:
-    '''Профессиональная генерация видео через Replicate CogVideoX'''
-    api_token = os.environ.get('REPLICATE_API_TOKEN')
+    '''Профессиональная генерация видео через Replicate Wan 2.1'''
+    api_token = get_replicate_key()
     print(f'DEBUG: API Token exists={bool(api_token)}, prompt={prompt[:50]}')
     print(f'DEBUG: Token first 10 chars: {api_token[:10] if api_token else "None"}')
-    if not api_token:
+    if not has_replicate_access():
         print('DEBUG: No API token found!')
         return GenerationResult(
             success=False,
@@ -168,18 +176,15 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         print(f'DEBUG: Using authorization header: Bearer {api_token[:15]}...')
         
         payload = {
-            'version': 'fofr/cogvideox-5b:49a2b3e8b56a4861d2860c1ee66ee4e0e7e0aee1fb88d4f2df1cd0ede944e2f7',
+            'version': 'wan-2.1-i2v-720p',
             'input': {
-                'prompt': enhanced_prompt,
-                'num_frames': num_frames,
-                'guidance_scale': 7.5,
-                'num_inference_steps': 50
+                'prompt': enhanced_prompt
             }
         }
         
         print(f'DEBUG: Enhanced prompt: {enhanced_prompt[:100]}')
         
-        print(f'DEBUG: Calling Replicate API...')
+        print(f'DEBUG: Calling Replicate Wan 2.1 API...')
         response = requests.post(
             'https://api.replicate.com/v1/predictions',
             json=payload,
@@ -311,10 +316,10 @@ def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
         return generate_video_pollinations_free(prompt, duration)
 
 def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResult:
-    '''Генерация AI видео по запросу через Replicate CogVideoX или бесплатные альтернативы'''
-    api_token = os.environ.get('REPLICATE_API_TOKEN')
+    '''Генерация AI видео по запросу через Replicate Wan 2.1 или бесплатные альтернативы'''
+    api_token = get_replicate_key()
     
-    if not api_token:
+    if not has_replicate_access():
         print('DEBUG: No Replicate token - returning info message')
         return GenerationResult(
             success=False,
@@ -329,9 +334,6 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
             translated_prompt = translate_to_english(prompt)
         else:
             translated_prompt = prompt
-        
-        num_frames_map = {3: 25, 5: 49, 10: 81}
-        num_frames = num_frames_map.get(duration, 49)
         
         headers = {
             'Authorization': f'Bearer {api_token}',
@@ -353,16 +355,13 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
         print(f'DEBUG: Enhanced prompt: {enhanced_prompt[:100]}')
         
         payload = {
-            'version': 'fofr/cogvideox-5b:49a2b3e8b56a4861d2860c1ee66ee4e0e7e0aee1fb88d4f2df1cd0ede944e2f7',
+            'version': 'wan-2.1-i2v-720p',
             'input': {
-                'prompt': enhanced_prompt,
-                'num_frames': num_frames,
-                'guidance_scale': 7.5,
-                'num_inference_steps': 50
+                'prompt': enhanced_prompt
             }
         }
         
-        print(f'DEBUG: Calling Replicate CogVideoX API...')
+        print(f'DEBUG: Calling Replicate Wan 2.1 API...')
         response = requests.post(
             'https://api.replicate.com/v1/predictions',
             json=payload,
