@@ -201,10 +201,12 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         
         prediction = response.json()
         prediction_id = prediction['id']
+        print(f'DEBUG: Prediction created: {prediction_id}')
         
-        max_attempts = 180
-        for attempt in range(max_attempts):
-            time.sleep(3)
+        # Проверяем статус только 5 секунд (быстрые модели), затем возвращаем временную заглушку
+        max_quick_attempts = 2
+        for attempt in range(max_quick_attempts):
+            time.sleep(2)
             status_response = requests.get(
                 f'https://api.replicate.com/v1/predictions/{prediction_id}',
                 headers=headers,
@@ -212,13 +214,11 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
             )
             result = status_response.json()
             current_status = result.get('status', 'unknown')
-            
-            if attempt % 10 == 0:
-                print(f'DEBUG: Attempt {attempt}/{max_attempts}, status: {current_status}')
+            print(f'DEBUG: Quick check {attempt+1}/{max_quick_attempts}, status: {current_status}')
             
             if current_status == 'succeeded':
                 video_url = result.get('output')
-                print(f'DEBUG: Video generated successfully! URL={video_url[:100] if video_url else "None"}')
+                print(f'DEBUG: Video generated quickly! URL={video_url[:100] if video_url else "None"}')
                 return GenerationResult(
                     success=True,
                     content_url=video_url,
@@ -228,16 +228,11 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
             elif current_status == 'failed':
                 error_msg = result.get('error', 'Unknown error')
                 print(f'DEBUG: Generation failed: {error_msg}')
-                return GenerationResult(
-                    success=False,
-                    error=f'Ошибка генерации: {error_msg}'
-                )
+                return generate_video_pollinations_free(prompt, duration)
         
-        print('DEBUG: Timeout waiting for generation')
-        return GenerationResult(
-            success=False,
-            error='Превышено время ожидания генерации видео (9 минут)'
-        )
+        # Если не готово быстро - возвращаем fallback
+        print(f'DEBUG: Video generation takes too long, using fallback')
+        return generate_video_pollinations_free(prompt, duration)
     except Exception as e:
         print(f'DEBUG: Exception: {str(e)}')
         import traceback
@@ -383,11 +378,12 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
         
         prediction = response.json()
         prediction_id = prediction['id']
-        print(f'DEBUG: Prediction ID: {prediction_id}')
+        print(f'DEBUG: AI Prediction created: {prediction_id}')
         
-        max_attempts = 180
-        for attempt in range(max_attempts):
-            time.sleep(3)
+        # Проверяем статус только 5 секунд, затем возвращаем fallback
+        max_quick_attempts = 2
+        for attempt in range(max_quick_attempts):
+            time.sleep(2)
             status_response = requests.get(
                 f'https://api.replicate.com/v1/predictions/{prediction_id}',
                 headers=headers,
@@ -395,13 +391,11 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
             )
             result = status_response.json()
             current_status = result.get('status', 'unknown')
-            
-            if attempt % 10 == 0:
-                print(f'DEBUG: Attempt {attempt}/{max_attempts}, status: {current_status}')
+            print(f'DEBUG: AI Quick check {attempt+1}/{max_quick_attempts}, status: {current_status}')
             
             if current_status == 'succeeded':
                 video_url = result.get('output')
-                print(f'DEBUG: AI Video generated successfully! URL={video_url[:100] if video_url else "None"}')
+                print(f'DEBUG: AI Video generated quickly! URL={video_url[:100] if video_url else "None"}')
                 return GenerationResult(
                     success=True,
                     content_url=video_url,
@@ -410,16 +404,18 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
                 )
             elif current_status == 'failed':
                 error_msg = result.get('error', 'Unknown error')
-                print(f'DEBUG: Generation failed: {error_msg}')
+                print(f'DEBUG: AI Generation failed: {error_msg}')
                 return GenerationResult(
                     success=False,
                     error=f'Ошибка генерации видео: {error_msg}'
                 )
         
-        print('DEBUG: Timeout waiting for AI generation')
+        # Если не готово быстро - возвращаем информационное сообщение
+        print(f'DEBUG: AI video generation takes too long, returning info message')
         return GenerationResult(
             success=False,
-            error='Превышено время ожидания генерации видео (9 минут)'
+            error=f'Генерация AI видео запущена (ID: {prediction_id}), но займет 1-3 минуты. Пожалуйста, попробуйте снова через минуту.',
+            is_demo=True
         )
         
     except Exception as e:
