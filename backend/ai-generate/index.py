@@ -125,10 +125,7 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
 
 
 
-def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResult:
-    '''Генерация AI видео через Replicate Hotshot-XL (только реальная генерация)'''
-    # Используем только профессиональную генерацию через Replicate
-    return generate_video_replicate_pro(prompt, duration)
+
 
 
 
@@ -859,7 +856,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         if content_type == 'video':
             duration = body_data.get('duration', 5)
             # Всегда используем реальную AI генерацию через Replicate
-            result = generate_video_ai_animated(prompt, duration)
+            result = generate_video_replicate_pro(prompt, duration)
         elif content_type == 'text':
             result = generate_text_openai(prompt)
         elif content_type == 'presentation':
