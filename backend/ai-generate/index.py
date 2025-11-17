@@ -283,6 +283,97 @@ def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
     except Exception:
         return generate_video_free_api(prompt, duration)
 
+def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResult:
+    '''AI генерация видео: создание изображения + анимация через нейросеть'''
+    try:
+        print(f'DEBUG: Starting AI video generation for: {prompt[:50]}')
+        
+        # Переводим на английский если есть кириллица
+        if any('а' <= c.lower() <= 'я' for c in prompt):
+            translated_prompt = translate_to_english(prompt)
+        else:
+            translated_prompt = prompt
+        
+        # Шаг 1: Генерируем качественное изображение для анимации
+        image_prompt = f'{translated_prompt}, cinematic frame, high quality, detailed, professional photography, 8k'
+        seed = abs(hash(prompt)) % 1000000
+        safe_prompt = requests.utils.quote(image_prompt)
+        
+        # Используем Flux для создания первого кадра
+        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1024&height=576&nologo=true&model=flux&seed={seed}&enhance=true'
+        print(f'DEBUG: Generated image URL for animation')
+        
+        # Шаг 2: Анимируем изображение через Replicate SVD
+        api_token = os.environ.get('REPLICATE_API_TOKEN')
+        if api_token:
+            try:
+                headers = {
+                    'Authorization': f'Token {api_token}',
+                    'Content-Type': 'application/json'
+                }
+                
+                payload = {
+                    'version': 'stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438',
+                    'input': {
+                        'cond_aug': 0.02,
+                        'decoding_t': 14,
+                        'input_image': image_url,
+                        'video_length': 'auto',
+                        'sizing_strategy': 'maintain_aspect_ratio',
+                        'motion_bucket_id': 127,
+                        'frames_per_second': 24
+                    }
+                }
+                
+                response = requests.post(
+                    'https://api.replicate.com/v1/predictions',
+                    json=payload,
+                    headers=headers,
+                    timeout=10
+                )
+                
+                if response.status_code == 201:
+                    prediction = response.json()
+                    prediction_id = prediction['id']
+                    print(f'DEBUG: Started SVD animation, prediction_id={prediction_id}')
+                    
+                    # Ждём результат
+                    for attempt in range(60):
+                        time.sleep(3)
+                        status_response = requests.get(
+                            f'https://api.replicate.com/v1/predictions/{prediction_id}',
+                            headers=headers,
+                            timeout=10
+                        )
+                        result = status_response.json()
+                        status = result.get('status')
+                        
+                        if status == 'succeeded':
+                            video_url = result.get('output')
+                            print(f'DEBUG: AI video generated successfully!')
+                            return GenerationResult(
+                                success=True,
+                                content_url=video_url,
+                                generation_id=f'ai-animated-{prediction_id}',
+                                is_demo=False
+                            )
+                        elif status == 'failed':
+                            print(f'DEBUG: SVD failed, falling back to stock video')
+                            break
+                        
+                        if attempt % 10 == 0:
+                            print(f'DEBUG: Waiting for animation... attempt {attempt}/60')
+            except Exception as e:
+                print(f'DEBUG: SVD animation error: {str(e)}')
+        
+        # Fallback: используем стоковое видео
+        print(f'DEBUG: Using stock video fallback')
+        return generate_video_free_api(prompt, duration)
+        
+    except Exception as e:
+        print(f'DEBUG: AI video generation error: {str(e)}')
+        return generate_video_free_api(prompt, duration)
+
 def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
     '''Генерация видео по запросу через стоковые видео API (Pixabay + Pexels)'''
     try:
@@ -1101,7 +1192,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         if content_type == 'video':
             duration = body_data.get('duration', 5)
-            result = generate_video_replicate_pro(prompt, duration)
+            use_ai = body_data.get('use_ai', True)
+            
+            if use_ai:
+                result = generate_video_ai_animated(prompt, duration)
+            else:
+                result = generate_video_free_api(prompt, duration)
         elif content_type == 'text':
             result = generate_text_openai(prompt)
         elif content_type == 'presentation':
