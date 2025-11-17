@@ -134,12 +134,15 @@ def generate_video_huggingface(prompt: str, duration: int = 5) -> GenerationResu
 
 def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationResult:
     '''Профессиональная генерация видео через Replicate CogVideoX'''
-    api_token = os.environ.get('REPLICATE_API_TOKEN_NEW') or os.environ.get('REPLICATE_API_TOKEN')
+    api_token = os.environ.get('REPLICATE_API_TOKEN')
     print(f'DEBUG: API Token exists={bool(api_token)}, prompt={prompt[:50]}')
     print(f'DEBUG: Token first 10 chars: {api_token[:10] if api_token else "None"}')
     if not api_token:
-        print('DEBUG: No API token - using fallback')
-        return generate_video_pollinations_free(prompt, duration)
+        print('DEBUG: No API token found!')
+        return GenerationResult(
+            success=False,
+            error='Не настроен REPLICATE_API_TOKEN. Добавьте ключ в настройках проекта.'
+        )
     
     try:
         num_frames_map = {3: 25, 5: 49, 10: 81}
@@ -165,12 +168,12 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         print(f'DEBUG: Using authorization header: Bearer {api_token[:15]}...')
         
         payload = {
-            'version': 'fofr/cogvideox-5b:49a2b3e8b56a4861d2860c1ee66ee4e0e7e0aee1fb88d4f2df1cd0ede944e2f7',
+            'version': '83c4c9e1d1fa9b8f14919481fa1f8c1e6856e06149fbf813ca7aa5d0bb3158e8',
             'input': {
                 'prompt': enhanced_prompt,
                 'num_frames': num_frames,
                 'guidance_scale': 7.5,
-                'num_inference_steps': 80
+                'num_inference_steps': 50
             }
         }
         
@@ -218,15 +221,24 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
             elif current_status == 'failed':
                 error_msg = result.get('error', 'Unknown error')
                 print(f'DEBUG: Generation failed: {error_msg}')
-                return generate_video_pollinations_free(prompt, duration)
+                return GenerationResult(
+                    success=False,
+                    error=f'Ошибка генерации: {error_msg}'
+                )
         
         print('DEBUG: Timeout waiting for generation')
-        return generate_video_pollinations_free(prompt, duration)
+        return GenerationResult(
+            success=False,
+            error='Превышено время ожидания генерации видео (9 минут)'
+        )
     except Exception as e:
         print(f'DEBUG: Exception: {str(e)}')
         import traceback
         traceback.print_exc()
-        return generate_video_pollinations_free(prompt, duration)
+        return GenerationResult(
+            success=False,
+            error=f'Ошибка API: {str(e)}'
+        )
 
 def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
     '''Генерация видео через Segmind API (SVD xt)'''
@@ -341,12 +353,12 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
         print(f'DEBUG: Enhanced prompt: {enhanced_prompt[:100]}')
         
         payload = {
-            'version': 'fofr/cogvideox-5b:49a2b3e8b56a4861d2860c1ee66ee4e0e7e0aee1fb88d4f2df1cd0ede944e2f7',
+            'version': '83c4c9e1d1fa9b8f14919481fa1f8c1e6856e06149fbf813ca7aa5d0bb3158e8',
             'input': {
                 'prompt': enhanced_prompt,
                 'num_frames': num_frames,
                 'guidance_scale': 7.5,
-                'num_inference_steps': 80
+                'num_inference_steps': 50
             }
         }
         
@@ -361,7 +373,10 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
         print(f'DEBUG: Replicate response status={response.status_code}')
         if response.status_code != 201:
             print(f'DEBUG: API error: {response.text[:200]}')
-            return generate_video_pollinations_free(prompt, duration)
+            return GenerationResult(
+                success=False,
+                error=f'Ошибка API Replicate: {response.status_code}. Проверьте REPLICATE_API_TOKEN'
+            )
         
         prediction = response.json()
         prediction_id = prediction['id']
@@ -393,16 +408,25 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
             elif current_status == 'failed':
                 error_msg = result.get('error', 'Unknown error')
                 print(f'DEBUG: Generation failed: {error_msg}')
-                return generate_video_pollinations_free(prompt, duration)
+                return GenerationResult(
+                    success=False,
+                    error=f'Ошибка генерации видео: {error_msg}'
+                )
         
         print('DEBUG: Timeout waiting for AI generation')
-        return generate_video_pollinations_free(prompt, duration)
+        return GenerationResult(
+            success=False,
+            error='Превышено время ожидания генерации видео (9 минут)'
+        )
         
     except Exception as e:
         print(f'DEBUG: Critical error: {str(e)}')
         import traceback
         traceback.print_exc()
-        return generate_video_pollinations_free(prompt, duration)
+        return GenerationResult(
+            success=False,
+            error=f'Ошибка: {str(e)}'
+        )
 
 def generate_video_pollinations_free(prompt: str, duration: int = 5) -> GenerationResult:
     '''Генерация видео через AnimateDiff и стабильные API'''
