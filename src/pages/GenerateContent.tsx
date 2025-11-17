@@ -26,6 +26,7 @@ const GenerateContent = () => {
   const [presentationImages, setPresentationImages] = useState<GeneratedImage[]>([]);
   const [slideCount, setSlideCount] = useState<number>(5);
   const [selectedSlideIndex, setSelectedSlideIndex] = useState<number>(0);
+  const [imageStyle, setImageStyle] = useState<string>('photorealistic');
 
   const generateSingleImage = async (slidePrompt: string, index: number) => {
     const token = localStorage.getItem('auth_token') || 'demo';
@@ -125,7 +126,8 @@ const GenerateContent = () => {
         },
         body: JSON.stringify({
           type: activeTab === 'photo' ? 'image' : activeTab,
-          prompt: prompt
+          prompt: prompt,
+          style: activeTab === 'photo' ? imageStyle : undefined
         })
       });
 
@@ -298,6 +300,23 @@ const GenerateContent = () => {
                   onChange={(e) => setSlideCount(Math.min(20, Math.max(1, parseInt(e.target.value) || 5)))}
                   className="w-32"
                 />
+              </div>
+            )}
+
+            {activeTab === 'photo' && (
+              <div>
+                <Label htmlFor="imageStyle">Стиль изображения</Label>
+                <select
+                  id="imageStyle"
+                  value={imageStyle}
+                  onChange={(e) => setImageStyle(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                >
+                  <option value="photorealistic">📸 Фотореалистичный</option>
+                  <option value="artistic">🎨 Художественный</option>
+                  <option value="cartoon">🎬 Мультяшный</option>
+                  <option value="abstract">🌈 Абстрактный</option>
+                </select>
               </div>
             )}
 

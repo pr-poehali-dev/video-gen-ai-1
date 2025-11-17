@@ -829,7 +829,7 @@ def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: 
             'photorealistic': 'professional photography, ultra detailed, 8k uhd, dslr camera, soft lighting, high quality, film grain, Fujifilm XT3, masterpiece',
             'artistic': 'digital art, concept art, trending on artstation, vibrant colors, professional illustration, detailed artwork, by greg rutkowski',
             'cartoon': '3D render, pixar style, disney animation, vibrant colors, professional animation, octane render, unreal engine',
-            'abstract': 'abstract art, creative composition, modern art, bold colors, geometric shapes, contemporary design'
+            'abstract': 'abstract art, creative composition, modern art, bold vibrant colors, flowing shapes, geometric patterns, contemporary design, artistic expression, non-representational, expressive brushstrokes, dynamic forms, color field painting, minimalist aesthetics'
         }
         
         enhancement = style_enhancements.get(style, style_enhancements['photorealistic'])
