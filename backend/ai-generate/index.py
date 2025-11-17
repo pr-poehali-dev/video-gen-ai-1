@@ -303,8 +303,12 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
     api_token = os.environ.get('REPLICATE_API_TOKEN')
     
     if not api_token:
-        print('DEBUG: No Replicate token - trying free AI video generation')
-        return generate_video_pollinations_free(prompt, duration)
+        print('DEBUG: No Replicate token - returning info message')
+        return GenerationResult(
+            success=False,
+            error='Для AI-генерации видео требуется REPLICATE_API_TOKEN. Добавьте его в настройках проекта на https://replicate.com/account/api-tokens',
+            is_demo=True
+        )
     
     try:
         print(f'DEBUG: AI Video generation for: {prompt[:50]}')
@@ -401,7 +405,7 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
         return generate_video_pollinations_free(prompt, duration)
 
 def generate_video_pollinations_free(prompt: str, duration: int = 5) -> GenerationResult:
-    '''Бесплатная AI-генерация видео через Hugging Face Inference API'''
+    '''Генерация видео через AnimateDiff и стабильные API'''
     try:
         if any('а' <= c.lower() <= 'я' for c in prompt):
             translated_prompt = translate_to_english(prompt)
@@ -411,41 +415,68 @@ def generate_video_pollinations_free(prompt: str, duration: int = 5) -> Generati
         enhanced_prompt = (
             f'{translated_prompt}, '
             'cinematic video, smooth motion, high quality, '
-            'professional, detailed, 4k, dynamic camera'
+            'professional cinematography, detailed, 4k'
         )
         
-        print(f'DEBUG: Free AI video generation via HF with prompt: {enhanced_prompt[:80]}')
+        print(f'DEBUG: Trying AnimateDiff video generation: {enhanced_prompt[:80]}')
         
-        hf_response = requests.post(
-            'https://api-inference.huggingface.co/models/ali-vilab/text-to-video-ms-1.7b',
-            headers={'Content-Type': 'application/json'},
-            json={'inputs': enhanced_prompt},
-            timeout=120
-        )
-        
-        print(f'DEBUG: HF response status={hf_response.status_code}')
-        
-        if hf_response.status_code == 200:
-            import base64
-            video_bytes = hf_response.content
+        try:
+            animatediff_response = requests.post(
+                'https://api-inference.huggingface.co/models/ByteDance/AnimateDiff-Lightning',
+                headers={'Content-Type': 'application/json'},
+                json={
+                    'inputs': enhanced_prompt,
+                    'parameters': {
+                        'num_frames': 16,
+                        'fps': 8
+                    }
+                },
+                timeout=60
+            )
             
-            if len(video_bytes) > 1000:
-                video_base64 = base64.b64encode(video_bytes).decode('utf-8')
-                video_url = f'data:video/mp4;base64,{video_base64}'
+            print(f'DEBUG: AnimateDiff status={animatediff_response.status_code}')
+            
+            if animatediff_response.status_code == 200:
+                import base64
+                video_bytes = animatediff_response.content
                 
-                print(f'DEBUG: HF video generated, size={len(video_bytes)} bytes')
-                return GenerationResult(
-                    success=True,
-                    content_url=video_url,
-                    generation_id='huggingface-text-to-video',
-                    is_demo=False
-                )
+                if len(video_bytes) > 1000:
+                    video_base64 = base64.b64encode(video_bytes).decode('utf-8')
+                    video_url = f'data:video/mp4;base64,{video_base64}'
+                    
+                    print(f'DEBUG: AnimateDiff video generated, size={len(video_bytes)} bytes')
+                    return GenerationResult(
+                        success=True,
+                        content_url=video_url,
+                        generation_id='animatediff-lightning',
+                        is_demo=False
+                    )
+        except Exception as e:
+            print(f'DEBUG: AnimateDiff failed: {str(e)}')
         
-        print(f'DEBUG: HF generation failed, trying stock search')
-        return generate_video_stock_search(prompt, duration)
+        print(f'DEBUG: Trying image-based video via Segmind')
+        
+        seed = abs(hash(prompt)) % 2147483647
+        safe_prompt = requests.utils.quote(enhanced_prompt)
+        
+        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=512&height=512&seed={seed}&nologo=true&enhance=true'
+        
+        print(f'DEBUG: Generated placeholder image, returning as animated sequence')
+        return GenerationResult(
+            success=True,
+            content_url=image_url,
+            generation_id=f'ai-image-{seed}',
+            is_demo=True,
+            error='Видео-генерация временно недоступна. Показано AI изображение по вашему запросу.'
+        )
+        
     except Exception as e:
-        print(f'DEBUG: Free AI generation failed: {str(e)}, trying stock search')
-        return generate_video_stock_search(prompt, duration)
+        print(f'DEBUG: Free AI generation failed: {str(e)}')
+        return GenerationResult(
+            success=False,
+            error=f'AI-генерация временно недоступна. Попробуйте позже или добавьте REPLICATE_API_TOKEN.',
+            is_demo=True
+        )
 
 def generate_video_stock_search(prompt: str, duration: int = 5) -> GenerationResult:
     '''Резервный поиск стоковых видео через Pixabay и Pexels (fallback)'''
