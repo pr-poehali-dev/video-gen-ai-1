@@ -284,9 +284,9 @@ def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
         return generate_video_free_api(prompt, duration)
 
 def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResult:
-    '''AI генерация видео в реальном времени: изображение + анимация через Pollinations AI'''
+    '''AI генерация видео: изображение + анимация через Segmind SVD'''
     try:
-        print(f'DEBUG: Starting real-time AI video generation for: {prompt[:50]}')
+        print(f'DEBUG: Starting AI video generation for: {prompt[:50]}')
         
         # Переводим на английский если есть кириллица
         if any('а' <= c.lower() <= 'я' for c in prompt):
@@ -294,48 +294,85 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
         else:
             translated_prompt = prompt
         
-        # Используем Pollinations Video API для генерации видео в реальном времени
-        video_prompt = f'{translated_prompt}, cinematic video, smooth motion, high quality, professional, detailed'
-        seed = abs(hash(prompt)) % 1000000
-        safe_prompt = requests.utils.quote(video_prompt)
+        # Шаг 1: Генерируем качественное изображение для анимации через Segmind
+        image_prompt = f'{translated_prompt}, cinematic frame, high quality, detailed, professional photography, 8k'
         
-        # Pollinations может генерировать видео напрямую
-        video_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1024&height=576&nologo=true&model=flux&seed={seed}&enhance=true&format=mp4'
+        headers = {
+            'x-api-key': SEGMIND_API_KEY
+        }
         
-        print(f'DEBUG: Generated AI video URL: {video_url[:100]}')
+        # Создаём первый кадр
+        seed = abs(hash(prompt)) % 2147483647
         
-        # Проверяем доступность видео
-        try:
-            check_response = requests.head(video_url, timeout=5)
-            if check_response.status_code == 200:
-                return GenerationResult(
-                    success=True,
-                    content_url=video_url,
-                    generation_id=f'ai-video-{seed}',
-                    is_demo=False
+        frame_data = {
+            'prompt': image_prompt,
+            'steps': 4,
+            'seed': seed,
+            'scheduler': 'simple',
+            'sampler_name': 'euler',
+            'width': 1024,
+            'height': 576
+        }
+        
+        print(f'DEBUG: Generating first frame with Flux...')
+        frame_response = requests.post(
+            'https://api.segmind.com/v1/flux-schnell',
+            headers=headers,
+            data=frame_data,
+            timeout=60
+        )
+        
+        if frame_response.status_code == 200:
+            import base64
+            frame_bytes = frame_response.content
+            
+            if len(frame_bytes) > 1000:
+                frame_base64 = base64.b64encode(frame_bytes).decode('utf-8')
+                print(f'DEBUG: First frame generated, size: {len(frame_bytes)} bytes')
+                
+                # Шаг 2: Анимируем изображение через SVD
+                video_data = {
+                    'image': frame_base64,
+                    'seed': seed,
+                    'decoding_t': 14,
+                    'fps': 6,
+                    'motion_bucket_id': 127,
+                    'base64': False
+                }
+                
+                print(f'DEBUG: Animating frame with SVD...')
+                video_response = requests.post(
+                    'https://api.segmind.com/v1/svd-xt',
+                    headers=headers,
+                    data=video_data,
+                    timeout=120
                 )
-        except Exception as e:
-            print(f'DEBUG: Video check failed: {str(e)}')
+                
+                if video_response.status_code == 200:
+                    video_bytes = video_response.content
+                    if len(video_bytes) > 10000:
+                        video_base64 = base64.b64encode(video_bytes).decode('utf-8')
+                        video_url = f'data:video/mp4;base64,{video_base64}'
+                        
+                        print(f'DEBUG: Video generated successfully! Size: {len(video_bytes)} bytes')
+                        return GenerationResult(
+                            success=True,
+                            content_url=video_url,
+                            generation_id=f'ai-video-{seed}',
+                            is_demo=False
+                        )
+                else:
+                    print(f'DEBUG: SVD failed with status {video_response.status_code}')
+        else:
+            print(f'DEBUG: Frame generation failed with status {frame_response.status_code}')
         
-        # Альтернативный метод: создаём GIF-анимацию как видео
-        print(f'DEBUG: Trying alternative method - animated generation')
-        
-        # Создаём серию изображений для анимации
-        frames_urls = []
-        for i in range(5):
-            frame_seed = seed + i * 1000
-            frame_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1024&height=576&nologo=true&model=flux&seed={frame_seed}&enhance=true'
-            frames_urls.append(frame_url)
-        
-        # Используем первый кадр как превью, возвращаем как видео
-        # В реальности Pollinations создаст анимированный контент
-        animated_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1024&height=576&nologo=true&model=flux&seed={seed}&enhance=true&animate=true'
-        
+        # Fallback: используем готовое демо-видео
+        print(f'DEBUG: Using fallback demo video')
         return GenerationResult(
             success=True,
-            content_url=animated_url,
-            generation_id=f'ai-animated-{seed}',
-            is_demo=False
+            content_url='https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+            generation_id='demo-fallback',
+            is_demo=True
         )
         
     except Exception as e:
@@ -343,16 +380,11 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
         import traceback
         traceback.print_exc()
         
-        # Последний fallback: простое изображение как видео
-        seed = abs(hash(prompt)) % 1000000
-        safe_prompt = requests.utils.quote(prompt)
-        fallback_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1024&height=576&nologo=true&model=flux&seed={seed}'
-        
         return GenerationResult(
             success=True,
-            content_url=fallback_url,
-            generation_id=f'fallback-{seed}',
-            is_demo=False
+            content_url='https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+            generation_id='error-fallback',
+            is_demo=True
         )
 
 def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
