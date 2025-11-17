@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -25,6 +25,7 @@ const GenerateContent = () => {
   const [isDemo, setIsDemo] = useState(false);
   const [presentationImages, setPresentationImages] = useState<GeneratedImage[]>([]);
   const [slideCount, setSlideCount] = useState<number>(5);
+  const [selectedSlideIndex, setSelectedSlideIndex] = useState<number>(0);
 
   const generateSingleImage = async (slidePrompt: string, index: number) => {
     const token = localStorage.getItem('auth_token') || 'demo';
@@ -175,6 +176,21 @@ const GenerateContent = () => {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (activeTab === 'presentation' && presentationImages.length > 0) {
+        if (e.key === 'ArrowLeft' && selectedSlideIndex > 0) {
+          setSelectedSlideIndex(prev => prev - 1);
+        } else if (e.key === 'ArrowRight' && selectedSlideIndex < presentationImages.length - 1) {
+          setSelectedSlideIndex(prev => prev + 1);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeTab, presentationImages.length, selectedSlideIndex]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
       <div className="container mx-auto px-4 py-8">
@@ -309,7 +325,7 @@ const GenerateContent = () => {
             {activeTab === 'presentation' && presentationImages.length > 0 && (
               <div className="mt-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-white">Галерея слайдов:</h3>
+                  <h3 className="text-lg font-semibold text-white">✨ Презентация из {presentationImages.length} слайдов готова!</h3>
                   <Button 
                     onClick={() => {
                       presentationImages.forEach((img, i) => {
@@ -318,54 +334,117 @@ const GenerateContent = () => {
                         }
                       });
                     }}
-                    variant="outline"
+                    className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500"
                     size="sm"
                   >
                     <Icon name="Download" className="mr-2" size={16} />
-                    Скачать все
+                    Скачать все слайды
                   </Button>
                 </div>
+
+                <p className="text-sm text-slate-400 mb-4">Нажмите на слайд для просмотра • Используйте ← → для навигации</p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-                  {presentationImages.map((image, index) => (
-                    <Card key={index} className="border-slate-700 overflow-hidden group">
-                      <div className="relative aspect-video bg-slate-800">
-                        {image.isLoading ? (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <Icon name="Loader2" className="animate-spin text-pink-400 mb-2" size={32} />
-                            <p className="text-sm text-slate-400">Генерация слайда {index + 1}...</p>
+                <div className="flex flex-col md:flex-row gap-4 h-auto md:h-[600px]">
+                  <div className="flex-1 relative min-h-[400px] md:min-h-0">
+                    {presentationImages[selectedSlideIndex] && (
+                      <div className="h-full rounded-lg overflow-hidden bg-slate-900 border-2 border-pink-500/30 relative">
+                        {presentationImages[selectedSlideIndex].isLoading ? (
+                          <div className="h-full min-h-[400px] flex flex-col items-center justify-center">
+                            <Icon name="Loader2" className="animate-spin text-pink-400 mb-4" size={48} />
+                            <p className="text-lg text-slate-300">Генерация слайда {selectedSlideIndex + 1}...</p>
                           </div>
-                        ) : image.url ? (
+                        ) : presentationImages[selectedSlideIndex].url ? (
                           <>
                             <img
-                              src={image.url}
-                              alt={`Slide ${index + 1}`}
-                              className="w-full h-full object-cover transition-all duration-700 ease-out"
+                              src={presentationImages[selectedSlideIndex].url}
+                              alt={`Слайд ${selectedSlideIndex + 1}`}
+                              className="w-full h-full object-contain min-h-[400px]"
                               style={{
-                                animation: 'fadeInBlur 1s ease-out'
+                                animation: 'fadeInBlur 0.5s ease-out'
                               }}
                             />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <div className="absolute top-4 left-4 bg-gradient-to-r from-pink-600 to-purple-600 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-white text-sm md:text-base font-semibold shadow-lg">
+                              Слайд {selectedSlideIndex + 1} из {presentationImages.length}
+                            </div>
+                            <div className="absolute bottom-4 right-4 flex gap-2">
                               <Button
                                 size="sm"
-                                onClick={() => downloadImage(image.url, index)}
-                                className="bg-white/90 text-black hover:bg-white"
+                                onClick={() => downloadImage(presentationImages[selectedSlideIndex].url, selectedSlideIndex)}
+                                className="bg-white/90 text-black hover:bg-white shadow-lg"
                               >
-                                <Icon name="Download" size={16} />
+                                <Icon name="Download" className="md:mr-2" size={16} />
+                                <span className="hidden md:inline">Скачать</span>
                               </Button>
                             </div>
-                            <div className="absolute bottom-2 left-2 bg-black/70 px-2 py-1 rounded text-xs text-white">
-                              Слайд {index + 1}
-                            </div>
+
+                            {selectedSlideIndex > 0 && (
+                              <Button
+                                onClick={() => setSelectedSlideIndex(prev => prev - 1)}
+                                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black/90 text-white rounded-full p-2 md:p-3"
+                                size="sm"
+                              >
+                                <Icon name="ChevronLeft" size={20} className="md:w-6 md:h-6" />
+                              </Button>
+                            )}
+
+                            {selectedSlideIndex < presentationImages.length - 1 && (
+                              <Button
+                                onClick={() => setSelectedSlideIndex(prev => prev + 1)}
+                                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black/90 text-white rounded-full p-2 md:p-3"
+                                size="sm"
+                              >
+                                <Icon name="ChevronRight" size={20} className="md:w-6 md:h-6" />
+                              </Button>
+                            )}
                           </>
                         ) : (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <Icon name="AlertCircle" className="text-red-400" size={32} />
+                          <div className="h-full min-h-[400px] flex items-center justify-center">
+                            <Icon name="AlertCircle" className="text-red-400" size={48} />
                           </div>
                         )}
                       </div>
-                    </Card>
-                  ))}
+                    )}
+                  </div>
+
+                  <div className="w-full md:w-64 flex md:flex-col gap-3 overflow-x-auto md:overflow-x-visible md:overflow-y-auto pr-2 pb-2 md:pb-0 custom-scrollbar">
+                    {presentationImages.map((image, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedSlideIndex(index)}
+                        className={`relative rounded-lg overflow-hidden border-2 transition-all cursor-pointer hover:scale-105 flex-shrink-0 md:flex-shrink ${
+                          selectedSlideIndex === index 
+                            ? 'border-pink-500 shadow-lg shadow-pink-500/50 scale-105' 
+                            : 'border-slate-700 hover:border-pink-400'
+                        }`}
+                      >
+                        <div className="aspect-video bg-slate-800 w-48 md:w-auto">
+                          {image.isLoading ? (
+                            <div className="h-full flex flex-col items-center justify-center">
+                              <Icon name="Loader2" className="animate-spin text-pink-400 mb-1" size={20} />
+                              <p className="text-xs text-slate-400">Загрузка...</p>
+                            </div>
+                          ) : image.url ? (
+                            <img
+                              src={image.url}
+                              alt={`Слайд ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-full flex items-center justify-center">
+                              <Icon name="AlertCircle" className="text-red-400" size={20} />
+                            </div>
+                          )}
+                        </div>
+                        <div className={`absolute bottom-1 left-1 px-2 py-0.5 rounded text-xs font-semibold ${
+                          selectedSlideIndex === index
+                            ? 'bg-pink-600 text-white'
+                            : 'bg-black/70 text-white'
+                        }`}>
+                          Слайд {index + 1}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
