@@ -114,7 +114,12 @@ const GeneratorModals = ({
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button 
-                    onClick={() => window.open(generatedContent, '_blank')}
+                    onClick={() => {
+                      const a = document.createElement('a');
+                      a.href = generatedContent;
+                      a.download = `video-${Date.now()}.mp4`;
+                      a.click();
+                    }}
                     disabled={!generatedContent}
                     className="flex-1 bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold disabled:opacity-50"
                   >
@@ -122,12 +127,13 @@ const GeneratorModals = ({
                     Скачать видео
                   </Button>
                   <Button 
+                    onClick={() => window.open(generatedContent, '_blank')}
                     variant="outline" 
                     disabled={!generatedContent}
                     className="flex-1 border-purple-300 hover:border-purple-400 hover:bg-purple-50 transition-all duration-300 disabled:opacity-50"
                   >
-                    <Icon name="Share2" className="mr-2" size={18} />
-                    Поделиться
+                    <Icon name="ExternalLink" className="mr-2" size={18} />
+                    Открыть в новой вкладке
                   </Button>
                 </div>
               </div>
@@ -340,15 +346,26 @@ const GeneratorModals = ({
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <Button 
-                      onClick={() => window.open(generatedContent, '_blank')}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+                      onClick={() => {
+                        const a = document.createElement('a');
+                        a.href = generatedContent;
+                        a.download = `photo-${Date.now()}.jpg`;
+                        a.click();
+                      }}
+                      disabled={!generatedContent}
+                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold disabled:opacity-50"
                     >
                       <Icon name="Download" className="mr-2" size={18} />
                       Скачать фото
                     </Button>
-                    <Button variant="outline" className="flex-1 border-green-300 hover:border-green-400 hover:bg-green-50 transition-all duration-300">
-                      <Icon name="Share2" className="mr-2" size={18} />
-                      Поделиться
+                    <Button 
+                      onClick={() => window.open(generatedContent, '_blank')}
+                      disabled={!generatedContent}
+                      variant="outline" 
+                      className="flex-1 border-green-300 hover:border-green-400 hover:bg-green-50 transition-all duration-300 disabled:opacity-50"
+                    >
+                      <Icon name="ExternalLink" className="mr-2" size={18} />
+                      Открыть в новой вкладке
                     </Button>
                   </div>
                 </div>
