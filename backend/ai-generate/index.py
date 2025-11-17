@@ -141,20 +141,22 @@ def generate_video_huggingface(prompt: str, duration: int = 5) -> GenerationResu
     return generate_video_pollinations_free(prompt, duration)
 
 def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationResult:
-    '''Профессиональная генерация видео через Replicate Wan 2.1'''
+    '''Профессиональная генерация видео через Replicate Hotshot-XL'''
     api_token = get_replicate_key()
     print(f'DEBUG: API Token exists={bool(api_token)}, prompt={prompt[:50]}')
-    print(f'DEBUG: Token first 10 chars: {api_token[:10] if api_token else "None"}')
     if not has_replicate_access():
         print('DEBUG: No API token found!')
         return GenerationResult(
             success=False,
-            error='Не настроен REPLICATE_API_TOKEN. Добавьте ключ в настройках проекта.'
+            error='Для генерации видео требуется REPLICATE_API_TOKEN. Получите ключ на https://replicate.com/account/api-tokens и добавьте в секреты проекта.'
         )
     
     try:
-        num_frames_map = {3: 25, 5: 49, 10: 81}
-        num_frames = num_frames_map.get(duration, 49)
+        # Переводим на английский если есть кириллица
+        if any('а' <= c.lower() <= 'я' for c in prompt):
+            translated_prompt = translate_to_english(prompt)
+        else:
+            translated_prompt = prompt
         
         headers = {
             'Authorization': f'Bearer {api_token}',
@@ -162,9 +164,9 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
             'User-Agent': 'Mozilla/5.0'
         }
         
-        # Улучшенный промпт для видео с людьми
+        # Улучшенный промпт для максимального качества
         enhanced_prompt = (
-            f'{prompt}, '
+            f'{translated_prompt}, '
             'ultra cinematic video, hollywood production quality, '
             'professional cinematography, smooth fluid motion, '
             'dynamic camera movement, perfect lighting, '
@@ -173,7 +175,7 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
             'photorealistic rendering, natural movement, '
             'professional color correction, cinematic depth of field'
         )
-        print(f'DEBUG: Using authorization header: Bearer {api_token[:15]}...')
+        print(f'DEBUG: Enhanced prompt: {enhanced_prompt[:100]}')
         
         payload = {
             'version': 'lucataco/hotshot-xl:78b3a6257e16e4b241245d65c8b2b81ea2e1ff7ed4c55306b511509ddbfd327a',
@@ -184,9 +186,7 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
             }
         }
         
-        print(f'DEBUG: Enhanced prompt: {enhanced_prompt[:100]}')
-        
-        print(f'DEBUG: Calling Replicate Wan 2.1 API...')
+        print(f'DEBUG: Calling Replicate API...')
         response = requests.post(
             'https://api.replicate.com/v1/predictions',
             json=payload,
@@ -197,7 +197,10 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         print(f'DEBUG: Replicate response status={response.status_code}')
         if response.status_code != 201:
             print(f'DEBUG: API error: {response.text[:200]}')
-            return generate_video_pollinations_free(prompt, duration)
+            return GenerationResult(
+                success=False,
+                error=f'Ошибка API Replicate: {response.status_code}. Проверьте токен.'
+            )
         
         prediction = response.json()
         prediction_id = prediction['id']
@@ -208,7 +211,7 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
             success=True,
             content_url='',  # Пока нет URL
             generation_id=prediction_id,
-            is_demo=False  # В процессе генерации
+            is_demo=False
         )
     except Exception as e:
         print(f'DEBUG: Exception: {str(e)}')
@@ -216,7 +219,7 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         traceback.print_exc()
         return GenerationResult(
             success=False,
-            error=f'Ошибка API: {str(e)}'
+            error=f'Ошибка генерации: {str(e)}'
         )
 
 def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
@@ -290,89 +293,9 @@ def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
         return generate_video_pollinations_free(prompt, duration)
 
 def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResult:
-    '''Генерация AI видео по запросу через Replicate Wan 2.1 или бесплатные альтернативы'''
-    api_token = get_replicate_key()
-    
-    if not has_replicate_access():
-        print('DEBUG: No Replicate token - returning info message')
-        return GenerationResult(
-            success=False,
-            error='Для AI-генерации видео требуется REPLICATE_API_TOKEN. Добавьте его в настройках проекта на https://replicate.com/account/api-tokens',
-            is_demo=True
-        )
-    
-    try:
-        print(f'DEBUG: AI Video generation for: {prompt[:50]}')
-        
-        if any('а' <= c.lower() <= 'я' for c in prompt):
-            translated_prompt = translate_to_english(prompt)
-        else:
-            translated_prompt = prompt
-        
-        headers = {
-            'Authorization': f'Bearer {api_token}',
-            'Content-Type': 'application/json',
-            'User-Agent': 'Mozilla/5.0'
-        }
-        
-        # Улучшенные промпты для максимального качества видео
-        enhanced_prompt = (
-            f'{translated_prompt}, '
-            'ultra cinematic video, hollywood production quality, '
-            'professional cinematography, smooth fluid motion, '
-            'dynamic camera movement, perfect lighting, '
-            'ultra high definition 4k, crystal clear details, '
-            'film grain, color grading, masterpiece quality, '
-            'photorealistic rendering, natural movement, '
-            'professional color correction, cinematic depth of field'
-        )
-        print(f'DEBUG: Enhanced prompt: {enhanced_prompt[:100]}')
-        
-        payload = {
-            'version': 'lucataco/hotshot-xl:78b3a6257e16e4b241245d65c8b2b81ea2e1ff7ed4c55306b511509ddbfd327a',
-            'input': {
-                'prompt': enhanced_prompt,
-                'video_length': '1_second',
-                'aspect_ratio': '16:9'
-            }
-        }
-        
-        print(f'DEBUG: Calling Replicate Wan 2.1 API...')
-        response = requests.post(
-            'https://api.replicate.com/v1/predictions',
-            json=payload,
-            headers=headers,
-            timeout=10
-        )
-        
-        print(f'DEBUG: Replicate response status={response.status_code}')
-        if response.status_code != 201:
-            print(f'DEBUG: API error: {response.text[:200]}')
-            return GenerationResult(
-                success=False,
-                error=f'Ошибка API Replicate: {response.status_code}. Проверьте REPLICATE_API_TOKEN'
-            )
-        
-        prediction = response.json()
-        prediction_id = prediction['id']
-        print(f'DEBUG: AI Prediction created: {prediction_id}')
-        
-        # Возвращаем ID для polling на фронте
-        return GenerationResult(
-            success=True,
-            content_url='',  # Пока нет URL
-            generation_id=prediction_id,
-            is_demo=False  # В процессе генерации
-        )
-        
-    except Exception as e:
-        print(f'DEBUG: Critical error: {str(e)}')
-        import traceback
-        traceback.print_exc()
-        return GenerationResult(
-            success=False,
-            error=f'Ошибка: {str(e)}'
-        )
+    '''Генерация AI видео через Replicate Hotshot-XL (только реальная генерация)'''
+    # Используем только профессиональную генерацию через Replicate
+    return generate_video_replicate_pro(prompt, duration)
 
 def generate_video_pollinations_free(prompt: str, duration: int = 5) -> GenerationResult:
     '''Генерация видео через AnimateDiff и стабильные API'''
@@ -1352,12 +1275,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         if content_type == 'video':
             duration = body_data.get('duration', 5)
-            use_ai = body_data.get('use_ai', True)
-            
-            if use_ai:
-                result = generate_video_ai_animated(prompt, duration)
-            else:
-                result = generate_video_stock_search(prompt, duration)
+            # Всегда используем реальную AI генерацию через Replicate
+            result = generate_video_ai_animated(prompt, duration)
         elif content_type == 'text':
             result = generate_text_openai(prompt)
         elif content_type == 'presentation':
