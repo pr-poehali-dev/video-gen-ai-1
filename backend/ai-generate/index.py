@@ -811,12 +811,12 @@ def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: 
     '''Генерация через Pollinations AI (Flux) - поддержка русского языка и высокое качество'''
     try:
         resolution_map = {
-            '1024x1024': (1024, 1024),
-            '1920x1080': (1920, 1080),
+            '1024x1024': (1536, 1536),
+            '1920x1080': (2048, 1152),
             '2560x1440': (2560, 1440)
         }
         
-        width, height = resolution_map.get(resolution, (1024, 1024))
+        width, height = resolution_map.get(resolution, (1536, 1536))
         
         # Переводим на английский только если есть кириллица
         if any('а' <= c.lower() <= 'я' for c in prompt):
@@ -835,14 +835,14 @@ def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: 
         enhancement = style_enhancements.get(style, style_enhancements['photorealistic'])
         
         # Добавляем качественные модификаторы для улучшения результата
-        quality_boost = 'highly detailed, sharp focus, professional quality, crisp details, vivid colors'
+        quality_boost = 'ultra high resolution, razor sharp focus, crystal clear details, professional quality, maximum sharpness, crisp edges, vivid colors, pristine clarity, HD quality, detailed textures'
         enhanced_prompt = f'{translated_prompt}, {enhancement}, {quality_boost}'
         
         # Используем seed для стабильности результата
         seed = abs(hash(prompt)) % 1000000
         
         safe_prompt = requests.utils.quote(enhanced_prompt)
-        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width={width}&height={height}&nologo=true&model=flux&seed={seed}&enhance=true'
+        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width={width}&height={height}&nologo=true&model=flux-pro&seed={seed}&enhance=true'
         
         return GenerationResult(
             success=True,
@@ -975,22 +975,25 @@ def generate_presentation_image_demo(slide_prompt: str) -> GenerationResult:
         
         # Добавляем профессиональные модификаторы для презентаций с текстом
         enhanced_prompt = (
-            f'presentation slide with text: "{translated_prompt}", '
+            f'presentation slide with large readable text: "{translated_prompt}", '
+            'ultra high resolution presentation, crystal clear text, '
+            'razor sharp typography, maximum text clarity, '
             'professional business presentation, clean modern design, '
-            'corporate style, minimalist layout, readable text, '
-            'large clear fonts, professional typography, '
+            'corporate style, minimalist layout, '
+            'extra large clear fonts size 48pt+, professional bold typography, '
+            'high contrast black text on white background, '
             'business template, powerpoint style, '
             'infographic elements, professional graphics, '
-            'clean white background or subtle gradient, '
-            'high contrast, sharp text, 16:9 aspect ratio, '
-            'ultra detailed, professional quality, 8k'
+            'maximum text legibility, sharp edges, 16:9 aspect ratio, '
+            'ultra detailed, pristine quality, 8k resolution, '
+            'crisp clear lettering, perfect text rendering'
         )
         
         seed = abs(hash(slide_prompt)) % 1000000
         safe_prompt = requests.utils.quote(enhanced_prompt)
         
-        # Используем model=flux-pro для лучшей генерации текста
-        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1920&height=1080&nologo=true&model=flux-pro&seed={seed}&enhance=true'
+        # Используем model=flux-pro с увеличенным разрешением для максимальной чёткости текста
+        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=2560&height=1440&nologo=true&model=flux-pro&seed={seed}&enhance=true'
         
         return GenerationResult(
             success=True,
