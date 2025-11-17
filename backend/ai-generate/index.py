@@ -176,9 +176,11 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         print(f'DEBUG: Using authorization header: Bearer {api_token[:15]}...')
         
         payload = {
-            'version': 'wan-2.1-i2v-720p',
+            'version': 'tencent/hunyuan-video:847dfa8b01e739637fc76f480ede0c1d76408e1d694b830b5dfb8e547bf98405',
             'input': {
-                'prompt': enhanced_prompt
+                'prompt': enhanced_prompt,
+                'video_length': 129,
+                'fps': 24
             }
         }
         
@@ -355,9 +357,11 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
         print(f'DEBUG: Enhanced prompt: {enhanced_prompt[:100]}')
         
         payload = {
-            'version': 'wan-2.1-i2v-720p',
+            'version': 'tencent/hunyuan-video:847dfa8b01e739637fc76f480ede0c1d76408e1d694b830b5dfb8e547bf98405',
             'input': {
-                'prompt': enhanced_prompt
+                'prompt': enhanced_prompt,
+                'video_length': 129,
+                'fps': 24
             }
         }
         
