@@ -177,12 +177,20 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         )
         print(f'DEBUG: Enhanced prompt: {enhanced_prompt[:100]}')
         
+        # Используем Zeroscope v2 XL для text-to-video (реальные MP4, не GIF)
         payload = {
-            'version': 'lucataco/hotshot-xl:78b3a6257e16e4b241245d65c8b2b81ea2e1ff7ed4c55306b511509ddbfd327a',
+            'version': 'anotherjesse/zeroscope-v2-xl:9f747673945c62801b13b84701c783929c0ee784e4748ec062204894dda1a351',
             'input': {
                 'prompt': enhanced_prompt,
-                'video_length': '1_second',
-                'aspect_ratio': '16:9'
+                'num_frames': 24,  # Количество кадров (24 = ~1 секунда при 24fps)
+                'num_inference_steps': 50,
+                'fps': 24,
+                'model': 'xl',
+                'width': 1024,
+                'height': 576,
+                'init_weight': 0.5,
+                'guidance_scale': 17.5,
+                'negative_prompt': 'low quality, worst quality, deformed, distorted'
             }
         }
         
