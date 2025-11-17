@@ -178,21 +178,26 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         print(f'DEBUG: Enhanced prompt: {enhanced_prompt[:100]}')
         
         # Используем Zeroscope v2 XL для text-to-video (реальные MP4, не GIF)
+        # Длительность зависит от параметра duration (по умолчанию 5 секунд)
+        num_frames = min(duration * 8, 120)  # 8 кадров в секунду, макс 120 кадров (~15 сек)
+        
         payload = {
             'version': 'anotherjesse/zeroscope-v2-xl:9f747673945c62801b13b84701c783929c0ee784e4748ec062204894dda1a351',
             'input': {
                 'prompt': enhanced_prompt,
-                'num_frames': 24,  # Количество кадров (24 = ~1 секунда при 24fps)
+                'num_frames': num_frames,
                 'num_inference_steps': 50,
-                'fps': 24,
+                'fps': 8,
                 'model': 'xl',
                 'width': 1024,
                 'height': 576,
                 'init_weight': 0.5,
                 'guidance_scale': 17.5,
-                'negative_prompt': 'low quality, worst quality, deformed, distorted'
+                'negative_prompt': 'low quality, worst quality, deformed, distorted, blurry, bad anatomy'
             }
         }
+        
+        print(f'DEBUG: Generating video with {num_frames} frames (~{num_frames/8:.1f} seconds at 8fps)')
         
         print(f'DEBUG: Calling Replicate API...')
         response = requests.post(
