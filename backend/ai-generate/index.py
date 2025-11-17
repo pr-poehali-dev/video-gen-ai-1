@@ -284,100 +284,90 @@ def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
         return generate_video_free_api(prompt, duration)
 
 def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResult:
-    '''Генерация видео: сначала ищем по запросу, потом генерируем через AI'''
+    '''Генерация AI видео по запросу через Replicate CogVideoX'''
+    api_token = os.environ.get('REPLICATE_API_TOKEN')
+    
+    if not api_token:
+        print('DEBUG: No Replicate token - using stock video search fallback')
+        return generate_video_free_api(prompt, duration)
+    
     try:
-        print(f'DEBUG: Video generation for: {prompt[:50]}')
+        print(f'DEBUG: AI Video generation for: {prompt[:50]}')
         
-        # Переводим на английский если есть кириллица
         if any('а' <= c.lower() <= 'я' for c in prompt):
             translated_prompt = translate_to_english(prompt)
         else:
             translated_prompt = prompt
         
-        print(f'DEBUG: Step 1 - Searching stock videos by request: {translated_prompt[:40]}')
+        num_frames_map = {3: 25, 5: 49, 10: 81}
+        num_frames = num_frames_map.get(duration, 49)
         
-        # Шаг 1: Пробуем найти видео через Pexels (релевантное запросу)
-        try:
-            pexels_response = requests.get(
-                'https://api.pexels.com/videos/search',
-                headers={'Authorization': 'Bearer 563492ad6f91700001000001298ee41a78dd46c9a8e0b0a9a9f7c88e'},
-                params={
-                    'query': translated_prompt[:100], 
-                    'per_page': 15,
-                    'orientation': 'landscape'
-                },
-                timeout=8
-            )
-            
-            if pexels_response.status_code == 200:
-                data = pexels_response.json()
-                videos = data.get('videos', [])
-                print(f'DEBUG: Pexels found {len(videos)} videos')
-                
-                if videos:
-                    video = videos[0]
-                    video_files = video.get('video_files', [])
-                    
-                    # Берем HD качество
-                    hd_video = next((v for v in video_files if v.get('quality') == 'hd'), None)
-                    if not hd_video and video_files:
-                        hd_video = video_files[0]
-                    
-                    if hd_video and hd_video.get('link'):
-                        video_url = hd_video['link']
-                        print(f'DEBUG: SUCCESS - Found relevant video on Pexels')
-                        
-                        return GenerationResult(
-                            success=True,
-                            content_url=video_url,
-                            generation_id='pexels-relevant',
-                            is_demo=False
-                        )
-        except Exception as e:
-            print(f'DEBUG: Pexels search failed: {str(e)}')
+        headers = {
+            'Authorization': f'Bearer {api_token}',
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0'
+        }
         
-        # Шаг 2: Пробуем Pixabay
-        try:
-            pixabay_response = requests.get(
-                'https://pixabay.com/api/videos/',
-                params={
-                    'key': '47601283-09734f8c9ada90d7ea5ddc525',
-                    'q': translated_prompt[:100],
-                    'per_page': 15
-                },
-                timeout=8
-            )
-            
-            if pixabay_response.status_code == 200:
-                data = pixabay_response.json()
-                videos = data.get('hits', [])
-                print(f'DEBUG: Pixabay found {len(videos)} videos')
-                
-                if videos:
-                    video = videos[0]
-                    video_files = video.get('videos', {})
-                    
-                    for quality in ['large', 'medium', 'small']:
-                        if quality in video_files:
-                            video_url = video_files[quality]['url']
-                            print(f'DEBUG: SUCCESS - Found relevant video on Pixabay')
-                            
-                            return GenerationResult(
-                                success=True,
-                                content_url=video_url,
-                                generation_id='pixabay-relevant',
-                                is_demo=False
-                            )
-        except Exception as e:
-            print(f'DEBUG: Pixabay search failed: {str(e)}')
+        enhanced_prompt = f'{translated_prompt}, cinematic video, smooth motion, high quality, professional, detailed, 4k'
+        print(f'DEBUG: Enhanced prompt: {enhanced_prompt[:100]}')
         
-        # Шаг 3: Если ничего не нашли - возвращаем ошибку с предложением
-        print(f'DEBUG: No relevant videos found for prompt')
-        return GenerationResult(
-            success=False,
-            error=f'По запросу "{prompt}" не найдено подходящего видео. Попробуйте изменить описание или сделать его более конкретным.',
-            is_demo=False
+        payload = {
+            'version': 'fofr/cogvideox-5b:49a2b3e8b56a4861d2860c1ee66ee4e0e7e0aee1fb88d4f2df1cd0ede944e2f7',
+            'input': {
+                'prompt': enhanced_prompt,
+                'num_frames': num_frames,
+                'guidance_scale': 6,
+                'num_inference_steps': 50
+            }
+        }
+        
+        print(f'DEBUG: Calling Replicate CogVideoX API...')
+        response = requests.post(
+            'https://api.replicate.com/v1/predictions',
+            json=payload,
+            headers=headers,
+            timeout=10
         )
+        
+        print(f'DEBUG: Replicate response status={response.status_code}')
+        if response.status_code != 201:
+            print(f'DEBUG: API error: {response.text[:200]}')
+            return generate_video_free_api(prompt, duration)
+        
+        prediction = response.json()
+        prediction_id = prediction['id']
+        print(f'DEBUG: Prediction ID: {prediction_id}')
+        
+        max_attempts = 180
+        for attempt in range(max_attempts):
+            time.sleep(3)
+            status_response = requests.get(
+                f'https://api.replicate.com/v1/predictions/{prediction_id}',
+                headers=headers,
+                timeout=10
+            )
+            result = status_response.json()
+            current_status = result.get('status', 'unknown')
+            
+            if attempt % 10 == 0:
+                print(f'DEBUG: Attempt {attempt}/{max_attempts}, status: {current_status}')
+            
+            if current_status == 'succeeded':
+                video_url = result.get('output')
+                print(f'DEBUG: AI Video generated successfully! URL={video_url[:100] if video_url else "None"}')
+                return GenerationResult(
+                    success=True,
+                    content_url=video_url,
+                    generation_id=prediction_id,
+                    is_demo=False
+                )
+            elif current_status == 'failed':
+                error_msg = result.get('error', 'Unknown error')
+                print(f'DEBUG: Generation failed: {error_msg}')
+                return generate_video_free_api(prompt, duration)
+        
+        print('DEBUG: Timeout waiting for AI generation')
+        return generate_video_free_api(prompt, duration)
         
     except Exception as e:
         print(f'DEBUG: Critical error: {str(e)}')
