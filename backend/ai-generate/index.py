@@ -168,7 +168,7 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         print(f'DEBUG: Using authorization header: Bearer {api_token[:15]}...')
         
         payload = {
-            'version': '83c4c9e1d1fa9b8f14919481fa1f8c1e6856e06149fbf813ca7aa5d0bb3158e8',
+            'version': 'fofr/cogvideox-5b:49a2b3e8b56a4861d2860c1ee66ee4e0e7e0aee1fb88d4f2df1cd0ede944e2f7',
             'input': {
                 'prompt': enhanced_prompt,
                 'num_frames': num_frames,
@@ -353,7 +353,7 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
         print(f'DEBUG: Enhanced prompt: {enhanced_prompt[:100]}')
         
         payload = {
-            'version': '83c4c9e1d1fa9b8f14919481fa1f8c1e6856e06149fbf813ca7aa5d0bb3158e8',
+            'version': 'fofr/cogvideox-5b:49a2b3e8b56a4861d2860c1ee66ee4e0e7e0aee1fb88d4f2df1cd0ede944e2f7',
             'input': {
                 'prompt': enhanced_prompt,
                 'num_frames': num_frames,
