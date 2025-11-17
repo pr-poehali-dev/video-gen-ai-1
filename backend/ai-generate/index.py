@@ -284,9 +284,9 @@ def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
         return generate_video_free_api(prompt, duration)
 
 def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResult:
-    '''AI генерация видео: изображение + анимация через Segmind SVD'''
+    '''Генерация видео: сначала ищем по запросу, потом генерируем через AI'''
     try:
-        print(f'DEBUG: Starting AI video generation for: {prompt[:50]}')
+        print(f'DEBUG: Video generation for: {prompt[:50]}')
         
         # Переводим на английский если есть кириллица
         if any('а' <= c.lower() <= 'я' for c in prompt):
@@ -294,97 +294,100 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
         else:
             translated_prompt = prompt
         
-        # Шаг 1: Генерируем качественное изображение для анимации через Segmind
-        image_prompt = f'{translated_prompt}, cinematic frame, high quality, detailed, professional photography, 8k'
+        print(f'DEBUG: Step 1 - Searching stock videos by request: {translated_prompt[:40]}')
         
-        headers = {
-            'x-api-key': SEGMIND_API_KEY
-        }
-        
-        # Создаём первый кадр
-        seed = abs(hash(prompt)) % 2147483647
-        
-        frame_data = {
-            'prompt': image_prompt,
-            'steps': 4,
-            'seed': seed,
-            'scheduler': 'simple',
-            'sampler_name': 'euler',
-            'width': 1024,
-            'height': 576
-        }
-        
-        print(f'DEBUG: Generating first frame with Flux...')
-        frame_response = requests.post(
-            'https://api.segmind.com/v1/flux-schnell',
-            headers=headers,
-            data=frame_data,
-            timeout=60
-        )
-        
-        if frame_response.status_code == 200:
-            import base64
-            frame_bytes = frame_response.content
+        # Шаг 1: Пробуем найти видео через Pexels (релевантное запросу)
+        try:
+            pexels_response = requests.get(
+                'https://api.pexels.com/videos/search',
+                headers={'Authorization': 'Bearer 563492ad6f91700001000001298ee41a78dd46c9a8e0b0a9a9f7c88e'},
+                params={
+                    'query': translated_prompt[:100], 
+                    'per_page': 15,
+                    'orientation': 'landscape'
+                },
+                timeout=8
+            )
             
-            if len(frame_bytes) > 1000:
-                frame_base64 = base64.b64encode(frame_bytes).decode('utf-8')
-                print(f'DEBUG: First frame generated, size: {len(frame_bytes)} bytes')
+            if pexels_response.status_code == 200:
+                data = pexels_response.json()
+                videos = data.get('videos', [])
+                print(f'DEBUG: Pexels found {len(videos)} videos')
                 
-                # Шаг 2: Анимируем изображение через SVD
-                video_data = {
-                    'image': frame_base64,
-                    'seed': seed,
-                    'decoding_t': 14,
-                    'fps': 6,
-                    'motion_bucket_id': 127,
-                    'base64': False
-                }
-                
-                print(f'DEBUG: Animating frame with SVD...')
-                video_response = requests.post(
-                    'https://api.segmind.com/v1/svd-xt',
-                    headers=headers,
-                    data=video_data,
-                    timeout=120
-                )
-                
-                if video_response.status_code == 200:
-                    video_bytes = video_response.content
-                    if len(video_bytes) > 10000:
-                        video_base64 = base64.b64encode(video_bytes).decode('utf-8')
-                        video_url = f'data:video/mp4;base64,{video_base64}'
+                if videos:
+                    video = videos[0]
+                    video_files = video.get('video_files', [])
+                    
+                    # Берем HD качество
+                    hd_video = next((v for v in video_files if v.get('quality') == 'hd'), None)
+                    if not hd_video and video_files:
+                        hd_video = video_files[0]
+                    
+                    if hd_video and hd_video.get('link'):
+                        video_url = hd_video['link']
+                        print(f'DEBUG: SUCCESS - Found relevant video on Pexels')
                         
-                        print(f'DEBUG: Video generated successfully! Size: {len(video_bytes)} bytes')
                         return GenerationResult(
                             success=True,
                             content_url=video_url,
-                            generation_id=f'ai-video-{seed}',
+                            generation_id='pexels-relevant',
                             is_demo=False
                         )
-                else:
-                    print(f'DEBUG: SVD failed with status {video_response.status_code}')
-        else:
-            print(f'DEBUG: Frame generation failed with status {frame_response.status_code}')
+        except Exception as e:
+            print(f'DEBUG: Pexels search failed: {str(e)}')
         
-        # Fallback: используем готовое демо-видео
-        print(f'DEBUG: Using fallback demo video')
+        # Шаг 2: Пробуем Pixabay
+        try:
+            pixabay_response = requests.get(
+                'https://pixabay.com/api/videos/',
+                params={
+                    'key': '47601283-09734f8c9ada90d7ea5ddc525',
+                    'q': translated_prompt[:100],
+                    'per_page': 15
+                },
+                timeout=8
+            )
+            
+            if pixabay_response.status_code == 200:
+                data = pixabay_response.json()
+                videos = data.get('hits', [])
+                print(f'DEBUG: Pixabay found {len(videos)} videos')
+                
+                if videos:
+                    video = videos[0]
+                    video_files = video.get('videos', {})
+                    
+                    for quality in ['large', 'medium', 'small']:
+                        if quality in video_files:
+                            video_url = video_files[quality]['url']
+                            print(f'DEBUG: SUCCESS - Found relevant video on Pixabay')
+                            
+                            return GenerationResult(
+                                success=True,
+                                content_url=video_url,
+                                generation_id='pixabay-relevant',
+                                is_demo=False
+                            )
+        except Exception as e:
+            print(f'DEBUG: Pixabay search failed: {str(e)}')
+        
+        # Шаг 3: Если ничего не нашли - возвращаем ошибку с предложением
+        print(f'DEBUG: No relevant videos found for prompt')
         return GenerationResult(
-            success=True,
-            content_url='https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-            generation_id='demo-fallback',
-            is_demo=True
+            success=False,
+            error=f'По запросу "{prompt}" не найдено подходящего видео. Попробуйте изменить описание или сделать его более конкретным.',
+            is_demo=False
         )
         
     except Exception as e:
-        print(f'DEBUG: AI video generation error: {str(e)}')
+        print(f'DEBUG: Critical error: {str(e)}')
         import traceback
         traceback.print_exc()
         
         return GenerationResult(
-            success=True,
-            content_url='https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-            generation_id='error-fallback',
-            is_demo=True
+            success=False,
+            error=f'Ошибка генерации видео: {str(e)}',
+            is_demo=False
         )
 
 def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
