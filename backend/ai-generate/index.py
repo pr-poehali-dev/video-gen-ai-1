@@ -64,12 +64,12 @@ def generate_video_creatomate(prompt: str, duration: int = 5) -> GenerationResul
         )
         
         if response.status_code != 200:
-            return generate_video_free_api(prompt, duration)
+            return generate_video_pollinations_free(prompt, duration)
         
         result = response.json()
         
         if not result:
-            return generate_video_free_api(prompt, duration)
+            return generate_video_pollinations_free(prompt, duration)
         
         render_data = result[0] if isinstance(result, list) else result
         render_id = render_data.get('id')
@@ -90,11 +90,11 @@ def generate_video_creatomate(prompt: str, duration: int = 5) -> GenerationResul
                     generation_id=render_id
                 )
             elif status_data.get('status') == 'failed':
-                return generate_video_free_api(prompt, duration)
+                return generate_video_pollinations_free(prompt, duration)
         
-        return generate_video_free_api(prompt, duration)
+        return generate_video_pollinations_free(prompt, duration)
     except Exception:
-        return generate_video_free_api(prompt, duration)
+        return generate_video_pollinations_free(prompt, duration)
 
 def generate_video_huggingface(prompt: str, duration: int = 5) -> GenerationResult:
     '''Генерация видео через Hugging Face (бесплатно)'''
@@ -130,7 +130,7 @@ def generate_video_huggingface(prompt: str, duration: int = 5) -> GenerationResu
     except Exception as e:
         print(f'DEBUG: HF exception: {str(e)}')
     
-    return generate_video_free_api(prompt, duration)
+    return generate_video_pollinations_free(prompt, duration)
 
 def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationResult:
     '''Профессиональная генерация видео через Replicate CogVideoX'''
@@ -139,7 +139,7 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
     print(f'DEBUG: Token first 10 chars: {api_token[:10] if api_token else "None"}')
     if not api_token:
         print('DEBUG: No API token - using fallback')
-        return generate_video_free_api(prompt, duration)
+        return generate_video_pollinations_free(prompt, duration)
     
     try:
         num_frames_map = {3: 25, 5: 49, 10: 81}
@@ -187,7 +187,7 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         print(f'DEBUG: Replicate response status={response.status_code}')
         if response.status_code != 201:
             print(f'DEBUG: API error: {response.text[:200]}')
-            return generate_video_free_api(prompt, duration)
+            return generate_video_pollinations_free(prompt, duration)
         
         prediction = response.json()
         prediction_id = prediction['id']
@@ -218,15 +218,15 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
             elif current_status == 'failed':
                 error_msg = result.get('error', 'Unknown error')
                 print(f'DEBUG: Generation failed: {error_msg}')
-                return generate_video_free_api(prompt, duration)
+                return generate_video_pollinations_free(prompt, duration)
         
         print('DEBUG: Timeout waiting for generation')
-        return generate_video_free_api(prompt, duration)
+        return generate_video_pollinations_free(prompt, duration)
     except Exception as e:
         print(f'DEBUG: Exception: {str(e)}')
         import traceback
         traceback.print_exc()
-        return generate_video_free_api(prompt, duration)
+        return generate_video_pollinations_free(prompt, duration)
 
 def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
     '''Генерация видео через Segmind API (SVD xt)'''
@@ -294,17 +294,17 @@ def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
                         is_demo=False
                     )
         
-        return generate_video_free_api(prompt, duration)
+        return generate_video_pollinations_free(prompt, duration)
     except Exception:
-        return generate_video_free_api(prompt, duration)
+        return generate_video_pollinations_free(prompt, duration)
 
 def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResult:
-    '''Генерация AI видео по запросу через Replicate CogVideoX'''
+    '''Генерация AI видео по запросу через Replicate CogVideoX или бесплатные альтернативы'''
     api_token = os.environ.get('REPLICATE_API_TOKEN')
     
     if not api_token:
-        print('DEBUG: No Replicate token - using stock video search fallback')
-        return generate_video_free_api(prompt, duration)
+        print('DEBUG: No Replicate token - trying free AI video generation')
+        return generate_video_pollinations_free(prompt, duration)
     
     try:
         print(f'DEBUG: AI Video generation for: {prompt[:50]}')
@@ -357,7 +357,7 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
         print(f'DEBUG: Replicate response status={response.status_code}')
         if response.status_code != 201:
             print(f'DEBUG: API error: {response.text[:200]}')
-            return generate_video_free_api(prompt, duration)
+            return generate_video_pollinations_free(prompt, duration)
         
         prediction = response.json()
         prediction_id = prediction['id']
@@ -389,24 +389,66 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
             elif current_status == 'failed':
                 error_msg = result.get('error', 'Unknown error')
                 print(f'DEBUG: Generation failed: {error_msg}')
-                return generate_video_free_api(prompt, duration)
+                return generate_video_pollinations_free(prompt, duration)
         
         print('DEBUG: Timeout waiting for AI generation')
-        return generate_video_free_api(prompt, duration)
+        return generate_video_pollinations_free(prompt, duration)
         
     except Exception as e:
         print(f'DEBUG: Critical error: {str(e)}')
         import traceback
         traceback.print_exc()
-        
-        return GenerationResult(
-            success=False,
-            error=f'Ошибка генерации видео: {str(e)}',
-            is_demo=False
-        )
+        return generate_video_pollinations_free(prompt, duration)
 
-def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
-    '''Генерация видео по запросу через стоковые видео API (Pixabay + Pexels)'''
+def generate_video_pollinations_free(prompt: str, duration: int = 5) -> GenerationResult:
+    '''Бесплатная AI-генерация видео через Hugging Face Inference API'''
+    try:
+        if any('а' <= c.lower() <= 'я' for c in prompt):
+            translated_prompt = translate_to_english(prompt)
+        else:
+            translated_prompt = prompt
+        
+        enhanced_prompt = (
+            f'{translated_prompt}, '
+            'cinematic video, smooth motion, high quality, '
+            'professional, detailed, 4k, dynamic camera'
+        )
+        
+        print(f'DEBUG: Free AI video generation via HF with prompt: {enhanced_prompt[:80]}')
+        
+        hf_response = requests.post(
+            'https://api-inference.huggingface.co/models/ali-vilab/text-to-video-ms-1.7b',
+            headers={'Content-Type': 'application/json'},
+            json={'inputs': enhanced_prompt},
+            timeout=120
+        )
+        
+        print(f'DEBUG: HF response status={hf_response.status_code}')
+        
+        if hf_response.status_code == 200:
+            import base64
+            video_bytes = hf_response.content
+            
+            if len(video_bytes) > 1000:
+                video_base64 = base64.b64encode(video_bytes).decode('utf-8')
+                video_url = f'data:video/mp4;base64,{video_base64}'
+                
+                print(f'DEBUG: HF video generated, size={len(video_bytes)} bytes')
+                return GenerationResult(
+                    success=True,
+                    content_url=video_url,
+                    generation_id='huggingface-text-to-video',
+                    is_demo=False
+                )
+        
+        print(f'DEBUG: HF generation failed, trying stock search')
+        return generate_video_stock_search(prompt, duration)
+    except Exception as e:
+        print(f'DEBUG: Free AI generation failed: {str(e)}, trying stock search')
+        return generate_video_stock_search(prompt, duration)
+
+def generate_video_stock_search(prompt: str, duration: int = 5) -> GenerationResult:
+    '''Резервный поиск стоковых видео через Pixabay и Pexels (fallback)'''
     try:
         # Переводим на английский только если есть кириллица
         if any('а' <= c.lower() <= 'я' for c in prompt):
@@ -1245,7 +1287,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if use_ai:
                 result = generate_video_ai_animated(prompt, duration)
             else:
-                result = generate_video_free_api(prompt, duration)
+                result = generate_video_stock_search(prompt, duration)
         elif content_type == 'text':
             result = generate_text_openai(prompt)
         elif content_type == 'presentation':
