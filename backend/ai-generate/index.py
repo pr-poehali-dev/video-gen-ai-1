@@ -151,7 +151,17 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
             'User-Agent': 'Mozilla/5.0'
         }
         
-        enhanced_prompt = f'{prompt}, cinematic video, smooth motion, high quality, professional, detailed, 4k'
+        # Улучшенный промпт для видео с людьми
+        enhanced_prompt = (
+            f'{prompt}, '
+            'ultra cinematic video, hollywood production quality, '
+            'professional cinematography, smooth fluid motion, '
+            'dynamic camera movement, perfect lighting, '
+            'ultra high definition 4k, crystal clear details, '
+            'film grain, color grading, masterpiece quality, '
+            'photorealistic rendering, natural movement, '
+            'professional color correction, cinematic depth of field'
+        )
         print(f'DEBUG: Using authorization header: Bearer {api_token[:15]}...')
         
         payload = {
@@ -159,8 +169,8 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
             'input': {
                 'prompt': enhanced_prompt,
                 'num_frames': num_frames,
-                'guidance_scale': 6,
-                'num_inference_steps': 50
+                'guidance_scale': 7.5,
+                'num_inference_steps': 80
             }
         }
         
@@ -222,7 +232,12 @@ def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
     '''Генерация видео через Segmind API (SVD xt)'''
     try:
         translated_prompt = translate_to_english(prompt)
-        enhanced_prompt = f'{translated_prompt}, high quality, cinematic, professional'
+        enhanced_prompt = (
+            f'{translated_prompt}, '
+            'ultra cinematic video, professional cinematography, '
+            'smooth motion, perfect lighting, 4k quality, '
+            'film grain, color grading, photorealistic'
+        )
         
         headers = {
             'x-api-key': SEGMIND_API_KEY
@@ -308,7 +323,17 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
             'User-Agent': 'Mozilla/5.0'
         }
         
-        enhanced_prompt = f'{translated_prompt}, cinematic video, smooth motion, high quality, professional, detailed, 4k'
+        # Улучшенные промпты для максимального качества видео
+        enhanced_prompt = (
+            f'{translated_prompt}, '
+            'ultra cinematic video, hollywood production quality, '
+            'professional cinematography, smooth fluid motion, '
+            'dynamic camera movement, perfect lighting, '
+            'ultra high definition 4k, crystal clear details, '
+            'film grain, color grading, masterpiece quality, '
+            'photorealistic rendering, natural movement, '
+            'professional color correction, cinematic depth of field'
+        )
         print(f'DEBUG: Enhanced prompt: {enhanced_prompt[:100]}')
         
         payload = {
@@ -316,8 +341,8 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
             'input': {
                 'prompt': enhanced_prompt,
                 'num_frames': num_frames,
-                'guidance_scale': 6,
-                'num_inference_steps': 50
+                'guidance_scale': 7.5,
+                'num_inference_steps': 80
             }
         }
         
@@ -389,8 +414,18 @@ def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
         else:
             translated_prompt = prompt
             
-        search_query = translated_prompt if translated_prompt else prompt
-        print(f'DEBUG: Video search - query: {search_query[:50]}')
+        # Улучшенный поиск видео с учётом контекста людей
+        search_keywords = ['person', 'people', 'human', 'man', 'woman', 'crowd', 'faces', 'portrait']
+        prompt_lower = translated_prompt.lower()
+        is_people_related = any(keyword in prompt_lower for keyword in search_keywords)
+        
+        # Расширяем поисковый запрос для лучших результатов
+        if is_people_related:
+            search_query = f'{translated_prompt} professional cinematic people'
+        else:
+            search_query = f'{translated_prompt} cinematic professional'
+        
+        print(f'DEBUG: Video search - query: {search_query[:80]}, people_related: {is_people_related}')
         
         try:
             pixabay_response = requests.get(
@@ -398,9 +433,11 @@ def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
                 params={
                     'key': '47601283-09734f8c9ada90d7ea5ddc525',
                     'q': search_query[:100],
-                    'per_page': 20,
+                    'per_page': 30,
                     'video_type': 'all',
-                    'order': 'popular'
+                    'order': 'popular',
+                    'min_width': 1920,
+                    'min_height': 1080
                 },
                 timeout=10
             )
@@ -436,9 +473,11 @@ def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
                 headers={'Authorization': 'Bearer 563492ad6f91700001000001298ee41a78dd46c9a8e0b0a9a9f7c88e'},
                 params={
                     'query': search_query[:100], 
-                    'per_page': 20,
+                    'per_page': 30,
                     'orientation': 'landscape',
-                    'size': 'large'
+                    'size': 'large',
+                    'min_width': 1920,
+                    'min_height': 1080
                 },
                 timeout=10
             )
