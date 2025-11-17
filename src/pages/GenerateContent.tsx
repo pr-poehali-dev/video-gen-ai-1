@@ -42,8 +42,10 @@ const GenerateContent = () => {
       });
 
       const data = await response.json();
+      console.log('📊 Status check response:', data);
       
       if (data.status === 'completed') {
+        console.log('✅ Video completed:', data.video_url);
         setGeneratedContent(data.video_url);
         setIsGenerating(false);
         setPollingPredictionId(null);
@@ -172,10 +174,12 @@ const GenerateContent = () => {
       });
 
       const data = await response.json();
+      console.log('🎬 Backend response:', data);
 
       if (data.success) {
         // Если это видео и есть generation_id, но нет URL - запускаем polling
         if (activeTab === 'video' && data.generation_id && !data.content_url) {
+          console.log('✅ Starting polling for prediction:', data.generation_id);
           setPollingPredictionId(data.generation_id);
           toast({
             title: '🎬 Генерация запущена',
