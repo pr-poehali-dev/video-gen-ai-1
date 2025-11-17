@@ -176,11 +176,11 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         print(f'DEBUG: Using authorization header: Bearer {api_token[:15]}...')
         
         payload = {
-            'version': 'tencent/hunyuan-video:847dfa8b01e739637fc76f480ede0c1d76408e1d694b830b5dfb8e547bf98405',
+            'version': 'lucataco/hotshot-xl:78b3a6257e16e4b241245d65c8b2b81ea2e1ff7ed4c55306b511509ddbfd327a',
             'input': {
                 'prompt': enhanced_prompt,
-                'video_length': 129,
-                'fps': 24
+                'video_length': '1_second',
+                'aspect_ratio': '16:9'
             }
         }
         
@@ -357,11 +357,11 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
         print(f'DEBUG: Enhanced prompt: {enhanced_prompt[:100]}')
         
         payload = {
-            'version': 'tencent/hunyuan-video:847dfa8b01e739637fc76f480ede0c1d76408e1d694b830b5dfb8e547bf98405',
+            'version': 'lucataco/hotshot-xl:78b3a6257e16e4b241245d65c8b2b81ea2e1ff7ed4c55306b511509ddbfd327a',
             'input': {
                 'prompt': enhanced_prompt,
-                'video_length': 129,
-                'fps': 24
+                'video_length': '1_second',
+                'aspect_ratio': '16:9'
             }
         }
         
