@@ -284,9 +284,14 @@ def generate_video_segmind(prompt: str, duration: int = 5) -> GenerationResult:
         return generate_video_free_api(prompt, duration)
 
 def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
-    '''Быстрая генерация через стоковые видео (Pixabay + Pexels)'''
+    '''Генерация видео по запросу через стоковые видео API (Pixabay + Pexels)'''
     try:
-        translated_prompt = translate_to_english(prompt)
+        # Переводим на английский только если есть кириллица
+        if any('а' <= c.lower() <= 'я' for c in prompt):
+            translated_prompt = translate_to_english(prompt)
+        else:
+            translated_prompt = prompt
+            
         search_query = translated_prompt if translated_prompt else prompt
         print(f'DEBUG: Video search - query: {search_query[:50]}')
         
@@ -296,10 +301,11 @@ def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
                 params={
                     'key': '47601283-09734f8c9ada90d7ea5ddc525',
                     'q': search_query[:100],
-                    'per_page': 10,
-                    'video_type': 'all'
+                    'per_page': 20,
+                    'video_type': 'all',
+                    'order': 'popular'
                 },
-                timeout=8
+                timeout=10
             )
             
             print(f'DEBUG: Pixabay response status: {pixabay_response.status_code}')
@@ -333,10 +339,11 @@ def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
                 headers={'Authorization': 'Bearer 563492ad6f91700001000001298ee41a78dd46c9a8e0b0a9a9f7c88e'},
                 params={
                     'query': search_query[:100], 
-                    'per_page': 10,
-                    'orientation': 'landscape'
+                    'per_page': 20,
+                    'orientation': 'landscape',
+                    'size': 'large'
                 },
-                timeout=8
+                timeout=10
             )
             
             print(f'DEBUG: Pexels response status: {pexels_response.status_code}')
@@ -367,22 +374,18 @@ def generate_video_free_api(prompt: str, duration: int = 5) -> GenerationResult:
         except Exception as e:
             print(f'DEBUG: Pexels failed: {str(e)}')
         
-        print('DEBUG: All APIs failed, using short demo video')
-        short_demo_url = 'https://www.w3schools.com/html/mov_bbb.mp4'
-        
+        print('DEBUG: No videos found for query, trying generic search')
         return GenerationResult(
-            success=True,
-            content_url=short_demo_url,
-            generation_id='demo-short',
-            is_demo=True
+            success=False,
+            error=f'Не найдено видео по запросу: {prompt}',
+            is_demo=False
         )
     except Exception as e:
         print(f'DEBUG: Critical error: {str(e)}')
         return GenerationResult(
-            success=True,
-            content_url='https://www.w3schools.com/html/mov_bbb.mp4',
-            generation_id='fallback-error',
-            is_demo=True
+            success=False,
+            error=str(e),
+            is_demo=False
         )
 
 def generate_video_demo(prompt: str) -> GenerationResult:
