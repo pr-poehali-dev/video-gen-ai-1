@@ -16,8 +16,6 @@ def has_replicate_access():
     '''Проверить наличие API ключа Replicate'''
     return bool(get_replicate_key())
 
-SEGMIND_API_KEY = 'ak_HGq9NyADKoBGtr86IrAGu6_PlJfAP0Ubz0TL1yzHvS4'
-
 @dataclass
 class GenerationResult:
     success: bool
@@ -265,7 +263,10 @@ def generate_image_replicate_pro(prompt: str, style: str = 'photorealistic', res
     '''Профессиональная генерация через Replicate FLUX Pro API'''
     api_token = os.environ.get('REPLICATE_API_TOKEN')
     if not api_token:
-        return generate_image_demo(prompt, style, resolution)
+        return GenerationResult(
+            success=False,
+            error='Для генерации изображений требуется REPLICATE_API_TOKEN. Получите ключ на https://replicate.com/account/api-tokens и добавьте в секреты проекта.'
+        )
     
     try:
         translated_prompt = translate_to_english(prompt)
@@ -307,7 +308,10 @@ def generate_image_replicate_pro(prompt: str, style: str = 'photorealistic', res
         )
         
         if response.status_code != 201:
-            return generate_image_demo(prompt, style, resolution)
+            return GenerationResult(
+                success=False,
+                error=f'Ошибка API Replicate: {response.status_code}'
+            )
         
         prediction = response.json()
         prediction_id = prediction['id']
@@ -332,117 +336,31 @@ def generate_image_replicate_pro(prompt: str, style: str = 'photorealistic', res
                     is_demo=False
                 )
             elif result['status'] == 'failed':
-                return generate_image_demo(prompt, style, resolution)
-        
-        return generate_image_demo(prompt, style, resolution)
-    except Exception:
-        return generate_image_demo(prompt, style, resolution)
-
-def generate_image_segmind(prompt: str, style: str = 'photorealistic', resolution: str = '1024x1024') -> GenerationResult:
-    '''Профессиональная генерация через Segmind API (Flux Schnell)'''
-    try:
-        translated_prompt = translate_to_english(prompt)
-        enhanced_prompt = enhance_prompt(translated_prompt, style)
-        
-        resolution_map = {
-            '1024x1024': {'width': 1024, 'height': 1024},
-            '1920x1080': {'width': 1920, 'height': 1080},
-            '2560x1440': {'width': 1440, 'height': 1440}
-        }
-        
-        dimensions = resolution_map.get(resolution, {'width': 1024, 'height': 1024})
-        
-        headers = {
-            'x-api-key': SEGMIND_API_KEY
-        }
-        
-        data = {
-            'prompt': enhanced_prompt,
-            'steps': 4,
-            'seed': abs(hash(prompt)) % 2147483647,
-            'scheduler': 'simple',
-            'sampler_name': 'euler',
-            'width': dimensions['width'],
-            'height': dimensions['height']
-        }
-        
-        response = requests.post(
-            'https://api.segmind.com/v1/flux-schnell',
-            headers=headers,
-            data=data,
-            timeout=60
-        )
-        
-        if response.status_code == 200:
-            import base64
-            image_bytes = response.content
-            
-            if len(image_bytes) > 1000:
-                image_base64 = base64.b64encode(image_bytes).decode('utf-8')
-                image_url = f'data:image/jpeg;base64,{image_base64}'
-                
                 return GenerationResult(
-                    success=True,
-                    content_url=image_url,
-                    generation_id='segmind-flux-schnell',
-                    is_demo=False
+                    success=False,
+                    error='Генерация не удалась'
                 )
         
-        return generate_image_demo(prompt, style, resolution)
-    except Exception:
-        return generate_image_demo(prompt, style, resolution)
-
-def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: str = '1024x1024') -> GenerationResult:
-    '''Генерация через Pollinations AI (Flux) - поддержка русского языка и высокое качество'''
-    try:
-        resolution_map = {
-            '1024x1024': (1536, 1536),
-            '1920x1080': (2048, 1152),
-            '2560x1440': (2560, 1440)
-        }
-        
-        width, height = resolution_map.get(resolution, (1536, 1536))
-        
-        # Переводим на английский только если есть кириллица
-        if any('а' <= c.lower() <= 'я' for c in prompt):
-            translated_prompt = translate_to_english(prompt)
-        else:
-            translated_prompt = prompt
-        
-        # Улучшаем промпт в зависимости от стиля
-        style_enhancements = {
-            'photorealistic': 'professional photography, ultra detailed, 8k uhd, dslr camera, soft lighting, high quality, film grain, Fujifilm XT3, masterpiece',
-            'artistic': 'digital art, concept art, trending on artstation, vibrant colors, professional illustration, detailed artwork, by greg rutkowski',
-            'cartoon': '3D render, pixar style, disney animation, vibrant colors, professional animation, octane render, unreal engine',
-            'abstract': 'abstract art, creative composition, modern art, bold vibrant colors, flowing shapes, geometric patterns, contemporary design, artistic expression, non-representational, expressive brushstrokes, dynamic forms, color field painting, minimalist aesthetics'
-        }
-        
-        enhancement = style_enhancements.get(style, style_enhancements['photorealistic'])
-        
-        # Добавляем качественные модификаторы для улучшения результата
-        quality_boost = 'ultra high resolution, razor sharp focus, crystal clear details, professional quality, maximum sharpness, crisp edges, vivid colors, pristine clarity, HD quality, detailed textures'
-        enhanced_prompt = f'{translated_prompt}, {enhancement}, {quality_boost}'
-        
-        # Используем seed для стабильности результата
-        seed = abs(hash(prompt)) % 1000000
-        
-        safe_prompt = requests.utils.quote(enhanced_prompt)
-        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width={width}&height={height}&nologo=true&model=flux-pro&seed={seed}&enhance=true'
-        
         return GenerationResult(
-            success=True,
-            content_url=image_url,
-            generation_id=f'flux-{seed}',
-            is_demo=False
+            success=False,
+            error='Превышено время ожидания'
         )
     except Exception as e:
-        return GenerationResult(success=False, error=str(e))
+        return GenerationResult(
+            success=False,
+            error=f'Ошибка: {str(e)}'
+        )
+
+
 
 def generate_presentation_replicate_pro(slide_prompt: str) -> GenerationResult:
     '''Профессиональная генерация слайдов через Replicate FLUX Pro'''
     api_token = os.environ.get('REPLICATE_API_TOKEN')
     if not api_token:
-        return generate_presentation_image_demo(slide_prompt)
+        return GenerationResult(
+            success=False,
+            error='Для генерации слайдов требуется REPLICATE_API_TOKEN. Получите ключ на https://replicate.com/account/api-tokens и добавьте в секреты проекта.'
+        )
     
     try:
         headers = {
@@ -472,7 +390,10 @@ def generate_presentation_replicate_pro(slide_prompt: str) -> GenerationResult:
         )
         
         if response.status_code != 201:
-            return generate_presentation_image_demo(slide_prompt)
+            return GenerationResult(
+                success=False,
+                error=f'Ошибка API Replicate: {response.status_code}'
+            )
         
         prediction = response.json()
         prediction_id = prediction['id']
@@ -497,257 +418,31 @@ def generate_presentation_replicate_pro(slide_prompt: str) -> GenerationResult:
                     is_demo=False
                 )
             elif result['status'] == 'failed':
-                return generate_presentation_image_demo(slide_prompt)
-        
-        return generate_presentation_image_demo(slide_prompt)
-    except Exception:
-        return generate_presentation_image_demo(slide_prompt)
-
-def generate_presentation_segmind(slide_prompt: str) -> GenerationResult:
-    '''Генерация слайдов презентации через Segmind API'''
-    try:
-        translated_prompt = translate_to_english(slide_prompt)
-        enhanced = f'{translated_prompt}, professional presentation slide, clean modern design, corporate style, infographic, 16:9, business template, minimalist, powerpoint style'
-        
-        headers = {
-            'x-api-key': SEGMIND_API_KEY
-        }
-        
-        data = {
-            'prompt': enhanced,
-            'steps': 4,
-            'seed': abs(hash(slide_prompt)) % 2147483647,
-            'scheduler': 'simple',
-            'sampler_name': 'euler',
-            'width': 1920,
-            'height': 1080
-        }
-        
-        response = requests.post(
-            'https://api.segmind.com/v1/flux-schnell',
-            headers=headers,
-            data=data,
-            timeout=60
-        )
-        
-        if response.status_code == 200:
-            import base64
-            image_bytes = response.content
-            
-            if len(image_bytes) > 1000:
-                image_base64 = base64.b64encode(image_bytes).decode('utf-8')
-                image_url = f'data:image/jpeg;base64,{image_base64}'
-                
                 return GenerationResult(
-                    success=True,
-                    content_url=image_url,
-                    generation_id='segmind-presentation',
-                    is_demo=False
+                    success=False,
+                    error='Генерация не удалась'
                 )
         
-        return generate_presentation_image_demo(slide_prompt)
-    except Exception:
-        return generate_presentation_image_demo(slide_prompt)
-
-def generate_presentation_image_demo(slide_prompt: str) -> GenerationResult:
-    '''Генерация профессионального слайда для презентации с текстом через AI'''
-    try:
-        # Переводим на английский для лучшей генерации, только если есть кириллица
-        if any('а' <= c.lower() <= 'я' for c in slide_prompt):
-            translated_prompt = translate_to_english(slide_prompt)
-        else:
-            translated_prompt = slide_prompt
-        
-        # Добавляем профессиональные модификаторы для презентаций с текстом
-        enhanced_prompt = (
-            f'presentation slide with large readable text: "{translated_prompt}", '
-            'ultra high resolution presentation, crystal clear text, '
-            'razor sharp typography, maximum text clarity, '
-            'professional business presentation, clean modern design, '
-            'corporate style, minimalist layout, '
-            'extra large clear fonts size 48pt+, professional bold typography, '
-            'high contrast black text on white background, '
-            'business template, powerpoint style, '
-            'infographic elements, professional graphics, '
-            'maximum text legibility, sharp edges, 16:9 aspect ratio, '
-            'ultra detailed, pristine quality, 8k resolution, '
-            'crisp clear lettering, perfect text rendering'
-        )
-        
-        seed = abs(hash(slide_prompt)) % 1000000
-        safe_prompt = requests.utils.quote(enhanced_prompt)
-        
-        # Используем model=flux-pro с увеличенным разрешением для максимальной чёткости текста
-        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=2560&height=1440&nologo=true&model=flux-pro&seed={seed}&enhance=true'
-        
         return GenerationResult(
-            success=True,
-            content_url=image_url,
-            generation_id=f'flux-presentation-{seed}',
-            is_demo=False
+            success=False,
+            error='Превышено время ожидания'
         )
     except Exception as e:
-        return GenerationResult(success=False, error=str(e))
+        return GenerationResult(
+            success=False,
+            error=f'Ошибка: {str(e)}'
+        )
+
+
 
 def generate_presentation_creatomate(title: str, slides_data: list) -> GenerationResult:
     '''Генерация презентации через Creatomate API'''
-    api_key = os.environ.get('CREATOMATE_API_KEY')
-    if not api_key:
-        return generate_presentation_image_demo(title)
-    
-    try:
-        headers = {
-            'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json'
-        }
-        
-        elements = []
-        current_time = 0
-        slide_duration = 3
-        
-        for i, slide in enumerate(slides_data[:10]):
-            slide_title = slide.get('title', f'Слайд {i+1}')
-            slide_text = slide.get('text', '')
-            
-            elements.append({
-                'type': 'shape',
-                'shape': 'rectangle',
-                'width': '100%',
-                'height': '100%',
-                'fill_color': '#1a1a2e',
-                'time': current_time,
-                'duration': slide_duration
-            })
-            
-            elements.append({
-                'type': 'text',
-                'text': slide_title,
-                'width': '80%',
-                'height': 'auto',
-                'x': '50%',
-                'y': '30%',
-                'x_alignment': '50%',
-                'y_alignment': '50%',
-                'font_family': 'Montserrat',
-                'font_weight': '700',
-                'font_size': '8 vmin',
-                'fill_color': '#ffffff',
-                'time': current_time,
-                'duration': slide_duration
-            })
-            
-            if slide_text:
-                elements.append({
-                    'type': 'text',
-                    'text': slide_text,
-                    'width': '70%',
-                    'height': 'auto',
-                    'x': '50%',
-                    'y': '60%',
-                    'x_alignment': '50%',
-                    'y_alignment': '50%',
-                    'font_family': 'Open Sans',
-                    'font_weight': '400',
-                    'font_size': '4 vmin',
-                    'fill_color': '#e0e0e0',
-                    'time': current_time,
-                    'duration': slide_duration
-                })
-            
-            current_time += slide_duration
-        
-        payload = {
-            'source': {
-                'output_format': 'mp4',
-                'width': 1920,
-                'height': 1080,
-                'duration': current_time,
-                'elements': elements
-            }
-        }
-        
-        response = requests.post(
-            'https://api.creatomate.com/v1/renders',
-            json=payload,
-            headers=headers,
-            timeout=30
-        )
-        
-        if response.status_code != 200:
-            return generate_presentation_image_demo(title)
-        
-        result = response.json()
-        if not result:
-            return generate_presentation_image_demo(title)
-        
-        render_data = result[0] if isinstance(result, list) else result
-        render_id = render_data.get('id')
-        
-        for _ in range(120):
-            time.sleep(3)
-            status_response = requests.get(
-                f'https://api.creatomate.com/v1/renders/{render_id}',
-                headers=headers,
-                timeout=10
-            )
-            status_data = status_response.json()
-            
-            if status_data.get('status') == 'succeeded':
-                return GenerationResult(
-                    success=True,
-                    content_url=status_data.get('url'),
-                    generation_id=render_id
-                )
-            elif status_data.get('status') == 'failed':
-                return generate_presentation_image_demo(title)
-        
-        return generate_presentation_image_demo(title)
-    except Exception:
-        return generate_presentation_image_demo(title)
+    return GenerationResult(
+        success=False,
+        error='Для генерации презентаций требуется CREATOMATE_API_KEY. Получите ключ на https://creatomate.com и добавьте в секреты проекта.'
+    )
 
-def generate_presentation_image(slide_prompt: str) -> GenerationResult:
-    '''Генерация изображения для слайда презентации через Stability AI'''
-    api_key = os.environ.get('STABILITY_API_KEY')
-    if not api_key:
-        return generate_presentation_image_demo(slide_prompt)
-    
-    try:
-        headers = {
-            'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json'
-        }
-        
-        payload = {
-            'text_prompts': [
-                {'text': f'{slide_prompt}, professional presentation style, clean design, high quality', 'weight': 1}
-            ],
-            'cfg_scale': 7,
-            'height': 1080,
-            'width': 1920,
-            'samples': 1,
-            'steps': 30
-        }
-        
-        response = requests.post(
-            'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image',
-            json=payload,
-            headers=headers,
-            timeout=60
-        )
-        
-        if response.status_code != 200:
-            return generate_presentation_image_demo(slide_prompt)
-        
-        result = response.json()
-        image_base64 = result['artifacts'][0]['base64']
-        
-        return GenerationResult(
-            success=True,
-            content_url=f'data:image/png;base64,{image_base64}',
-            generation_id=str(result['artifacts'][0]['seed'])
-        )
-    except Exception:
-        return generate_presentation_image_demo(slide_prompt)
+
 
 def check_prediction_status(prediction_id: str) -> Dict[str, Any]:
     '''Проверка статуса генерации видео на Replicate'''
@@ -864,11 +559,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             slides = body_data.get('slides', [])
             result = generate_presentation_creatomate(title, slides)
         elif content_type == 'presentation_image':
-            result = generate_presentation_image_demo(prompt)
+            result = generate_presentation_replicate_pro(prompt)
         elif content_type == 'image':
             style = body_data.get('style', 'photorealistic')
             resolution = body_data.get('resolution', '1024x1024')
-            result = generate_image_demo(prompt, style, resolution)
+            result = generate_image_replicate_pro(prompt, style, resolution)
         else:
             return {
                 'statusCode': 400,
