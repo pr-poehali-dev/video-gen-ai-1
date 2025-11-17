@@ -708,7 +708,7 @@ def generate_image_segmind(prompt: str, style: str = 'photorealistic', resolutio
         return generate_image_demo(prompt, style, resolution)
 
 def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: str = '1024x1024') -> GenerationResult:
-    '''Генерация через Pollinations AI (Flux) - быстрая и качественная'''
+    '''Генерация через Pollinations AI (Flux) - поддержка русского языка и высокое качество'''
     try:
         resolution_map = {
             '1024x1024': (1024, 1024),
@@ -718,16 +718,25 @@ def generate_image_demo(prompt: str, style: str = 'photorealistic', resolution: 
         
         width, height = resolution_map.get(resolution, (1024, 1024))
         
+        # Переводим на английский только если есть кириллица
+        if any('а' <= c.lower() <= 'я' for c in prompt):
+            translated_prompt = translate_to_english(prompt)
+        else:
+            translated_prompt = prompt
+        
         # Улучшаем промпт в зависимости от стиля
         style_enhancements = {
-            'photorealistic': 'professional photography, highly detailed, 8k, sharp focus',
-            'artistic': 'digital art, concept art, vibrant colors, professional illustration',
-            'cartoon': '3D render, pixar style, vibrant colors, professional animation',
-            'abstract': 'abstract art, creative composition, modern art, bold colors'
+            'photorealistic': 'professional photography, ultra detailed, 8k uhd, dslr camera, soft lighting, high quality, film grain, Fujifilm XT3, masterpiece',
+            'artistic': 'digital art, concept art, trending on artstation, vibrant colors, professional illustration, detailed artwork, by greg rutkowski',
+            'cartoon': '3D render, pixar style, disney animation, vibrant colors, professional animation, octane render, unreal engine',
+            'abstract': 'abstract art, creative composition, modern art, bold colors, geometric shapes, contemporary design'
         }
         
         enhancement = style_enhancements.get(style, style_enhancements['photorealistic'])
-        enhanced_prompt = f'{prompt}, {enhancement}'
+        
+        # Добавляем качественные модификаторы для улучшения результата
+        quality_boost = 'highly detailed, sharp focus, professional quality, crisp details, vivid colors'
+        enhanced_prompt = f'{translated_prompt}, {enhancement}, {quality_boost}'
         
         # Используем seed для стабильности результата
         seed = abs(hash(prompt)) % 1000000
@@ -856,22 +865,32 @@ def generate_presentation_segmind(slide_prompt: str) -> GenerationResult:
         return generate_presentation_image_demo(slide_prompt)
 
 def generate_presentation_image_demo(slide_prompt: str) -> GenerationResult:
-    '''Генерация профессионального изображения для презентации через AI'''
+    '''Генерация профессионального слайда для презентации с текстом через AI'''
     try:
-        # Переводим на английский для лучшей генерации
-        translated_prompt = translate_to_english(slide_prompt)
+        # Переводим на английский для лучшей генерации, только если есть кириллица
+        if any('а' <= c.lower() <= 'я' for c in slide_prompt):
+            translated_prompt = translate_to_english(slide_prompt)
+        else:
+            translated_prompt = slide_prompt
         
-        # Добавляем профессиональные модификаторы для презентаций
+        # Добавляем профессиональные модификаторы для презентаций с текстом
         enhanced_prompt = (
-            f'{translated_prompt}, professional presentation slide, '
-            'clean modern design, corporate style, business template, '
-            'minimalist, powerpoint style, professional graphics, '
-            'infographic style, high quality, detailed, 16:9 aspect ratio'
+            f'presentation slide with text: "{translated_prompt}", '
+            'professional business presentation, clean modern design, '
+            'corporate style, minimalist layout, readable text, '
+            'large clear fonts, professional typography, '
+            'business template, powerpoint style, '
+            'infographic elements, professional graphics, '
+            'clean white background or subtle gradient, '
+            'high contrast, sharp text, 16:9 aspect ratio, '
+            'ultra detailed, professional quality, 8k'
         )
         
         seed = abs(hash(slide_prompt)) % 1000000
         safe_prompt = requests.utils.quote(enhanced_prompt)
-        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1920&height=1080&nologo=true&model=flux&seed={seed}&enhance=true'
+        
+        # Используем model=flux-pro для лучшей генерации текста
+        image_url = f'https://image.pollinations.ai/prompt/{safe_prompt}?width=1920&height=1080&nologo=true&model=flux-pro&seed={seed}&enhance=true'
         
         return GenerationResult(
             success=True,
