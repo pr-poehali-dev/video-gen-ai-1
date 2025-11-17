@@ -92,7 +92,9 @@ const GenerationForm = ({
             <Icon name="Loader2" className="mr-2 animate-spin" size={20} />
             {activeTab === 'presentation' 
               ? `Создаю ${slideCount} слайдов параллельно...` 
-              : 'Генерация... (это может занять 1-2 минуты)'}
+              : activeTab === 'video'
+              ? 'Создаю видео... (1-3 минуты)'
+              : 'Генерация...'}
           </>
         ) : (
           <>

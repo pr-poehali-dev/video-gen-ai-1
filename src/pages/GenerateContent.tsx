@@ -28,6 +28,45 @@ const GenerateContent = () => {
   const [slideCount, setSlideCount] = useState<number>(5);
   const [selectedSlideIndex, setSelectedSlideIndex] = useState<number>(0);
   const [imageStyle, setImageStyle] = useState<string>('photorealistic');
+  const [pollingPredictionId, setPollingPredictionId] = useState<string | null>(null);
+
+  const checkVideoStatus = async (predictionId: string) => {
+    const token = localStorage.getItem('auth_token') || 'demo';
+    
+    try {
+      const response = await fetch(`https://functions.poehali.dev/500cc697-682b-469a-b439-fa265e84c833?action=check_status&prediction_id=${predictionId}`, {
+        method: 'GET',
+        headers: {
+          'X-User-Token': token
+        }
+      });
+
+      const data = await response.json();
+      
+      if (data.status === 'completed') {
+        setGeneratedContent(data.video_url);
+        setIsGenerating(false);
+        setPollingPredictionId(null);
+        toast({
+          title: '✅ Видео готово!',
+          description: 'Генерация завершена успешно',
+        });
+      } else if (data.status === 'failed') {
+        setIsGenerating(false);
+        setPollingPredictionId(null);
+        toast({
+          title: 'Ошибка генерации',
+          description: data.error || 'Не удалось создать видео',
+          variant: 'destructive'
+        });
+      } else if (data.status === 'processing') {
+        setTimeout(() => checkVideoStatus(predictionId), 5000);
+      }
+    } catch (error) {
+      console.error('Ошибка проверки статуса:', error);
+      setTimeout(() => checkVideoStatus(predictionId), 5000);
+    }
+  };
 
   const generateSingleImage = async (slidePrompt: string, index: number) => {
     const token = localStorage.getItem('auth_token') || 'demo';
@@ -135,12 +174,23 @@ const GenerateContent = () => {
       const data = await response.json();
 
       if (data.success) {
-        setGeneratedContent(data.content_url);
-        setIsDemo(data.is_demo || false);
-        toast({
-          title: data.is_demo ? '✨ Демо-версия' : 'Готово!',
-          description: data.message || `${activeTab === 'video' ? 'Видео' : activeTab === 'text' ? 'Текст' : 'Изображение'} успешно создано`,
-        });
+        // Если это видео и есть generation_id, но нет URL - запускаем polling
+        if (activeTab === 'video' && data.generation_id && !data.content_url) {
+          setPollingPredictionId(data.generation_id);
+          toast({
+            title: '🎬 Генерация запущена',
+            description: 'Создаем видео... Это займет 1-3 минуты',
+          });
+          checkVideoStatus(data.generation_id);
+        } else {
+          setGeneratedContent(data.content_url);
+          setIsDemo(data.is_demo || false);
+          setIsGenerating(false);
+          toast({
+            title: data.is_demo ? '✨ Демо-версия' : 'Готово!',
+            description: data.message || `${activeTab === 'video' ? 'Видео' : activeTab === 'text' ? 'Текст' : 'Изображение'} успешно создано`,
+          });
+        }
       } else {
         throw new Error(data.error || 'Ошибка генерации');
       }
@@ -150,7 +200,6 @@ const GenerateContent = () => {
         description: error instanceof Error ? error.message : 'Попробуйте позже',
         variant: 'destructive'
       });
-    } finally {
       setIsGenerating(false);
     }
   };
@@ -264,6 +313,7 @@ const GenerateContent = () => {
               activeTab={activeTab}
               content={generatedContent}
               onCopyOrDownload={handleCopyOrDownload}
+              isGenerating={isGenerating}
             />
           </CardContent>
         </Card>

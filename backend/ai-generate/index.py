@@ -203,36 +203,13 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         prediction_id = prediction['id']
         print(f'DEBUG: Prediction created: {prediction_id}')
         
-        # Проверяем статус только 5 секунд (быстрые модели), затем возвращаем временную заглушку
-        max_quick_attempts = 2
-        for attempt in range(max_quick_attempts):
-            time.sleep(2)
-            status_response = requests.get(
-                f'https://api.replicate.com/v1/predictions/{prediction_id}',
-                headers=headers,
-                timeout=10
-            )
-            result = status_response.json()
-            current_status = result.get('status', 'unknown')
-            print(f'DEBUG: Quick check {attempt+1}/{max_quick_attempts}, status: {current_status}')
-            
-            if current_status == 'succeeded':
-                video_url = result.get('output')
-                print(f'DEBUG: Video generated quickly! URL={video_url[:100] if video_url else "None"}')
-                return GenerationResult(
-                    success=True,
-                    content_url=video_url,
-                    generation_id=prediction_id,
-                    is_demo=False
-                )
-            elif current_status == 'failed':
-                error_msg = result.get('error', 'Unknown error')
-                print(f'DEBUG: Generation failed: {error_msg}')
-                return generate_video_pollinations_free(prompt, duration)
-        
-        # Если не готово быстро - возвращаем fallback
-        print(f'DEBUG: Video generation takes too long, using fallback')
-        return generate_video_pollinations_free(prompt, duration)
+        # Возвращаем ID для polling на фронте
+        return GenerationResult(
+            success=True,
+            content_url='',  # Пока нет URL
+            generation_id=prediction_id,
+            is_demo=False  # В процессе генерации
+        )
     except Exception as e:
         print(f'DEBUG: Exception: {str(e)}')
         import traceback
@@ -380,42 +357,12 @@ def generate_video_ai_animated(prompt: str, duration: int = 5) -> GenerationResu
         prediction_id = prediction['id']
         print(f'DEBUG: AI Prediction created: {prediction_id}')
         
-        # Проверяем статус только 5 секунд, затем возвращаем fallback
-        max_quick_attempts = 2
-        for attempt in range(max_quick_attempts):
-            time.sleep(2)
-            status_response = requests.get(
-                f'https://api.replicate.com/v1/predictions/{prediction_id}',
-                headers=headers,
-                timeout=10
-            )
-            result = status_response.json()
-            current_status = result.get('status', 'unknown')
-            print(f'DEBUG: AI Quick check {attempt+1}/{max_quick_attempts}, status: {current_status}')
-            
-            if current_status == 'succeeded':
-                video_url = result.get('output')
-                print(f'DEBUG: AI Video generated quickly! URL={video_url[:100] if video_url else "None"}')
-                return GenerationResult(
-                    success=True,
-                    content_url=video_url,
-                    generation_id=prediction_id,
-                    is_demo=False
-                )
-            elif current_status == 'failed':
-                error_msg = result.get('error', 'Unknown error')
-                print(f'DEBUG: AI Generation failed: {error_msg}')
-                return GenerationResult(
-                    success=False,
-                    error=f'Ошибка генерации видео: {error_msg}'
-                )
-        
-        # Если не готово быстро - возвращаем информационное сообщение
-        print(f'DEBUG: AI video generation takes too long, returning info message')
+        # Возвращаем ID для polling на фронте
         return GenerationResult(
-            success=False,
-            error=f'Генерация AI видео запущена (ID: {prediction_id}), но займет 1-3 минуты. Пожалуйста, попробуйте снова через минуту.',
-            is_demo=True
+            success=True,
+            content_url='',  # Пока нет URL
+            generation_id=prediction_id,
+            is_demo=False  # В процессе генерации
         )
         
     except Exception as e:
@@ -1299,6 +1246,58 @@ def generate_presentation_image(slide_prompt: str) -> GenerationResult:
     except Exception:
         return generate_presentation_image_demo(slide_prompt)
 
+def check_prediction_status(prediction_id: str) -> Dict[str, Any]:
+    '''Проверка статуса генерации видео на Replicate'''
+    api_token = get_replicate_key()
+    if not api_token:
+        return {
+            'status': 'error',
+            'error': 'No API token'
+        }
+    
+    try:
+        headers = {
+            'Authorization': f'Bearer {api_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        response = requests.get(
+            f'https://api.replicate.com/v1/predictions/{prediction_id}',
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code != 200:
+            return {
+                'status': 'error',
+                'error': f'API error: {response.status_code}'
+            }
+        
+        result = response.json()
+        status = result.get('status', 'unknown')
+        
+        if status == 'succeeded':
+            return {
+                'status': 'completed',
+                'video_url': result.get('output')
+            }
+        elif status == 'failed':
+            return {
+                'status': 'failed',
+                'error': result.get('error', 'Unknown error')
+            }
+        else:
+            # processing, starting, etc.
+            return {
+                'status': 'processing',
+                'progress': result.get('progress', 0)
+            }
+    except Exception as e:
+        return {
+            'status': 'error',
+            'error': str(e)
+        }
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
     Business: API для генерации контента через нейросети
@@ -1321,6 +1320,23 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     
     params = event.get('queryStringParameters', {})
     action = params.get('action', 'generate')
+    
+    # Проверка статуса генерации
+    if method == 'GET' and action == 'check_status':
+        prediction_id = params.get('prediction_id', '')
+        if not prediction_id:
+            return {
+                'statusCode': 400,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'Необходимо указать prediction_id'})
+            }
+        
+        status_result = check_prediction_status(prediction_id)
+        return {
+            'statusCode': 200,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps(status_result)
+        }
     
     if method == 'POST' and action == 'generate':
         body_data = json.loads(event.get('body', '{}'))
