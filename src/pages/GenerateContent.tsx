@@ -7,6 +7,13 @@ import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 import { useNavigate } from 'react-router-dom';
 import Footer from '@/components/Footer';
+import { Input } from '@/components/ui/input';
+
+interface GeneratedImage {
+  url: string;
+  prompt: string;
+  isLoading: boolean;
+}
 
 const GenerateContent = () => {
   const navigate = useNavigate();
@@ -16,6 +23,45 @@ const GenerateContent = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
   const [isDemo, setIsDemo] = useState(false);
+  const [presentationImages, setPresentationImages] = useState<GeneratedImage[]>([]);
+  const [slideCount, setSlideCount] = useState<number>(5);
+
+  const generateSingleImage = async (slidePrompt: string, index: number) => {
+    const token = localStorage.getItem('auth_token') || 'demo';
+    
+    try {
+      const response = await fetch('https://functions.poehali.dev/500cc697-682b-469a-b439-fa265e84c833?action=generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Token': token
+        },
+        body: JSON.stringify({
+          type: 'image',
+          prompt: slidePrompt
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setPresentationImages(prev => 
+          prev.map((img, i) => 
+            i === index ? { ...img, url: data.content_url, isLoading: false } : img
+          )
+        );
+      } else {
+        setPresentationImages(prev => 
+          prev.map((img, i) => 
+            i === index ? { ...img, isLoading: false } : img
+          )
+        );
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      console.error(`Ошибка генерации слайда ${index + 1}:`, error);
+    }
+  };
 
   const generateContent = async () => {
     if (!prompt.trim()) {
@@ -40,6 +86,33 @@ const GenerateContent = () => {
 
     setIsGenerating(true);
     setGeneratedContent(null);
+
+    if (activeTab === 'presentation') {
+      const initialImages: GeneratedImage[] = Array.from({ length: slideCount }, (_, i) => ({
+        url: '',
+        prompt: `${prompt}, slide ${i + 1}, professional presentation style`,
+        isLoading: true
+      }));
+      
+      setPresentationImages(initialImages);
+      
+      toast({
+        title: '🚀 Запущена генерация',
+        description: `Создаю ${slideCount} изображений для презентации...`,
+      });
+
+      Promise.all(
+        initialImages.map((img, index) => generateSingleImage(img.prompt, index))
+      ).then(() => {
+        setIsGenerating(false);
+        toast({
+          title: '✅ Презентация готова!',
+          description: `Все ${slideCount} слайдов успешно созданы`,
+        });
+      });
+
+      return;
+    }
 
     try {
       const token = localStorage.getItem('auth_token') || 'demo';
@@ -75,6 +148,30 @@ const GenerateContent = () => {
       });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const downloadImage = async (url: string, index: number) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `slide-${index + 1}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: '✅ Скачано',
+        description: `Слайд ${index + 1} сохранен`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось скачать изображение',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -121,7 +218,7 @@ const GenerateContent = () => {
             <CardHeader>
               <Icon name="Presentation" className="mb-2 text-pink-400" size={32} />
               <CardTitle>Презентация</CardTitle>
-              <CardDescription>Изображения для слайдов</CardDescription>
+              <CardDescription>Создайте серию изображений для презентации</CardDescription>
             </CardHeader>
           </Card>
 
@@ -142,13 +239,13 @@ const GenerateContent = () => {
             <CardTitle>
               {activeTab === 'video' && 'Создать видео'}
               {activeTab === 'text' && 'Сгенерировать текст'}
-              {activeTab === 'presentation' && 'Создать изображение для слайда'}
+              {activeTab === 'presentation' && 'Создать презентацию'}
               {activeTab === 'photo' && 'Создать фото'}
             </CardTitle>
             <CardDescription>
               {activeTab === 'video' && 'Опишите, какое видео вы хотите создать (сцены, стиль, настроение)'}
               {activeTab === 'text' && 'Опишите, какой текст нужен (тема, стиль, объем)'}
-              {activeTab === 'presentation' && 'Опишите, что должно быть на изображении для слайда'}
+              {activeTab === 'presentation' && 'Опишите тему презентации, и я создам серию уникальных изображений для слайдов'}
               {activeTab === 'photo' && 'Опишите, какое изображение вы хотите создать'}
             </CardDescription>
           </CardHeader>
@@ -164,14 +261,29 @@ const GenerateContent = () => {
                     ? 'Например: Напиши статью о пользе медитации, 500 слов, научный стиль'
                     : activeTab === 'photo'
                     ? 'Например: Красивый закат над океаном, фотореалистичный стиль, 4K качество'
-                    : 'Например: Современный офис с командой за работой, профессиональный стиль'
+                    : 'Например: Презентация о цифровом маркетинге, современный стиль, минимализм'
                 }
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                rows={6}
+                rows={4}
                 className="resize-none"
               />
             </div>
+
+            {activeTab === 'presentation' && (
+              <div>
+                <Label htmlFor="slideCount">Количество слайдов</Label>
+                <Input
+                  id="slideCount"
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={slideCount}
+                  onChange={(e) => setSlideCount(Math.min(20, Math.max(1, parseInt(e.target.value) || 5)))}
+                  className="w-32"
+                />
+              </div>
+            )}
 
             <Button 
               onClick={generateContent}
@@ -182,17 +294,83 @@ const GenerateContent = () => {
               {isGenerating ? (
                 <>
                   <Icon name="Loader2" className="mr-2 animate-spin" size={20} />
-                  Генерация... (это может занять 1-2 минуты)
+                  {activeTab === 'presentation' 
+                    ? `Создаю ${slideCount} слайдов параллельно...` 
+                    : 'Генерация... (это может занять 1-2 минуты)'}
                 </>
               ) : (
                 <>
                   <Icon name="Sparkles" className="mr-2" size={20} />
-                  Сгенерировать
+                  {activeTab === 'presentation' ? `Создать ${slideCount} слайдов` : 'Сгенерировать'}
                 </>
               )}
             </Button>
 
-            {generatedContent && (
+            {activeTab === 'presentation' && presentationImages.length > 0 && (
+              <div className="mt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-white">Галерея слайдов:</h3>
+                  <Button 
+                    onClick={() => {
+                      presentationImages.forEach((img, i) => {
+                        if (img.url && !img.isLoading) {
+                          setTimeout(() => downloadImage(img.url, i), i * 200);
+                        }
+                      });
+                    }}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Icon name="Download" className="mr-2" size={16} />
+                    Скачать все
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                  {presentationImages.map((image, index) => (
+                    <Card key={index} className="border-slate-700 overflow-hidden group">
+                      <div className="relative aspect-video bg-slate-800">
+                        {image.isLoading ? (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <Icon name="Loader2" className="animate-spin text-pink-400 mb-2" size={32} />
+                            <p className="text-sm text-slate-400">Генерация слайда {index + 1}...</p>
+                          </div>
+                        ) : image.url ? (
+                          <>
+                            <img
+                              src={image.url}
+                              alt={`Slide ${index + 1}`}
+                              className="w-full h-full object-cover transition-all duration-700 ease-out"
+                              style={{
+                                animation: 'fadeInBlur 1s ease-out'
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => downloadImage(image.url, index)}
+                                className="bg-white/90 text-black hover:bg-white"
+                              >
+                                <Icon name="Download" size={16} />
+                              </Button>
+                            </div>
+                            <div className="absolute bottom-2 left-2 bg-black/70 px-2 py-1 rounded text-xs text-white">
+                              Слайд {index + 1}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Icon name="AlertCircle" className="text-red-400" size={32} />
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {generatedContent && activeTab !== 'presentation' && (
               <div className="mt-6 p-4 border border-slate-700 rounded-lg bg-slate-900/50">
                 <h3 className="text-lg font-semibold mb-4 text-white">Результат:</h3>
                 
@@ -210,7 +388,7 @@ const GenerateContent = () => {
                   </div>
                 )}
 
-                {activeTab === 'presentation' && (
+                {activeTab === 'presentation' && presentationImages.length === 0 && (
                   <img 
                     src={generatedContent} 
                     alt="Generated slide" 
