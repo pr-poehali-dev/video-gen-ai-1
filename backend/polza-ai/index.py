@@ -252,36 +252,49 @@ def check_video_status(task_id: str) -> Dict[str, Any]:
     headers = {"Authorization": f"Bearer {POLZA_API_KEY}"}
     status_url = f"{BASE_URL}/videos/{task_id}"
     
-    print(f"DEBUG: Checking video status for task {task_id}")
+    print(f"DEBUG: Checking video status for task {task_id} at {status_url}")
     
-    r = requests.get(status_url, headers=headers, timeout=15)
-    if r.status_code != 200:
-        return {"status": "error", "message": f"HTTP {r.status_code}"}
-    
-    data = r.json()
-    status = str(data.get("status", "")).lower()
-    print(f"DEBUG: Video task status: {status}")
-    
-    if status in ("succeeded", "completed", "done"):
-        result_bytes = _parse_image_result(data)
-        if result_bytes:
+    try:
+        r = requests.get(status_url, headers=headers, timeout=15)
+        print(f"DEBUG: Status API response code: {r.status_code}")
+        
+        if r.status_code != 200:
+            print(f"DEBUG: Error response: {r.text[:200]}")
+            return {"status": "error", "message": f"HTTP {r.status_code}"}
+        
+        data = r.json()
+        status = str(data.get("status", "")).lower()
+        print(f"DEBUG: Video task status: {status}, full response: {json.dumps(data, indent=2)[:500]}")
+        
+        if status in ("succeeded", "completed", "done"):
+            result_bytes = _parse_image_result(data)
+            if result_bytes:
+                print(f"DEBUG: Video ready, size: {len(result_bytes)} bytes")
+                return {
+                    "status": "completed",
+                    "video_b64": base64.b64encode(result_bytes).decode('utf-8')
+                }
+            print(f"DEBUG: Status is completed but no video data found in response")
             return {
-                "status": "completed",
-                "video_b64": base64.b64encode(result_bytes).decode('utf-8')
+                "status": "error",
+                "message": f"Результат не найден. Ответ: {json.dumps(data)}"
             }
-        return {
-            "status": "error",
-            "message": f"Результат не найден. Ответ: {json.dumps(data)}"
-        }
-    
-    if status in ("failed", "error", "canceled"):
-        error_info = data.get("error", {}).get("message", "Причина не указана.")
-        return {
-            "status": "failed",
-            "message": error_info
-        }
-    
-    return {"status": "processing"}
+        
+        if status in ("failed", "error", "canceled"):
+            error_info = data.get("error", {}).get("message", "Причина не указана.")
+            print(f"DEBUG: Video generation failed: {error_info}")
+            return {
+                "status": "failed",
+                "message": error_info
+            }
+        
+        print(f"DEBUG: Video still processing...")
+        return {"status": "processing"}
+    except Exception as e:
+        print(f"DEBUG: Exception in check_video_status: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {"status": "error", "message": str(e)}
 
 
 def generate_video(prompt: str) -> str:
