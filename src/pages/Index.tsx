@@ -41,8 +41,8 @@ const Index = () => {
     handleIncrementRequest
   );
 
-  const handlePlanClick = (planName: string) => {
-    window.location.href = '/payment';
+  const handlePlanClick = (planName: string, price: number) => {
+    window.location.href = `/payment?plan=${encodeURIComponent(planName)}&amount=${price}`;
   };
 
   const handleOfferAccept = () => {

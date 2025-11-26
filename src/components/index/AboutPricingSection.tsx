@@ -12,7 +12,7 @@ interface AboutPricingSectionProps {
     ref: (node?: Element | null) => void;
     isVisible: boolean;
   };
-  handlePlanClick: (planName: string) => void;
+  handlePlanClick: (planName: string, price: number) => void;
 }
 
 const AboutPricingSection = ({ aboutSection, pricingSection, handlePlanClick }: AboutPricingSectionProps) => {
@@ -119,7 +119,7 @@ const AboutPricingSection = ({ aboutSection, pricingSection, handlePlanClick }: 
                     HD качество
                   </li>
                 </ul>
-                <Button onClick={() => handlePlanClick('Старт')} className="w-full bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] font-bold neon-glow transition-all duration-300">
+                <Button onClick={() => handlePlanClick('Старт', 999)} className="w-full bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] font-bold neon-glow transition-all duration-300">
                   Выбрать план
                 </Button>
               </CardContent>
@@ -162,7 +162,7 @@ const AboutPricingSection = ({ aboutSection, pricingSection, handlePlanClick }: 
                     Приоритетная поддержка
                   </li>
                 </ul>
-                <Button onClick={() => handlePlanClick('Про')} className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold neon-glow-purple transition-all duration-300">
+                <Button onClick={() => handlePlanClick('Про', 1999)} className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold neon-glow-purple transition-all duration-300">
                   Выбрать план
                 </Button>
               </CardContent>
@@ -204,7 +204,7 @@ const AboutPricingSection = ({ aboutSection, pricingSection, handlePlanClick }: 
                     Персональный менеджер
                   </li>
                 </ul>
-                <Button onClick={() => handlePlanClick('Бизнес')} className="w-full bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] font-bold neon-glow transition-all duration-300">
+                <Button onClick={() => handlePlanClick('Бизнес', 4999)} className="w-full bg-cyan-500 hover:bg-cyan-400 text-[#0f1729] font-bold neon-glow transition-all duration-300">
                   Выбрать план
                 </Button>
               </CardContent>

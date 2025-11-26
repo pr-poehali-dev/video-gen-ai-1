@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,9 +10,22 @@ import Icon from '@/components/ui/icon';
 
 const Payment = () => {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const planName = searchParams.get('plan');
+    const planAmount = searchParams.get('amount');
+    
+    if (planAmount) {
+      setAmount(planAmount);
+    }
+    if (planName) {
+      setDescription(`Подписка на тариф "${planName}"`);
+    }
+  }, [searchParams]);
 
   const handlePayment = async () => {
     if (!amount || parseFloat(amount) <= 0) {
