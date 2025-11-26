@@ -362,7 +362,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         action = body_data.get('action')
         prompt = body_data.get('prompt', '')
         
-        if not prompt and action != 'check_image':
+        if not prompt and action not in ('check_image', 'check_video'):
             return {
                 'statusCode': 400,
                 'headers': {
