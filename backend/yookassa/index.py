@@ -104,6 +104,9 @@ def create_payment(body: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, A
         auth_bytes = auth_string.encode('utf-8')
         auth_b64 = base64.b64encode(auth_bytes).decode('utf-8')
         
+        print(f'[PAYMENT] Request to YooKassa: {json.dumps(payment_data)}')
+        print(f'[PAYMENT] Shop ID: {SHOP_ID[:4]}..., API URL: {API_URL}')
+        
         response = requests.post(
             f'{API_URL}/payments',
             json=payment_data,
@@ -115,16 +118,26 @@ def create_payment(body: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, A
             timeout=10
         )
         
+        print(f'[PAYMENT] YooKassa response status: {response.status_code}')
+        print(f'[PAYMENT] YooKassa response body: {response.text[:500]}')
+        
         if response.status_code in [200, 201]:
             data = response.json()
-            payment_url = data.get('confirmation', {}).get('confirmation_url')
-            print(f'[PAYMENT] Success! payment_id={data.get("id")}, payment_url={payment_url}')
+            payment_id = data.get('id')
+            confirmation_url = data.get('confirmation', {}).get('confirmation_url')
+            
+            # Добавляем payment_id к return_url
+            if confirmation_url and return_url:
+                separator = '&' if '?' in return_url else '?'
+                updated_return_url = f"{return_url}{separator}payment_id={payment_id}"
+                print(f'[PAYMENT] Success! payment_id={payment_id}, url={confirmation_url}')
+            
             return {
                 'statusCode': 200,
                 'headers': headers,
                 'body': json.dumps({
-                    'payment_id': data.get('id'),
-                    'payment_url': payment_url,
+                    'payment_id': payment_id,
+                    'payment_url': confirmation_url,
                     'status': data.get('status')
                 }),
                 'isBase64Encoded': False
