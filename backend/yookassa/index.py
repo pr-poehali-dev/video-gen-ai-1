@@ -1,6 +1,6 @@
 '''
 Business: Обработка платежей через ЮКасса (создание платежа, проверка статуса)
-Args: event с httpMethod (POST, GET), body с суммой и описанием, queryStringParameters с payment_id
+Args: event с httpMethod (POST), body с action (create/check), amount, description, payment_id
 Returns: JSON с payment_id и URL для оплаты или статусом платежа
 '''
 
@@ -47,9 +47,20 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
     
     if method == 'POST':
-        return create_payment(event, headers)
-    elif method == 'GET':
-        return check_payment_status(event, headers)
+        body = json.loads(event.get('body', '{}'))
+        action = body.get('action')
+        
+        if action == 'create':
+            return create_payment(body, headers)
+        elif action == 'check':
+            return check_payment_status(body, headers)
+        else:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'Укажите action: create или check'}),
+                'isBase64Encoded': False
+            }
     
     return {
         'statusCode': 405,
@@ -58,9 +69,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         'isBase64Encoded': False
     }
 
-def create_payment(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
+def create_payment(body: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
     try:
-        body = json.loads(event.get('body', '{}'))
         amount = body.get('amount')
         description = body.get('description', 'Оплата на сайте')
         return_url = body.get('return_url', 'https://example.com/success')
@@ -134,10 +144,9 @@ def create_payment(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, 
             'isBase64Encoded': False
         }
 
-def check_payment_status(event: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
+def check_payment_status(body: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
     try:
-        params = event.get('queryStringParameters', {})
-        payment_id = params.get('payment_id')
+        payment_id = body.get('payment_id')
         
         if not payment_id:
             return {
