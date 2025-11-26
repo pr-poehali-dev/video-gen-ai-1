@@ -123,7 +123,8 @@ def generate_text(prompt: str, system_prompt: str = "") -> str:
     return data["choices"][0]["message"]["content"]
 
 
-def generate_image(prompt: str, size: str = "1024x1024") -> str:
+def start_image_generation(prompt: str, size: str = "1024x1024") -> str:
+    """Запускает генерацию изображения и возвращает task_id"""
     headers = {"Authorization": f"Bearer {POLZA_API_KEY}", "Content-Type": "application/json"}
     payload = {
         "model": IMAGE_MODEL,
@@ -143,6 +144,63 @@ def generate_image(prompt: str, size: str = "1024x1024") -> str:
     task_id = _extract_request_id(response_data)
     if not task_id:
         raise RuntimeError(f"Не удалось получить ID задачи от API. Ответ: {json.dumps(response_data)}")
+    
+    return task_id
+
+
+def check_image_status(task_id: str) -> Dict[str, Any]:
+    """Проверяет статус генерации изображения"""
+    headers = {"Authorization": f"Bearer {POLZA_API_KEY}"}
+    status_url = f"{BASE_URL}/images/{task_id}"
+    
+    print(f"DEBUG: Checking status for task {task_id}")
+    
+    r = requests.get(status_url, headers=headers, timeout=15)
+    if r.status_code != 200:
+        return {"status": "error", "message": f"HTTP {r.status_code}"}
+    
+    data = r.json()
+    status = str(data.get("status", "")).lower()
+    print(f"DEBUG: Task status: {status}")
+    
+    if status in ("succeeded", "completed", "done"):
+        result_bytes = _parse_image_result(data)
+        if result_bytes:
+            return {
+                "status": "completed",
+                "image_b64": base64.b64encode(result_bytes).decode('utf-8')
+            }
+        return {
+            "status": "error",
+            "message": f"Результат не найден. Ответ: {json.dumps(data)}"
+        }
+    
+    if status in ("failed", "error", "canceled"):
+        error_info = data.get("error", {}).get("message", "Причина не указана.")
+        return {
+            "status": "failed",
+            "message": error_info
+        }
+    
+    return {"status": "processing"}
+
+
+def generate_image(prompt: str, size: str = "1024x1024") -> str:
+    """DEPRECATED: Используется для обратной совместимости с тестами"""
+    headers = {"Authorization": f"Bearer {POLZA_API_KEY}", "Content-Type": "application/json"}
+    payload = {
+        "model": IMAGE_MODEL,
+        "prompt": prompt,
+        "size": size,
+        "n": 1
+    }
+
+    response = requests.post(f"{BASE_URL}/images/generations", headers=headers, json=payload, timeout=30)
+    response.raise_for_status()
+    
+    task_id = _extract_request_id(response.json())
+    if not task_id:
+        raise RuntimeError("Не удалось получить ID задачи от API.")
 
     image_bytes, error = _poll_task(
         task_id=task_id,
@@ -238,14 +296,40 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         elif action == 'image':
             size = body_data.get('size', '1024x1024')
-            result = generate_image(prompt, size)
+            task_id = start_image_generation(prompt, size)
             return {
                 'statusCode': 200,
                 'headers': {
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
-                'body': json.dumps({'image_b64': result})
+                'body': json.dumps({
+                    'task_id': task_id,
+                    'status': 'processing',
+                    'message': 'Генерация начата. Используйте task_id для проверки статуса.'
+                })
+            }
+        
+        elif action == 'check_image':
+            task_id = body_data.get('task_id')
+            if not task_id:
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'body': json.dumps({'error': 'task_id обязателен для проверки статуса'})
+                }
+            
+            result = check_image_status(task_id)
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps(result)
             }
         
         elif action == 'video':

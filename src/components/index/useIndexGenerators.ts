@@ -176,7 +176,7 @@ export const useIndexGenerators = (
         
         const slidePrompt = `Создай слайд ${i + 1} из ${presentationSlides} для презентации на тему: ${presentationTopic}. Стиль: ${presentationStyle}`;
         
-        const response = await fetch(polzaUrl, {
+        const startResponse = await fetch(polzaUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -188,13 +188,49 @@ export const useIndexGenerators = (
           })
         });
 
-        const result = await response.json();
+        const startResult = await startResponse.json();
 
-        if (!response.ok || result.error) {
-          throw new Error(result.error || `Ошибка генерации слайда ${i + 1}`);
+        if (!startResponse.ok || startResult.error) {
+          throw new Error(startResult.error || `Ошибка генерации слайда ${i + 1}`);
         }
 
-        slides.push(`data:image/png;base64,${result.image_b64}`);
+        const taskId = startResult.task_id;
+        
+        let imageBase64 = null;
+        let attempts = 0;
+        const maxAttempts = 60;
+        
+        while (attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          const checkResponse = await fetch(polzaUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              action: 'check_image',
+              task_id: taskId
+            })
+          });
+          
+          const checkResult = await checkResponse.json();
+          
+          if (checkResult.status === 'completed') {
+            imageBase64 = checkResult.image_b64;
+            break;
+          } else if (checkResult.status === 'failed' || checkResult.status === 'error') {
+            throw new Error(checkResult.message || `Генерация слайда ${i + 1} провалена`);
+          }
+          
+          attempts++;
+        }
+        
+        if (!imageBase64) {
+          throw new Error(`Таймаут генерации слайда ${i + 1}`);
+        }
+
+        slides.push(`data:image/png;base64,${imageBase64}`);
       }
 
       setProgress(100);
@@ -255,7 +291,7 @@ export const useIndexGenerators = (
 
       const enhancedPrompt = `${photoPrompt}, ${styleMap[photoStyle] || ''}`;
 
-      const response = await fetch(polzaUrl, {
+      const startResponse = await fetch(polzaUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -267,17 +303,52 @@ export const useIndexGenerators = (
         })
       });
 
-      const result = await response.json();
+      const startResult = await startResponse.json();
+
+      if (!startResponse.ok || startResult.error) {
+        throw new Error(startResult.error || 'Ошибка генерации изображения');
+      }
+
+      const taskId = startResult.task_id;
+      
+      let imageBase64 = null;
+      let attempts = 0;
+      const maxAttempts = 60;
+      
+      while (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const checkResponse = await fetch(polzaUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'check_image',
+            task_id: taskId
+          })
+        });
+        
+        const checkResult = await checkResponse.json();
+        
+        if (checkResult.status === 'completed') {
+          imageBase64 = checkResult.image_b64;
+          break;
+        } else if (checkResult.status === 'failed' || checkResult.status === 'error') {
+          throw new Error(checkResult.message || 'Генерация изображения провалена');
+        }
+        
+        attempts++;
+      }
+      
+      if (!imageBase64) {
+        throw new Error('Таймаут генерации изображения');
+      }
 
       clearInterval(interval);
       setProgress(100);
-
-      if (!response.ok || result.error) {
-        throw new Error(result.error || 'Ошибка генерации изображения');
-      }
-
       setIsGenerating(false);
-      const imageData = `data:image/png;base64,${result.image_b64}`;
+      const imageData = `data:image/png;base64,${imageBase64}`;
       setGeneratedContent(imageData);
 
       handleIncrementRequest();
