@@ -145,48 +145,25 @@ export const useIndexGenerators = (
     try {
       const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
 
-      console.log('📤 Sending text generation request:', { prompt: textPrompt });
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 180000);
-
       const response = await fetch(polzaUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
         },
         body: JSON.stringify({
           action: 'text',
           prompt: textPrompt,
           system_prompt: 'Ты полезный AI-ассистент. Отвечай кратко и по делу.'
-        }),
-        signal: controller.signal,
-        mode: 'cors',
-        credentials: 'omit'
+        })
       });
 
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ HTTP error:', { status: response.status, text: errorText });
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-
       const result = await response.json();
-      console.log('📥 Text generation response:', { status: response.status, result });
 
       clearInterval(interval);
       setProgress(100);
 
-      if (result.error) {
-        console.error('❌ Text generation failed:', result);
-        throw new Error(result.error);
-      }
-
-      if (!result.text) {
-        throw new Error('Текст не получен от API');
+      if (!response.ok || result.error) {
+        throw new Error(result.error || 'Ошибка генерации текста');
       }
 
       setIsGenerating(false);
@@ -199,22 +176,11 @@ export const useIndexGenerators = (
         description: 'Текст успешно сгенерирован',
       });
     } catch (error) {
-      console.error('❌ Exception in text generation:', error);
       clearInterval(interval);
       setIsGenerating(false);
-      
-      let errorMessage = 'Не удалось сгенерировать текст';
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          errorMessage = 'Превышено время ожидания. Попробуйте еще раз.';
-        } else {
-          errorMessage = error.message;
-        }
-      }
-      
       toast({
         title: 'Ошибка',
-        description: errorMessage,
+        description: error instanceof Error ? error.message : 'Не удалось сгенерировать текст',
         variant: 'destructive',
       });
     }
