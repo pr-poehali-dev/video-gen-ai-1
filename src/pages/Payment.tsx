@@ -61,18 +61,24 @@ const Payment = () => {
 
     try {
       console.log('Creating payment with amount:', amount);
+      console.log('Current origin:', window.location.origin);
+      
+      const requestBody = {
+        action: 'create',
+        amount: parseFloat(amount),
+        description: description || 'Оплата на сайте',
+        return_url: window.location.origin + '/payment-success',
+      };
+      
+      console.log('Request body:', requestBody);
       
       const response = await fetch('https://functions.poehali.dev/af7d6978-94af-4605-8dc6-affae659f400', {
         method: 'POST',
+        mode: 'cors',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          action: 'create',
-          amount: parseFloat(amount),
-          description: description || 'Оплата на сайте',
-          return_url: window.location.origin + '/payment-success',
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       console.log('Response status:', response.status);
