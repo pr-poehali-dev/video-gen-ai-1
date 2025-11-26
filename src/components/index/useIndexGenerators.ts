@@ -35,8 +35,6 @@ export const useIndexGenerators = (
     try {
       const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
       
-      console.log('[VIDEO] Отправка запроса:', videoPrompt);
-      
       const response = await fetch(polzaUrl, {
         method: 'POST',
         headers: {
@@ -48,9 +46,7 @@ export const useIndexGenerators = (
         })
       });
 
-      console.log('[VIDEO] Ответ получен:', response.status, response.ok);
       const result = await response.json();
-      console.log('[VIDEO] Результат:', result);
 
       if (!response.ok || result.error) {
         throw new Error(result.error || 'Ошибка генерации видео');
