@@ -35,7 +35,10 @@ export const useIndexGenerators = (
     try {
       const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
       
-      console.log('[VIDEO] Начало генерации, prompt:', videoPrompt);
+      toast({
+        title: '⏳ Генерация запущена',
+        description: 'Создаём видео... Обычно это занимает 1-2 минуты',
+      });
       
       const response = await fetch(polzaUrl, {
         method: 'POST',
@@ -43,74 +46,32 @@ export const useIndexGenerators = (
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          action: 'start_video',
+          action: 'video',
           prompt: videoPrompt
         })
       });
 
-      console.log('[VIDEO] Response status:', response.status, response.ok);
       const result = await response.json();
-      console.log('[VIDEO] Response data:', result);
 
+      clearInterval(interval);
+      
       if (!response.ok || result.error) {
         throw new Error(result.error || 'Ошибка генерации видео');
       }
 
-      const taskId = result.task_id;
+      setProgress(100);
+      setIsGenerating(false);
       
-      clearInterval(interval);
-      
+      const videoBase64 = result.video_b64;
+      const videoUrl = `data:video/mp4;base64,${videoBase64}`;
+      setGeneratedContent(videoUrl);
+
+      handleIncrementRequest();
+
       toast({
-        title: '⏳ Генерация запущена',
-        description: 'Создаём видео... Обычно это занимает 1-2 минуты',
+        title: '✅ Готово!',
+        description: 'Видео успешно сгенерировано',
       });
-      
-      let attempts = 0;
-      const startTime = Date.now();
-      
-      while (true) {
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        const progressPercent = Math.min(10 + (elapsed / 120) * 85, 95);
-        setProgress(progressPercent);
-        
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        
-        const checkResponse = await fetch(polzaUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: 'check_video',
-            task_id: taskId
-          })
-        });
-        
-        const checkResult = await checkResponse.json();
-        
-        if (checkResult.status === 'completed') {
-          setProgress(100);
-          setIsGenerating(false);
-          
-          setGeneratedContent(checkResult.video_url);
-
-          handleIncrementRequest();
-
-          toast({
-            title: '✅ Готово!',
-            description: `Видео сгенерировано за ${elapsed} секунд`,
-          });
-          return;
-        } else if (checkResult.status === 'failed' || checkResult.status === 'error') {
-          throw new Error(checkResult.message || 'Генерация видео провалена');
-        }
-        
-        attempts++;
-        
-        if (attempts > 600) {
-          throw new Error('Генерация видео заняла слишком много времени. Попробуйте упростить описание.');
-        }
-      }
     } catch (error) {
       clearInterval(interval);
       setIsGenerating(false);
@@ -218,69 +179,30 @@ export const useIndexGenerators = (
       const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
       
       for (let i = 0; i < presentationSlides; i++) {
-        setProgress(Math.floor(((i + 1) / presentationSlides) * 90));
+        const slideStartTime = Date.now();
+        setProgress(Math.floor(((i) / presentationSlides) * 90));
         
         const slidePrompt = `Создай слайд ${i + 1} из ${presentationSlides} для презентации на тему: ${presentationTopic}. Стиль: ${presentationStyle}`;
         
-        const startResponse = await fetch(polzaUrl, {
+        const response = await fetch(polzaUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            action: 'start_image',
+            action: 'image',
             prompt: slidePrompt,
             size: '1024x1024'
           })
         });
 
-        const startResult = await startResponse.json();
+        const result = await response.json();
 
-        if (!startResponse.ok || startResult.error) {
-          throw new Error(startResult.error || `Ошибка генерации слайда ${i + 1}`);
+        if (!response.ok || result.error) {
+          throw new Error(result.error || `Ошибка генерации слайда ${i + 1}`);
         }
 
-        const taskId = startResult.task_id;
-        
-        let imageBase64 = null;
-        let attempts = 0;
-        const maxAttempts = 60;
-        const slideStartTime = Date.now();
-        
-        while (attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-          const elapsed = Math.floor((Date.now() - slideStartTime) / 1000);
-          const slideProgress = Math.floor(((i + elapsed / 60) / presentationSlides) * 90);
-          setProgress(Math.min(slideProgress, 90));
-          
-          const checkResponse = await fetch(polzaUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              action: 'check_image',
-              task_id: taskId
-            })
-          });
-          
-          const checkResult = await checkResponse.json();
-          
-          if (checkResult.status === 'completed') {
-            imageBase64 = checkResult.image_b64;
-            break;
-          } else if (checkResult.status === 'failed' || checkResult.status === 'error') {
-            throw new Error(checkResult.message || `Генерация слайда ${i + 1} провалена`);
-          }
-          
-          attempts++;
-        }
-        
-        if (!imageBase64) {
-          throw new Error(`Таймаут генерации слайда ${i + 1}`);
-        }
-
+        const imageBase64 = result.image_b64;
         slides.push(`data:image/png;base64,${imageBase64}`);
         
         toast({
