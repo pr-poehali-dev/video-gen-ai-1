@@ -41,8 +41,15 @@ def _parse_image_result(data: Dict[str, Any]) -> Optional[bytes]:
     
     print(f"DEBUG: Parsing response data: {json.dumps(data, indent=2)}")
     
-    items_to_check = data.get("data", [])
-    if not isinstance(items_to_check, list):
+    items_to_check = []
+    
+    if "data" in data and isinstance(data["data"], list):
+        items_to_check.extend(data["data"])
+    
+    if "images" in data and isinstance(data["images"], list):
+        items_to_check.extend(data["images"])
+    
+    if not items_to_check:
         items_to_check = [data]
 
     for item in items_to_check:
@@ -60,8 +67,10 @@ def _parse_image_result(data: Dict[str, Any]) -> Optional[bytes]:
             url = item.get(key)
             if isinstance(url, str) and url.startswith("http"):
                 try:
+                    print(f"DEBUG: Downloading image from {url}")
                     response = requests.get(url, timeout=60)
                     response.raise_for_status()
+                    print(f"DEBUG: Successfully downloaded {len(response.content)} bytes")
                     return response.content
                 except Exception as e:
                     print(f"DEBUG: Failed to download from {url}: {e}")
