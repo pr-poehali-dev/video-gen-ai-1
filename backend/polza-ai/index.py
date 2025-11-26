@@ -244,6 +244,7 @@ def generate_video(prompt: str) -> str:
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method = event.get('httpMethod', 'GET')
+    print(f"DEBUG handler: method={method}, body={event.get('body', '')[:200]}")
     
     if method == 'OPTIONS':
         return {
@@ -254,7 +255,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'Access-Control-Allow-Headers': 'Content-Type, X-User-Id',
                 'Access-Control-Max-Age': '86400'
             },
-            'body': ''
+            'body': '',
+            'isBase64Encoded': False
         }
     
     if not POLZA_API_KEY:
@@ -264,7 +266,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'
             },
-            'body': json.dumps({'error': 'POLZA_AI_API_KEY не настроен'})
+            'body': json.dumps({'error': 'POLZA_AI_API_KEY не настроен'}),
+            'isBase64Encoded': False
         }
     
     if method == 'POST':
@@ -272,14 +275,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         action = body_data.get('action')
         prompt = body_data.get('prompt', '')
         
-        if not prompt:
+        if not prompt and action != 'check_image':
             return {
                 'statusCode': 400,
                 'headers': {
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
-                'body': json.dumps({'error': 'Prompt обязателен'})
+                'body': json.dumps({'error': 'Prompt обязателен'}),
+                'isBase64Encoded': False
             }
         
         if action == 'text':
@@ -291,7 +295,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
-                'body': json.dumps({'text': result})
+                'body': json.dumps({'text': result}),
+                'isBase64Encoded': False
             }
         
         elif action == 'image':
@@ -307,7 +312,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'task_id': task_id,
                     'status': 'processing',
                     'message': 'Генерация начата. Используйте task_id для проверки статуса.'
-                })
+                }),
+                'isBase64Encoded': False
             }
         
         elif action == 'check_image':
@@ -319,7 +325,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'Content-Type': 'application/json',
                         'Access-Control-Allow-Origin': '*'
                     },
-                    'body': json.dumps({'error': 'task_id обязателен для проверки статуса'})
+                    'body': json.dumps({'error': 'task_id обязателен для проверки статуса'}),
+                    'isBase64Encoded': False
                 }
             
             result = check_image_status(task_id)
@@ -329,7 +336,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
-                'body': json.dumps(result)
+                'body': json.dumps(result),
+                'isBase64Encoded': False
             }
         
         elif action == 'video':
@@ -340,7 +348,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
-                'body': json.dumps({'video_b64': result})
+                'body': json.dumps({'video_b64': result}),
+                'isBase64Encoded': False
             }
         
         else:
@@ -350,7 +359,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
-                'body': json.dumps({'error': 'Неизвестное действие. Доступно: text, image, video'})
+                'body': json.dumps({'error': 'Неизвестное действие. Доступно: text, image, check_image, video'}),
+                'isBase64Encoded': False
             }
     
     return {
@@ -359,5 +369,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*'
         },
-        'body': json.dumps({'error': 'Метод не поддерживается'})
+        'body': json.dumps({'error': 'Метод не поддерживается'}),
+        'isBase64Encoded': False
     }
