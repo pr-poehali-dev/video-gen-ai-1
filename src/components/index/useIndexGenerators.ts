@@ -35,18 +35,28 @@ export const useIndexGenerators = (
     try {
       const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
       
-      const response = await fetch(polzaUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'start_video',
-          prompt: videoPrompt
-        })
-      });
+      console.log('[VIDEO] Starting generation...');
+      
+      let response;
+      try {
+        response = await fetch(polzaUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'start_video',
+            prompt: videoPrompt
+          })
+        });
+        console.log('[VIDEO] Fetch completed, status:', response.status);
+      } catch (fetchError) {
+        console.error('[VIDEO] Fetch failed:', fetchError);
+        throw new Error(`Не удалось подключиться к серверу: ${fetchError.message}`);
+      }
 
       const result = await response.json();
+      console.log('[VIDEO] Response:', result);
       
       if (!response.ok || result.error) {
         throw new Error(result.error || 'Ошибка генерации видео');
