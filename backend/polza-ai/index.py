@@ -363,7 +363,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         action = body_data.get('action')
         prompt = body_data.get('prompt', '')
         
-        if not prompt and action not in ('check_image', 'check_video'):
+        if not prompt and action not in ('check_image', 'check_video', 'check_presentation'):
             return {
                 'statusCode': 400,
                 'headers': {
@@ -387,7 +387,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'isBase64Encoded': False
             }
         
-        elif action == 'image':
+        elif action == 'start_image':
             size = body_data.get('size', '1024x1024')
             task_id = start_image_generation(prompt, size)
             return {
@@ -428,7 +428,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'isBase64Encoded': False
             }
         
-        elif action == 'video':
+        elif action == 'start_video':
             task_id = start_video_generation(prompt)
             return {
                 'statusCode': 200,
@@ -475,7 +475,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
-                'body': json.dumps({'error': 'Неизвестное действие. Доступно: text, image, check_image, video, check_video'}),
+                'body': json.dumps({'error': 'Неизвестное действие. Доступно: text, start_image, check_image, start_video, check_video'}),
                 'isBase64Encoded': False
             }
     

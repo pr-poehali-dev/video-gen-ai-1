@@ -41,7 +41,7 @@ export const useIndexGenerators = (
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          action: 'video',
+          action: 'start_video',
           prompt: videoPrompt
         })
       });
@@ -224,7 +224,7 @@ export const useIndexGenerators = (
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            action: 'image',
+            action: 'start_image',
             prompt: slidePrompt,
             size: '1024x1024'
           })
