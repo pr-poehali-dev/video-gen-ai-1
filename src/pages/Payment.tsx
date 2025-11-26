@@ -15,6 +15,7 @@ const Payment = () => {
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isPlanSelected, setIsPlanSelected] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState('');
 
   useEffect(() => {
     const planName = searchParams.get('plan');
@@ -24,8 +25,27 @@ const Payment = () => {
       setAmount(planAmount);
       setDescription(`Подписка на тариф "${planName}"`);
       setIsPlanSelected(true);
+      setSelectedPlan(planName);
     }
   }, [searchParams]);
+
+  const getPlanIcon = (plan: string) => {
+    switch(plan) {
+      case 'Старт': return 'Rocket';
+      case 'Про': return 'Star';
+      case 'Бизнес': return 'Building2';
+      default: return 'Package';
+    }
+  };
+
+  const getPlanColor = (plan: string) => {
+    switch(plan) {
+      case 'Старт': return 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30';
+      case 'Про': return 'text-purple-400 bg-purple-500/10 border-purple-500/30';
+      case 'Бизнес': return 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30';
+      default: return 'text-gray-400 bg-gray-500/10 border-gray-500/30';
+    }
+  };
 
   const handlePayment = async () => {
     if (!amount || parseFloat(amount) <= 0) {
@@ -85,6 +105,19 @@ const Payment = () => {
             Безопасная оплата через ЮКассу
           </CardDescription>
         </CardHeader>
+        {isPlanSelected && (
+          <div className="px-6 pb-4">
+            <div className={`flex items-center gap-3 p-4 rounded-lg border ${getPlanColor(selectedPlan)}`}>
+              <div className="flex-shrink-0">
+                <Icon name={getPlanIcon(selectedPlan)} size={24} />
+              </div>
+              <div>
+                <div className="font-semibold">Тариф: {selectedPlan}</div>
+                <div className="text-sm opacity-80">{amount} ₽/месяц</div>
+              </div>
+            </div>
+          </div>
+        )}
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="amount">Сумма (₽)</Label>
