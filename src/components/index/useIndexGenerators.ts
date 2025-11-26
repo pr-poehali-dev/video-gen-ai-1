@@ -145,8 +145,6 @@ export const useIndexGenerators = (
     try {
       const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
 
-      console.log('[TEXT GEN] Начало запроса:', { textPrompt, time: new Date().toISOString() });
-
       const response = await fetch(polzaUrl, {
         method: 'POST',
         headers: {
@@ -159,20 +157,12 @@ export const useIndexGenerators = (
         })
       });
 
-      console.log('[TEXT GEN] Ответ получен:', { 
-        status: response.status, 
-        ok: response.ok,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-
       const result = await response.json();
-      console.log('[TEXT GEN] Результат распарсен:', { result });
 
       clearInterval(interval);
       setProgress(100);
 
       if (!response.ok || result.error) {
-        console.error('[TEXT GEN] Ошибка в ответе:', result.error);
         throw new Error(result.error || 'Ошибка генерации текста');
       }
 
@@ -181,14 +171,11 @@ export const useIndexGenerators = (
 
       handleIncrementRequest();
 
-      console.log('[TEXT GEN] Успешно завершено');
       toast({
         title: 'Готово!',
         description: 'Текст успешно сгенерирован',
       });
     } catch (error) {
-      console.error('[TEXT GEN] Поймана ошибка:', error);
-      console.error('[TEXT GEN] Stack:', error instanceof Error ? error.stack : 'N/A');
       clearInterval(interval);
       setIsGenerating(false);
       toast({
