@@ -143,17 +143,16 @@ export const useIndexGenerators = (
     }, 500);
 
     try {
-      const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
+      const aiGenerateUrl = 'https://functions.poehali.dev/500cc697-682b-469a-b439-fa265e84c833?action=generate';
 
-      const response = await fetch(polzaUrl, {
+      const response = await fetch(aiGenerateUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          action: 'text',
-          prompt: textPrompt,
-          system_prompt: 'Ты полезный AI-ассистент. Отвечай кратко и по делу.'
+          type: 'text',
+          prompt: textPrompt
         })
       });
 
@@ -162,12 +161,12 @@ export const useIndexGenerators = (
       clearInterval(interval);
       setProgress(100);
 
-      if (!response.ok || result.error) {
+      if (!response.ok || result.error || !result.success) {
         throw new Error(result.error || 'Ошибка генерации текста');
       }
 
       setIsGenerating(false);
-      setGeneratedContent(result.text);
+      setGeneratedContent(result.content_url);
 
       handleIncrementRequest();
 
