@@ -40,10 +40,13 @@ const Payment = () => {
       });
 
       const result = await response.json();
+      console.log('Payment response:', result);
 
       if (response.ok && result.payment_url) {
+        console.log('Redirecting to:', result.payment_url);
         window.location.href = result.payment_url;
       } else {
+        console.error('Payment error:', result);
         throw new Error(result.error || 'Ошибка создания платежа');
       }
     } catch (error) {

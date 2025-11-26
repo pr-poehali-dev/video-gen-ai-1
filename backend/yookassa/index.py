@@ -75,6 +75,8 @@ def create_payment(body: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, A
         description = body.get('description', 'Оплата на сайте')
         return_url = body.get('return_url', 'https://example.com/success')
         
+        print(f'[PAYMENT] Creating payment: amount={amount}, description={description}')
+        
         if not amount or float(amount) <= 0:
             return {
                 'statusCode': 400,
@@ -115,17 +117,20 @@ def create_payment(body: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, A
         
         if response.status_code in [200, 201]:
             data = response.json()
+            payment_url = data.get('confirmation', {}).get('confirmation_url')
+            print(f'[PAYMENT] Success! payment_id={data.get("id")}, payment_url={payment_url}')
             return {
                 'statusCode': 200,
                 'headers': headers,
                 'body': json.dumps({
                     'payment_id': data.get('id'),
-                    'payment_url': data.get('confirmation', {}).get('confirmation_url'),
+                    'payment_url': payment_url,
                     'status': data.get('status')
                 }),
                 'isBase64Encoded': False
             }
         
+        print(f'[PAYMENT] Error from YooKassa: status={response.status_code}, body={response.text}')
         return {
             'statusCode': response.status_code,
             'headers': headers,
@@ -137,6 +142,9 @@ def create_payment(body: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, A
         }
         
     except Exception as e:
+        print(f'[PAYMENT] Exception in create_payment: {str(e)}')
+        import traceback
+        traceback.print_exc()
         return {
             'statusCode': 500,
             'headers': headers,
