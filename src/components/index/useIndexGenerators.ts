@@ -33,13 +33,13 @@ export const useIndexGenerators = (
     }, 3000);
 
     try {
-      const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
+      const aiContentUrl = 'https://functions.poehali.dev/34147c53-3589-4dc6-9c1b-3170886e1a99';
       
       console.log('[VIDEO] Starting generation...');
       
       let response;
       try {
-        response = await fetch(polzaUrl, {
+        response = await fetch(aiContentUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

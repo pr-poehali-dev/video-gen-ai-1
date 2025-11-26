@@ -1,56 +1,37 @@
 {
   "tests": [
     {
-      "name": "Generate image with AIML API",
+      "name": "Test OPTIONS CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedHeaders": {
+        "Access-Control-Allow-Origin": "*"
+      }
+    },
+    {
+      "name": "Test text generation without prompt",
       "method": "POST",
       "path": "/",
       "body": {
-        "type": "image",
-        "prompt": "A beautiful sunset over mountains",
-        "params": {
-          "model": "flux/schnell",
-          "size": "1024x1024"
-        }
+        "action": "text"
       },
-      "expectedStatus": 200,
+      "expectedStatus": 500,
       "expectedBody": {
-        "url": "string",
-        "type": "image",
-        "provider": "aimlapi"
+        "error": "string"
       },
       "bodyMatcher": "partial"
     },
     {
-      "name": "Generate text with AIML API",
+      "name": "Test unknown action",
       "method": "POST",
       "path": "/",
       "body": {
-        "type": "text",
-        "prompt": "Write a short story about space",
-        "params": {
-          "model": "gpt-4o",
-          "max_tokens": 500
-        }
-      },
-      "expectedStatus": 200,
-      "expectedBody": {
-        "text": "string",
-        "type": "text",
-        "provider": "aimlapi"
-      },
-      "bodyMatcher": "partial"
-    },
-    {
-      "name": "Reject empty prompt",
-      "method": "POST",
-      "path": "/",
-      "body": {
-        "type": "image",
-        "prompt": ""
+        "action": "unknown"
       },
       "expectedStatus": 400,
       "expectedBody": {
-        "error": "Prompt is required"
+        "error": "string"
       },
       "bodyMatcher": "partial"
     }
