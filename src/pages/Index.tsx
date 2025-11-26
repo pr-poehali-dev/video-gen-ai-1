@@ -42,8 +42,7 @@ const Index = () => {
   );
 
   const handlePlanClick = (planName: string) => {
-    state.setSelectedPlan(planName);
-    state.setIsOfferModalOpen(true);
+    window.location.href = '/payment';
   };
 
   const handleOfferAccept = () => {
