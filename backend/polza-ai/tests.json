@@ -1,0 +1,39 @@
+{
+  "tests": [
+    {
+      "name": "Test OPTIONS CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test text generation",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "text",
+        "prompt": "Привет, как дела?"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "text": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test missing prompt error",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "text"
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
