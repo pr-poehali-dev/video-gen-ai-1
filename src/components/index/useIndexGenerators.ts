@@ -6,108 +6,16 @@ export const useIndexGenerators = (
   setGeneratedSlides: (slides: string[]) => void,
   handleIncrementRequest: () => void
 ) => {
-  const simulateGeneration = async (type: 'video' | 'text' | 'presentation', prompt: string, duration?: number, style?: string) => {
-    if (!prompt.trim()) {
-      toast({
-        title: 'Ошибка',
-        description: 'Пожалуйста, заполните поле запроса',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsGenerating(true);
-    setProgress(0);
-
-    const interval = setInterval(() => {
-      setProgress(prev => Math.min(prev + 5, 90));
-    }, 500);
-
-    try {
-      const apiUrl = 'https://functions.poehali.dev/500cc697-682b-469a-b439-fa265e84c833';
-      
-      const styleMap: Record<string, string> = {
-        cinematic: 'cinematic camera work, film grain, movie quality, dramatic lighting',
-        realistic: 'photorealistic, natural lighting, real world footage, documentary style',
-        animated: '3D animation, cartoon style, smooth motion, vibrant colors',
-        artistic: 'artistic style, creative visuals, expressive, stylized'
-      };
-
-      const body = type === 'video' 
-        ? { 
-            type: 'video', 
-            prompt: style ? `${prompt}, ${styleMap[style] || ''}` : prompt, 
-            duration: duration || 5 
-          }
-        : type === 'presentation'
-        ? { type: 'presentation_image', prompt }
-        : { type: 'text', prompt };
-
-      console.log('🚀 Отправка запроса:', type);
-      console.log('📝 Body:', JSON.stringify(body, null, 2));
-
-      const response = await fetch(`${apiUrl}?action=generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body)
-      });
-
-      const result = await response.json();
-      console.log('📦 Статус ответа:', response.status);
-      console.log('📦 Результат:', JSON.stringify(result, null, 2));
-
-      clearInterval(interval);
-      setProgress(100);
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Ошибка генерации');
-      }
-
-      setIsGenerating(false);
-
-      if (type === 'video') {
-        setGeneratedContent(result.url || result.content_url || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
-      } else if (type === 'text') {
-        setGeneratedContent(result.content_url || result.text || 'Текст сгенерирован успешно!');
-      } else if (type === 'presentation') {
-        setGeneratedContent(result.url || result.content_url || '');
-      }
-
-      handleIncrementRequest();
-
-      toast({
-        title: 'Готово!',
-        description: `${type === 'video' ? 'Видео' : type === 'presentation' ? 'Презентация' : 'Текст'} успешно ${result.is_demo ? 'создан (демо)' : 'сгенерирован'}`,
-      });
-    } catch (error) {
-      clearInterval(interval);
-      setIsGenerating(false);
-      toast({
-        title: 'Ошибка',
-        description: error instanceof Error ? error.message : 'Не удалось сгенерировать контент',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleVideoGenerate = (
+  const handleVideoGenerate = async (
     videoPrompt: string,
     videoDuration: number,
     videoStyle: string,
     setIsVideoModalOpen: (open: boolean) => void,
     checkRequestLimit: () => boolean
   ) => {
-    console.log('🎬 handleVideoGenerate вызван', { videoPrompt, videoDuration, videoStyle });
-    
-    if (!checkRequestLimit()) {
-      console.log('❌ Лимит запросов исчерпан');
-      return;
-    }
+    if (!checkRequestLimit()) return;
     
     if (!videoPrompt.trim()) {
-      console.log('❌ Пустой промпт');
       toast({
         title: 'Ошибка',
         description: 'Введите описание видео',
@@ -116,9 +24,56 @@ export const useIndexGenerators = (
       return;
     }
     
-    console.log('✅ Открываю модальное окно и запускаю генерацию');
     setIsVideoModalOpen(true);
-    simulateGeneration('video', videoPrompt, videoDuration, videoStyle);
+    setIsGenerating(true);
+    setProgress(0);
+
+    const interval = setInterval(() => {
+      setProgress(prev => Math.min(prev + 2, 90));
+    }, 3000);
+
+    try {
+      const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
+      
+      const response = await fetch(polzaUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'video',
+          prompt: videoPrompt
+        })
+      });
+
+      const result = await response.json();
+
+      clearInterval(interval);
+      setProgress(100);
+
+      if (!response.ok || result.error) {
+        throw new Error(result.error || 'Ошибка генерации видео');
+      }
+
+      setIsGenerating(false);
+      const videoData = `data:video/mp4;base64,${result.video_b64}`;
+      setGeneratedContent(videoData);
+
+      handleIncrementRequest();
+
+      toast({
+        title: 'Готово!',
+        description: 'Видео успешно сгенерировано',
+      });
+    } catch (error) {
+      clearInterval(interval);
+      setIsGenerating(false);
+      toast({
+        title: 'Ошибка',
+        description: error instanceof Error ? error.message : 'Не удалось сгенерировать видео',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleTextGenerate = async (
@@ -146,21 +101,17 @@ export const useIndexGenerators = (
     }, 500);
 
     try {
-      const apiUrl = 'https://functions.poehali.dev/afb4ee36-6a99-4357-b02b-de653bf882bc';
+      const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
 
-      const response = await fetch(apiUrl, {
+      const response = await fetch(polzaUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: [
-            {
-              role: 'user',
-              content: textPrompt
-            }
-          ],
-          max_tokens: 1000
+          action: 'text',
+          prompt: textPrompt,
+          system_prompt: 'Ты полезный AI-ассистент. Отвечай кратко и по делу.'
         })
       });
 
@@ -174,7 +125,7 @@ export const useIndexGenerators = (
       }
 
       setIsGenerating(false);
-      setGeneratedContent(result.response);
+      setGeneratedContent(result.text);
 
       handleIncrementRequest();
 
@@ -215,36 +166,40 @@ export const useIndexGenerators = (
     setIsGenerating(true);
     setProgress(0);
 
-    const interval = setInterval(() => {
-      setProgress(prev => Math.min(prev + Math.floor(100 / presentationSlides), 90));
-    }, 1000);
+    const slides: string[] = [];
 
     try {
-      const apiUrl = 'https://functions.poehali.dev/34147c53-3589-4dc6-9c1b-3170886e1a99';
+      const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
+      
+      for (let i = 0; i < presentationSlides; i++) {
+        setProgress(Math.floor(((i + 1) / presentationSlides) * 90));
+        
+        const slidePrompt = `Создай слайд ${i + 1} из ${presentationSlides} для презентации на тему: ${presentationTopic}. Стиль: ${presentationStyle}`;
+        
+        const response = await fetch(polzaUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'image',
+            prompt: slidePrompt,
+            size: '1024x1024'
+          })
+        });
 
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          topic: presentationTopic,
-          slides: presentationSlides,
-          style: presentationStyle
-        })
-      });
+        const result = await response.json();
 
-      const result = await response.json();
+        if (!response.ok || result.error) {
+          throw new Error(result.error || `Ошибка генерации слайда ${i + 1}`);
+        }
 
-      clearInterval(interval);
-      setProgress(100);
-
-      if (!response.ok || result.error) {
-        throw new Error(result.error || 'Ошибка генерации презентации');
+        slides.push(`data:image/png;base64,${result.image_b64}`);
       }
 
+      setProgress(100);
       setIsGenerating(false);
-      setGeneratedSlides(result.slides || []);
+      setGeneratedSlides(slides);
 
       handleIncrementRequest();
 
@@ -253,7 +208,6 @@ export const useIndexGenerators = (
         description: 'Презентация успешно создана',
       });
     } catch (error) {
-      clearInterval(interval);
       setIsGenerating(false);
       toast({
         title: 'Ошибка',
@@ -290,7 +244,7 @@ export const useIndexGenerators = (
     }, 500);
 
     try {
-      const apiUrl = 'https://functions.poehali.dev/500cc697-682b-469a-b439-fa265e84c833';
+      const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
       
       const styleMap: Record<string, string> = {
         photorealistic: 'photorealistic, highly detailed, sharp focus, professional photography',
@@ -301,13 +255,13 @@ export const useIndexGenerators = (
 
       const enhancedPrompt = `${photoPrompt}, ${styleMap[photoStyle] || ''}`;
 
-      const response = await fetch(`${apiUrl}?action=generate`, {
+      const response = await fetch(polzaUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          type: 'image',
+          action: 'image',
           prompt: enhancedPrompt,
           size: photoResolution
         })
@@ -318,12 +272,13 @@ export const useIndexGenerators = (
       clearInterval(interval);
       setProgress(100);
 
-      if (!response.ok || !result.success) {
+      if (!response.ok || result.error) {
         throw new Error(result.error || 'Ошибка генерации изображения');
       }
 
       setIsGenerating(false);
-      setGeneratedContent(result.url || result.content_url || '');
+      const imageData = `data:image/png;base64,${result.image_b64}`;
+      setGeneratedContent(imageData);
 
       handleIncrementRequest();
 
@@ -343,7 +298,6 @@ export const useIndexGenerators = (
   };
 
   return {
-    simulateGeneration,
     handleVideoGenerate,
     handleTextGenerate,
     handlePresentationGenerate,
