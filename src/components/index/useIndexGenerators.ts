@@ -58,16 +58,15 @@ export const useIndexGenerators = (
       
       toast({
         title: '⏳ Генерация запущена',
-        description: 'Создаём видео... Обычно это занимает 1-3 минуты',
+        description: 'Создаём видео... Обычно это занимает 1-2 минуты',
       });
       
       let attempts = 0;
-      const maxAttempts = 120;
       const startTime = Date.now();
       
-      while (attempts < maxAttempts) {
+      while (true) {
         const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        const progressPercent = Math.min(10 + (elapsed / 180) * 85, 95);
+        const progressPercent = Math.min(10 + (elapsed / 120) * 85, 95);
         setProgress(progressPercent);
         
         await new Promise(resolve => setTimeout(resolve, 3000));
@@ -104,9 +103,11 @@ export const useIndexGenerators = (
         }
         
         attempts++;
+        
+        if (attempts > 600) {
+          throw new Error('Генерация видео заняла слишком много времени. Попробуйте упростить описание.');
+        }
       }
-      
-      throw new Error('Таймаут генерации видео (>6 минут). Попробуйте упростить описание или повторите попытку.');
     } catch (error) {
       clearInterval(interval);
       setIsGenerating(false);

@@ -21,8 +21,6 @@ VIDEO_MODEL = "kling/kling2.5-text-to-video"
 
 IMAGE_POLL_TIMEOUT_SEC = 300
 IMAGE_POLL_INTERVAL_SEC = 2
-VIDEO_POLL_TIMEOUT_SEC = 900
-VIDEO_POLL_INTERVAL_SEC = 3
 
 
 def _extract_request_id(data: Dict[str, Any]) -> Optional[str]:
@@ -229,7 +227,10 @@ def start_video_generation(prompt: str) -> str:
     headers = {"Authorization": f"Bearer {POLZA_API_KEY}", "Content-Type": "application/json"}
     payload = {
         "model": VIDEO_MODEL,
-        "prompt": prompt
+        "prompt": prompt,
+        "mode": "standard",
+        "duration": 5,
+        "aspect_ratio": "16:9"
     }
     
     print(f"DEBUG: Sending video generation request with prompt: {prompt}")
