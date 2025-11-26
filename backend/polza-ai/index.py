@@ -332,7 +332,7 @@ def generate_video(prompt: str) -> str:
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method = event.get('httpMethod', 'GET')
-    print(f"DEBUG handler: method={method}, body={event.get('body', '')[:200]}")
+    print(f"[POLZA-AI] method={method}, body={event.get('body', '')[:200]}")
     
     if method == 'OPTIONS':
         return {
