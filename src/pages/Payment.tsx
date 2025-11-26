@@ -14,16 +14,16 @@ const Payment = () => {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isPlanSelected, setIsPlanSelected] = useState(false);
 
   useEffect(() => {
     const planName = searchParams.get('plan');
     const planAmount = searchParams.get('amount');
     
-    if (planAmount) {
+    if (planAmount && planName) {
       setAmount(planAmount);
-    }
-    if (planName) {
       setDescription(`Подписка на тариф "${planName}"`);
+      setIsPlanSelected(true);
     }
   }, [searchParams]);
 
@@ -96,7 +96,15 @@ const Payment = () => {
               onChange={(e) => setAmount(e.target.value)}
               min="1"
               step="0.01"
+              disabled={isPlanSelected}
+              className={isPlanSelected ? 'bg-muted cursor-not-allowed' : ''}
             />
+            {isPlanSelected && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Icon name="Lock" size={12} />
+                Сумма тарифа изменению не подлежит
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Описание (необязательно)</Label>
