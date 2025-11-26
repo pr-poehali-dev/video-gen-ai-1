@@ -131,27 +131,34 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
 
 
 def generate_text_openai(prompt: str, max_tokens: int = 2000) -> GenerationResult:
-    '''Генерация текста через Polza AI'''
-    api_key = os.environ.get('POLZA_AI_API_KEY')
+    '''Генерация текста через OpenRouter API (поддерживает все модели)'''
+    api_key = os.environ.get('OPENROUTER_API_KEY')
     if not api_key:
         return GenerationResult(
             success=False,
-            error='Для генерации текста требуется POLZA_AI_API_KEY'
+            error='Для генерации текста требуется OPENROUTER_API_KEY. Получите бесплатно на https://openrouter.ai/keys'
         )
     
     try:
         headers = {
             'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://roushen.com',
+            'X-Title': 'ROUSHEN AI'
         }
         
         payload = {
-            'action': 'text',
-            'prompt': prompt
+            'model': 'google/gemini-2.0-flash-exp:free',
+            'messages': [
+                {'role': 'system', 'content': 'Ты помощник для создания качественного контента на русском языке.'},
+                {'role': 'user', 'content': prompt}
+            ],
+            'max_tokens': max_tokens,
+            'temperature': 0.7
         }
         
         response = requests.post(
-            'https://api.polza.ai/v1/generate',
+            'https://openrouter.ai/api/v1/chat/completions',
             json=payload,
             headers=headers,
             timeout=30
@@ -160,16 +167,16 @@ def generate_text_openai(prompt: str, max_tokens: int = 2000) -> GenerationResul
         if response.status_code != 200:
             return GenerationResult(
                 success=False,
-                error=f'Ошибка Polza AI: {response.status_code}'
+                error=f'Ошибка OpenRouter API: {response.status_code} - {response.text[:200]}'
             )
         
         result = response.json()
-        text_content = result.get('text', result.get('content', ''))
+        text_content = result['choices'][0]['message']['content']
         
         return GenerationResult(
             success=True,
             content_url=text_content,
-            generation_id=result.get('id', 'polza-text')
+            generation_id=result.get('id', 'openrouter-text')
         )
     except Exception as e:
         return GenerationResult(
