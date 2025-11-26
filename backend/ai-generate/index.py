@@ -504,6 +504,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
     method = event.get('httpMethod', 'GET')
     
+    print(f'DEBUG handler: method={method}, event={json.dumps(event, ensure_ascii=False)[:300]}')
+    
     if method == 'OPTIONS':
         return {
             'statusCode': 200,
@@ -516,12 +518,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'body': ''
         }
     
-    params = event.get('queryStringParameters', {})
+    params = event.get('queryStringParameters', {}) or {}
     action = params.get('action', 'generate')
+    
+    print(f'DEBUG: action={action}, params={params}')
     
     # Проверка статуса генерации
     if method == 'GET' and action == 'check_status':
         prediction_id = params.get('prediction_id', '')
+        print(f'DEBUG: checking status for prediction_id={prediction_id}')
         if not prediction_id:
             return {
                 'statusCode': 400,
@@ -530,6 +535,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
         
         status_result = check_prediction_status(prediction_id)
+        print(f'DEBUG: status_result={status_result}')
         return {
             'statusCode': 200,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
