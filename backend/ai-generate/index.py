@@ -22,7 +22,6 @@ class GenerationResult:
     content_url: Optional[str] = None
     error: Optional[str] = None
     generation_id: Optional[str] = None
-    is_demo: bool = False
 
 
 
@@ -108,9 +107,8 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
         # Возвращаем ID для polling на фронте
         return GenerationResult(
             success=True,
-            content_url='',  # Пока нет URL
-            generation_id=prediction_id,
-            is_demo=False
+            content_url='',
+            generation_id=prediction_id
         )
     except Exception as e:
         print(f'DEBUG: Exception: {str(e)}')
@@ -130,38 +128,16 @@ def generate_video_replicate_pro(prompt: str, duration: int = 5) -> GenerationRe
 
 
 
-def generate_text_demo(prompt: str) -> GenerationResult:
-    '''Демо-генерация текста'''
-    demo_text = f'''Это демо-версия генерации текста.
 
-Ваш запрос: "{prompt}"
-
-Для получения реальных текстов от GPT-4:
-1. Получите API ключ на https://platform.openai.com
-2. Добавьте OPENAI_API_KEY в секреты проекта
-3. Пополните баланс минимум на $5
-
-Реальная генерация создаст качественный контент на основе вашего запроса, используя возможности GPT-4 Turbo.
-
-Пример возможностей:
-- Статьи и блог-посты любой длины
-- Маркетинговые тексты и описания
-- Сценарии и креативный контент
-- Технические документы и инструкции
-- SEO-оптимизированный контент'''
-
-    return GenerationResult(
-        success=True,
-        content_url=demo_text,
-        generation_id='demo',
-        is_demo=True
-    )
 
 def generate_text_openai(prompt: str, max_tokens: int = 2000) -> GenerationResult:
-    '''Генерация текста через OpenAI GPT-4'''
-    api_key = os.environ.get('OPENAI_API_KEY')
+    '''Генерация текста через Polza AI'''
+    api_key = os.environ.get('POLZA_AI_API_KEY')
     if not api_key:
-        return generate_text_demo(prompt)
+        return GenerationResult(
+            success=False,
+            error='Для генерации текста требуется POLZA_AI_API_KEY'
+        )
     
     try:
         headers = {
@@ -170,35 +146,36 @@ def generate_text_openai(prompt: str, max_tokens: int = 2000) -> GenerationResul
         }
         
         payload = {
-            'model': 'gpt-4-turbo-preview',
-            'messages': [
-                {'role': 'system', 'content': 'Ты помощник для создания качественного контента на русском языке.'},
-                {'role': 'user', 'content': prompt}
-            ],
-            'max_tokens': max_tokens,
-            'temperature': 0.7
+            'action': 'text',
+            'prompt': prompt
         }
         
         response = requests.post(
-            'https://api.openai.com/v1/chat/completions',
+            'https://api.polza.ai/v1/generate',
             json=payload,
             headers=headers,
             timeout=30
         )
         
         if response.status_code != 200:
-            return generate_text_demo(prompt)
+            return GenerationResult(
+                success=False,
+                error=f'Ошибка Polza AI: {response.status_code}'
+            )
         
         result = response.json()
-        text_content = result['choices'][0]['message']['content']
+        text_content = result.get('text', result.get('content', ''))
         
         return GenerationResult(
             success=True,
             content_url=text_content,
-            generation_id=result['id']
+            generation_id=result.get('id', 'polza-text')
         )
-    except Exception:
-        return generate_text_demo(prompt)
+    except Exception as e:
+        return GenerationResult(
+            success=False,
+            error=f'Ошибка генерации текста: {str(e)}'
+        )
 
 def translate_to_english(text: str) -> str:
     '''Перевод русского текста на английский для улучшения генерации'''
@@ -333,7 +310,7 @@ def generate_image_replicate_pro(prompt: str, style: str = 'photorealistic', res
                     success=True,
                     content_url=image_url,
                     generation_id=prediction_id,
-                    is_demo=False
+
                 )
             elif result['status'] == 'failed':
                 return GenerationResult(
@@ -415,7 +392,7 @@ def generate_presentation_replicate_pro(slide_prompt: str) -> GenerationResult:
                     success=True,
                     content_url=image_url,
                     generation_id=prediction_id,
-                    is_demo=False
+
                 )
             elif result['status'] == 'failed':
                 return GenerationResult(
@@ -598,9 +575,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'generation_id': result.generation_id,
                 'type': content_type
             }
-            if result.is_demo:
-                response_data['is_demo'] = True
-                response_data['message'] = 'Используется демо-версия. Добавьте API ключи для реальной генерации.'
             
             return {
                 'statusCode': 200,
