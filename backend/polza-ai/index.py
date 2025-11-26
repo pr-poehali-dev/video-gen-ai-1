@@ -47,6 +47,9 @@ def _parse_image_result(data: Dict[str, Any]) -> Optional[bytes]:
     if "images" in data and isinstance(data["images"], list):
         items_to_check.extend(data["images"])
     
+    if "videos" in data and isinstance(data["videos"], list):
+        items_to_check.extend(data["videos"])
+    
     if not items_to_check:
         items_to_check = [data]
 
@@ -54,26 +57,26 @@ def _parse_image_result(data: Dict[str, Any]) -> Optional[bytes]:
         if not isinstance(item, dict):
             continue
         
-        for key in ("b64_json", "b64", "image_b64", "image"):
+        for key in ("b64_json", "b64", "image_b64", "image", "video_b64", "video"):
             if isinstance(item.get(key), str):
                 try:
                     return base64.b64decode(item[key])
                 except Exception as e:
                     print(f"DEBUG: Failed to decode base64 from key {key}: {e}")
         
-        for key in ("url", "image_url", "output"):
+        for key in ("url", "image_url", "output", "video_url", "file_url"):
             url = item.get(key)
             if isinstance(url, str) and url.startswith("http"):
                 try:
-                    print(f"DEBUG: Downloading image from {url}")
-                    response = requests.get(url, timeout=60)
+                    print(f"DEBUG: Downloading media from {url}")
+                    response = requests.get(url, timeout=120)
                     response.raise_for_status()
                     print(f"DEBUG: Successfully downloaded {len(response.content)} bytes")
                     return response.content
                 except Exception as e:
                     print(f"DEBUG: Failed to download from {url}: {e}")
     
-    print(f"DEBUG: No valid image data found in response")
+    print(f"DEBUG: No valid media data found in response")
     return None
 
 
