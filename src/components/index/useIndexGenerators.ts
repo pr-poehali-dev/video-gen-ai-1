@@ -33,30 +33,20 @@ export const useIndexGenerators = (
     }, 3000);
 
     try {
-      const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
+      const genUrl = 'https://functions.poehali.dev/10403e62-7ac3-4dc7-a3c4-d42277380d1f';
       
-      console.log('[VIDEO] Starting generation...');
-      
-      let response;
-      try {
-        response = await fetch(polzaUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: 'start_video',
-            prompt: videoPrompt
-          })
-        });
-        console.log('[VIDEO] Fetch completed, status:', response.status);
-      } catch (fetchError) {
-        console.error('[VIDEO] Fetch failed:', fetchError);
-        throw new Error(`Не удалось подключиться к серверу: ${fetchError.message}`);
-      }
+      const response = await fetch(genUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'video',
+          prompt: videoPrompt
+        })
+      });
 
       const result = await response.json();
-      console.log('[VIDEO] Response:', result);
       
       if (!response.ok || result.error) {
         throw new Error(result.error || 'Ошибка генерации видео');
@@ -81,7 +71,7 @@ export const useIndexGenerators = (
         
         await new Promise(resolve => setTimeout(resolve, 3000));
         
-        const checkResponse = await fetch(polzaUrl, {
+        const checkResponse = await fetch(genUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -221,7 +211,7 @@ export const useIndexGenerators = (
     const slides: string[] = [];
 
     try {
-      const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
+      const genUrl = 'https://functions.poehali.dev/10403e62-7ac3-4dc7-a3c4-d42277380d1f';
       
       for (let i = 0; i < presentationSlides; i++) {
         const slideStartTime = Date.now();
@@ -229,13 +219,13 @@ export const useIndexGenerators = (
         
         const slidePrompt = `Создай слайд ${i + 1} из ${presentationSlides} для презентации на тему: ${presentationTopic}. Стиль: ${presentationStyle}`;
         
-        const startResponse = await fetch(polzaUrl, {
+        const startResponse = await fetch(genUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            action: 'start_image',
+            action: 'image',
             prompt: slidePrompt,
             size: '1024x1024'
           })
@@ -256,7 +246,7 @@ export const useIndexGenerators = (
         while (attempts < maxAttempts) {
           await new Promise(resolve => setTimeout(resolve, 2000));
           
-          const checkResponse = await fetch(polzaUrl, {
+          const checkResponse = await fetch(genUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -338,7 +328,7 @@ export const useIndexGenerators = (
     }, 500);
 
     try {
-      const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
+      const genUrl = 'https://functions.poehali.dev/10403e62-7ac3-4dc7-a3c4-d42277380d1f';
       
       const styleMap: Record<string, string> = {
         photorealistic: 'photorealistic, highly detailed, sharp focus, professional photography',
@@ -349,13 +339,13 @@ export const useIndexGenerators = (
 
       const enhancedPrompt = `${photoPrompt}, ${styleMap[photoStyle] || ''}`;
 
-      const startResponse = await fetch(polzaUrl, {
+      const startResponse = await fetch(genUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          action: 'start_image',
+          action: 'image',
           prompt: enhancedPrompt,
           size: photoResolution
         })
@@ -388,7 +378,7 @@ export const useIndexGenerators = (
         
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        const checkResponse = await fetch(polzaUrl, {
+        const checkResponse = await fetch(genUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

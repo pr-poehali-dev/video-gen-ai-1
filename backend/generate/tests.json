@@ -1,0 +1,22 @@
+{
+  "tests": [
+    {
+      "name": "Test OPTIONS CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedHeaders": {
+        "Access-Control-Allow-Origin": "*"
+      }
+    },
+    {
+      "name": "Test unknown action",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "unknown"
+      },
+      "expectedStatus": 400
+    }
+  ]
+}
