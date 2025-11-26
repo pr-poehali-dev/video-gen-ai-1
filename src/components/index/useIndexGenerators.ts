@@ -35,43 +35,78 @@ export const useIndexGenerators = (
     try {
       const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
       
-      toast({
-        title: '⏳ Генерация запущена',
-        description: 'Создаём видео... Обычно это занимает 1-2 минуты',
-      });
-      
       const response = await fetch(polzaUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          action: 'video',
+          action: 'start_video',
           prompt: videoPrompt
         })
       });
 
       const result = await response.json();
-
-      clearInterval(interval);
       
       if (!response.ok || result.error) {
         throw new Error(result.error || 'Ошибка генерации видео');
       }
 
-      setProgress(100);
-      setIsGenerating(false);
+      const taskId = result.task_id;
       
-      const videoBase64 = result.video_b64;
-      const videoUrl = `data:video/mp4;base64,${videoBase64}`;
-      setGeneratedContent(videoUrl);
-
-      handleIncrementRequest();
-
+      clearInterval(interval);
+      
       toast({
-        title: '✅ Готово!',
-        description: 'Видео успешно сгенерировано',
+        title: '⏳ Генерация запущена',
+        description: 'Создаём видео... Обычно это занимает 1-2 минуты',
       });
+      
+      let attempts = 0;
+      const startTime = Date.now();
+      
+      while (true) {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const progressPercent = Math.min(10 + (elapsed / 120) * 85, 95);
+        setProgress(progressPercent);
+        
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        const checkResponse = await fetch(polzaUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'check_video',
+            task_id: taskId
+          })
+        });
+        
+        const checkResult = await checkResponse.json();
+        
+        if (checkResult.status === 'completed') {
+          setProgress(100);
+          setIsGenerating(false);
+          
+          setGeneratedContent(checkResult.video_url);
+
+          handleIncrementRequest();
+
+          toast({
+            title: '✅ Готово!',
+            description: `Видео сгенерировано за ${elapsed} секунд`,
+          });
+          return;
+        } else if (checkResult.status === 'failed' || checkResult.status === 'error') {
+          throw new Error(checkResult.message || 'Генерация видео провалена');
+        }
+        
+        attempts++;
+        
+        if (attempts > 600) {
+          throw new Error('Генерация видео заняла слишком много времени. Попробуйте упростить описание.');
+        }
+      }
     } catch (error) {
       clearInterval(interval);
       setIsGenerating(false);
@@ -184,25 +219,60 @@ export const useIndexGenerators = (
         
         const slidePrompt = `Создай слайд ${i + 1} из ${presentationSlides} для презентации на тему: ${presentationTopic}. Стиль: ${presentationStyle}`;
         
-        const response = await fetch(polzaUrl, {
+        const startResponse = await fetch(polzaUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            action: 'image',
+            action: 'start_image',
             prompt: slidePrompt,
             size: '1024x1024'
           })
         });
 
-        const result = await response.json();
+        const startResult = await startResponse.json();
 
-        if (!response.ok || result.error) {
-          throw new Error(result.error || `Ошибка генерации слайда ${i + 1}`);
+        if (!startResponse.ok || startResult.error) {
+          throw new Error(startResult.error || `Ошибка генерации слайда ${i + 1}`);
         }
 
-        const imageBase64 = result.image_b64;
+        const taskId = startResult.task_id;
+        
+        let imageBase64 = null;
+        let attempts = 0;
+        const maxAttempts = 60;
+        
+        while (attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          const checkResponse = await fetch(polzaUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              action: 'check_image',
+              task_id: taskId
+            })
+          });
+          
+          const checkResult = await checkResponse.json();
+          
+          if (checkResult.status === 'completed') {
+            imageBase64 = checkResult.image_b64;
+            break;
+          } else if (checkResult.status === 'failed' || checkResult.status === 'error') {
+            throw new Error(checkResult.message || `Генерация слайда ${i + 1} провалена`);
+          }
+          
+          attempts++;
+        }
+        
+        if (!imageBase64) {
+          throw new Error(`Таймаут генерации слайда ${i + 1}`);
+        }
+
         slides.push(`data:image/png;base64,${imageBase64}`);
         
         toast({

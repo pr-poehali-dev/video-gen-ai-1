@@ -5,12 +5,10 @@ Returns: HTTP response с результатом генерации
 '''
 
 import os
-import io
 import json
-import time
 import base64
 import requests
-from typing import Tuple, Optional, Dict, Any
+from typing import Optional, Dict, Any
 
 POLZA_API_KEY = os.environ.get("POLZA_AI_API_KEY")
 BASE_URL = os.environ.get("POLZA_BASE_URL", "https://api.polza.ai/api/v1").rstrip("/")
@@ -18,11 +16,6 @@ BASE_URL = os.environ.get("POLZA_BASE_URL", "https://api.polza.ai/api/v1").rstri
 TEXT_MODEL = "openai/gpt-4o"
 IMAGE_MODEL = "kie/grok-imagine"
 VIDEO_MODEL = "kling/kling2.5-text-to-video"
-
-IMAGE_POLL_TIMEOUT_SEC = 300
-IMAGE_POLL_INTERVAL_SEC = 2
-VIDEO_POLL_TIMEOUT_SEC = 900
-VIDEO_POLL_INTERVAL_SEC = 3
 
 
 def _extract_request_id(data: Dict[str, Any]) -> Optional[str]:
@@ -34,70 +27,6 @@ def _extract_request_id(data: Dict[str, Any]) -> Optional[str]:
         if isinstance(val, str) and len(val) > 8 and "/" not in val:
             return val
     return None
-
-
-def _parse_image_result(data: Dict[str, Any]) -> Optional[bytes]:
-    """Извлекает готовое изображение (в байтах) из ответа API."""
-    if not isinstance(data, dict):
-        return None
-    
-    items_to_check = data.get("data", [])
-    if not isinstance(items_to_check, list):
-        items_to_check = [data]
-
-    for item in items_to_check:
-        if not isinstance(item, dict):
-            continue
-        for key in ("b64_json", "b64", "image_b64"):
-            if isinstance(item.get(key), str):
-                try:
-                    return base64.b64decode(item[key])
-                except Exception as e:
-                    print(f"Ошибка декодирования base64: {e}")
-        for key in ("url", "image_url"):
-            if isinstance(item.get(key), str) and item[key].startswith("http"):
-                try:
-                    response = requests.get(item[key], timeout=60)
-                    response.raise_for_status()
-                    return response.content
-                except Exception as e:
-                    print(f"Ошибка при скачивании изображения: {e}")
-    return None
-
-
-def _poll_task(task_id: str, status_endpoint: str, timeout: int, interval: int) -> Tuple[Optional[bytes], Optional[str]]:
-    """Универсальная функция опроса статуса для фото и видео."""
-    headers = {"Authorization": f"Bearer {POLZA_API_KEY}"}
-    status_url = f"{BASE_URL}{status_endpoint}/{task_id}"
-    start_time = time.time()
-
-    while time.time() - start_time < timeout:
-        try:
-            r = requests.get(status_url, headers=headers, timeout=15)
-            if r.status_code != 200:
-                time.sleep(interval)
-                continue
-            
-            data = r.json()
-            status = str(data.get("status", "")).lower()
-
-            if status in ("succeeded", "completed", "done"):
-                result_bytes = _parse_image_result(data)
-                if result_bytes:
-                    return result_bytes, None
-                return None, "Задача выполнена, но результат не найден в ответе."
-
-            if status in ("failed", "error", "canceled"):
-                error_info = data.get("error", {}).get("message", "Причина не указана.")
-                return None, f"Задача провалена (статус: {status}): {error_info}"
-            
-            time.sleep(interval)
-
-        except Exception as e:
-            print(f"Ошибка при опросе статуса: {e}")
-            time.sleep(interval)
-
-    return None, "Таймаут ожидания результата."
 
 
 def generate_text(prompt: str, system_prompt: str = "") -> str:
@@ -120,8 +49,8 @@ def generate_text(prompt: str, system_prompt: str = "") -> str:
     return data["choices"][0]["message"]["content"]
 
 
-def generate_image(prompt: str, size: str = "1024x1024") -> str:
-    """Генерирует изображение и возвращает base64."""
+def start_image_generation(prompt: str, size: str = "1024x1024") -> str:
+    """Запускает генерацию изображения и возвращает task_id."""
     headers = {"Authorization": f"Bearer {POLZA_API_KEY}", "Content-Type": "application/json"}
     payload = {
         "model": IMAGE_MODEL,
@@ -136,22 +65,58 @@ def generate_image(prompt: str, size: str = "1024x1024") -> str:
     task_id = _extract_request_id(response.json())
     if not task_id:
         raise RuntimeError("Не удалось получить ID задачи от API.")
-
-    image_bytes, error = _poll_task(
-        task_id=task_id,
-        status_endpoint="/images",
-        timeout=IMAGE_POLL_TIMEOUT_SEC,
-        interval=IMAGE_POLL_INTERVAL_SEC
-    )
     
-    if error:
-        raise RuntimeError(error)
+    return task_id
+
+
+def check_image_status(task_id: str) -> Dict[str, Any]:
+    """Проверяет статус генерации изображения."""
+    headers = {"Authorization": f"Bearer {POLZA_API_KEY}"}
+    status_url = f"{BASE_URL}/images/{task_id}"
     
-    return base64.b64encode(image_bytes).decode('utf-8')
+    r = requests.get(status_url, headers=headers, timeout=15)
+    if r.status_code != 200:
+        return {"status": "error", "message": f"HTTP {r.status_code}"}
+    
+    data = r.json()
+    status = str(data.get("status", "")).lower()
+    
+    if status in ("succeeded", "completed", "done"):
+        # Ищем изображение в data
+        items_to_check = data.get("data", [])
+        if not isinstance(items_to_check, list):
+            items_to_check = [data]
+        
+        for item in items_to_check:
+            if not isinstance(item, dict):
+                continue
+            # Проверяем b64
+            for key in ("b64_json", "b64", "image_b64"):
+                if isinstance(item.get(key), str):
+                    return {"status": "completed", "image_b64": item[key]}
+            # Проверяем URL
+            for key in ("url", "image_url"):
+                url = item.get(key)
+                if isinstance(url, str) and url.startswith("http"):
+                    try:
+                        img_response = requests.get(url, timeout=60)
+                        img_response.raise_for_status()
+                        img_b64 = base64.b64encode(img_response.content).decode('utf-8')
+                        return {"status": "completed", "image_b64": img_b64}
+                    except Exception as e:
+                        return {"status": "error", "message": f"Ошибка скачивания: {str(e)}"}
+        
+        return {"status": "error", "message": "Результат не найден в ответе"}
+    
+    if status in ("failed", "error", "canceled"):
+        error_info = data.get("error", {}).get("message", "Причина не указана.")
+        return {"status": "failed", "message": error_info}
+    
+    return {"status": "processing"}
 
 
-def generate_video(prompt: str) -> str:
-    """Генерирует видео и возвращает base64."""
+def start_video_generation(prompt: str) -> str:
+    """Запускает генерацию видео и возвращает task_id."""
     headers = {"Authorization": f"Bearer {POLZA_API_KEY}", "Content-Type": "application/json"}
     payload = {
         "model": VIDEO_MODEL,
@@ -161,24 +126,54 @@ def generate_video(prompt: str) -> str:
         "aspect_ratio": "16:9"
     }
 
+    print(f"DEBUG: Starting video generation with prompt: {prompt}")
     response = requests.post(f"{BASE_URL}/videos/generations", headers=headers, json=payload, timeout=30)
     response.raise_for_status()
     
-    task_id = _extract_request_id(response.json())
+    response_data = response.json()
+    print(f"DEBUG: Video generation response: {json.dumps(response_data, indent=2)}")
+    
+    task_id = _extract_request_id(response_data)
     if not task_id:
-        raise RuntimeError("Не удалось получить ID задачи от API.")
+        raise RuntimeError(f"Не удалось получить ID задачи от API. Ответ: {json.dumps(response_data)}")
+    
+    print(f"DEBUG: Video task_id: {task_id}")
+    return task_id
 
-    video_bytes, error = _poll_task(
-        task_id=task_id,
-        status_endpoint="/videos",
-        timeout=VIDEO_POLL_TIMEOUT_SEC,
-        interval=VIDEO_POLL_INTERVAL_SEC
-    )
+
+def check_video_status(task_id: str) -> Dict[str, Any]:
+    """Проверяет статус генерации видео."""
+    headers = {"Authorization": f"Bearer {POLZA_API_KEY}"}
+    status_url = f"{BASE_URL}/videos/{task_id}"
     
-    if error:
-        raise RuntimeError(error)
+    print(f"DEBUG: Checking video status at {status_url}")
+    r = requests.get(status_url, headers=headers, timeout=15)
+    print(f"DEBUG: Status check response code: {r.status_code}")
     
-    return base64.b64encode(video_bytes).decode('utf-8')
+    if r.status_code != 200:
+        return {"status": "error", "message": f"HTTP {r.status_code}"}
+    
+    data = r.json()
+    status = str(data.get("status", "")).lower()
+    print(f"DEBUG: Video task status: {status}, response: {json.dumps(data, indent=2)[:500]}")
+    
+    if status in ("succeeded", "completed", "done"):
+        # Ищем URL видео напрямую
+        video_url = data.get("url")
+        if video_url and isinstance(video_url, str) and video_url.startswith("http"):
+            print(f"DEBUG: Video ready at URL: {video_url}")
+            return {"status": "completed", "video_url": video_url}
+        
+        print(f"DEBUG: Status is completed but no video URL found")
+        return {"status": "error", "message": f"Результат не найден. Ответ: {json.dumps(data)}"}
+    
+    if status in ("failed", "error", "canceled"):
+        error_info = data.get("error", {}).get("message", "Причина не указана.")
+        print(f"DEBUG: Video generation failed: {error_info}")
+        return {"status": "failed", "message": error_info}
+    
+    print(f"DEBUG: Video still processing...")
+    return {"status": "processing"}
 
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -214,7 +209,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         action = body_data.get('action')
         prompt = body_data.get('prompt', '')
         
-        if not prompt:
+        if not prompt and action not in ('check_image', 'check_video'):
             return {
                 'statusCode': 400,
                 'headers': {
@@ -239,28 +234,74 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'isBase64Encoded': False
                 }
             
-            elif action == 'image':
+            elif action == 'start_image':
                 size = body_data.get('size', '1024x1024')
-                result = generate_image(prompt, size)
+                task_id = start_image_generation(prompt, size)
                 return {
                     'statusCode': 200,
                     'headers': {
                         'Content-Type': 'application/json',
                         'Access-Control-Allow-Origin': '*'
                     },
-                    'body': json.dumps({'image_b64': result}),
+                    'body': json.dumps({'task_id': task_id, 'status': 'processing'}),
                     'isBase64Encoded': False
                 }
             
-            elif action == 'video':
-                result = generate_video(prompt)
+            elif action == 'check_image':
+                task_id = body_data.get('task_id')
+                if not task_id:
+                    return {
+                        'statusCode': 400,
+                        'headers': {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'
+                        },
+                        'body': json.dumps({'error': 'task_id обязателен'}),
+                        'isBase64Encoded': False
+                    }
+                result = check_image_status(task_id)
                 return {
                     'statusCode': 200,
                     'headers': {
                         'Content-Type': 'application/json',
                         'Access-Control-Allow-Origin': '*'
                     },
-                    'body': json.dumps({'video_b64': result}),
+                    'body': json.dumps(result),
+                    'isBase64Encoded': False
+                }
+            
+            elif action == 'start_video':
+                task_id = start_video_generation(prompt)
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'body': json.dumps({'task_id': task_id, 'status': 'processing'}),
+                    'isBase64Encoded': False
+                }
+            
+            elif action == 'check_video':
+                task_id = body_data.get('task_id')
+                if not task_id:
+                    return {
+                        'statusCode': 400,
+                        'headers': {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'
+                        },
+                        'body': json.dumps({'error': 'task_id обязателен'}),
+                        'isBase64Encoded': False
+                    }
+                result = check_video_status(task_id)
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'body': json.dumps(result),
                     'isBase64Encoded': False
                 }
             
@@ -271,12 +312,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'Content-Type': 'application/json',
                         'Access-Control-Allow-Origin': '*'
                     },
-                    'body': json.dumps({'error': 'Неизвестное действие. Доступно: text, image, video'}),
+                    'body': json.dumps({'error': 'Неизвестное действие. Доступно: text, start_image, check_image, start_video, check_video'}),
                     'isBase64Encoded': False
                 }
         
         except Exception as e:
             print(f"Ошибка генерации: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return {
                 'statusCode': 500,
                 'headers': {
