@@ -60,6 +60,8 @@ const Payment = () => {
     setIsLoading(true);
 
     try {
+      console.log('Creating payment with amount:', amount);
+      
       const response = await fetch('https://functions.poehali.dev/af7d6978-94af-4605-8dc6-affae659f400', {
         method: 'POST',
         headers: {
@@ -73,17 +75,25 @@ const Payment = () => {
         }),
       });
 
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Response error:', errorText);
+        throw new Error(`Ошибка ${response.status}: ${errorText}`);
+      }
+
       const result = await response.json();
       console.log('Payment response:', result);
 
-      if (response.ok && result.payment_url) {
+      if (result.payment_url) {
         console.log('Redirecting to:', result.payment_url);
         window.location.href = result.payment_url;
       } else {
-        console.error('Payment error:', result);
-        throw new Error(result.error || 'Ошибка создания платежа');
+        throw new Error(result.error || 'Не получен URL для оплаты');
       }
     } catch (error) {
+      console.error('Fetch error:', error);
       toast({
         title: 'Ошибка',
         description: error instanceof Error ? error.message : 'Не удалось создать платёж',
