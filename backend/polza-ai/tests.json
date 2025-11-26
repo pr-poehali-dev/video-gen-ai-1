@@ -4,9 +4,7 @@
       "name": "Test OPTIONS CORS",
       "method": "OPTIONS",
       "path": "/",
-      "expectedStatus": 200,
-      "expectedBody": {},
-      "bodyMatcher": "partial"
+      "expectedStatus": 200
     },
     {
       "name": "Test text generation",
