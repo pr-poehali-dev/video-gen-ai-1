@@ -33,7 +33,7 @@ export const useIndexGenerators = (
     }, 3000);
 
     try {
-      const polzaUrl = 'https://functions.poehali.dev/500cc697-682b-469a-b439-fa265e84c833';
+      const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
       
       const response = await fetch(polzaUrl, {
         method: 'POST',
@@ -143,7 +143,7 @@ export const useIndexGenerators = (
     }, 500);
 
     try {
-      const polzaUrl = 'https://functions.poehali.dev/500cc697-682b-469a-b439-fa265e84c833';
+      const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
 
       const response = await fetch(polzaUrl, {
         method: 'POST',
@@ -211,7 +211,7 @@ export const useIndexGenerators = (
     const slides: string[] = [];
 
     try {
-      const polzaUrl = 'https://functions.poehali.dev/500cc697-682b-469a-b439-fa265e84c833';
+      const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
       
       for (let i = 0; i < presentationSlides; i++) {
         setProgress(Math.floor(((i + 1) / presentationSlides) * 90));
@@ -332,7 +332,7 @@ export const useIndexGenerators = (
     }, 500);
 
     try {
-      const polzaUrl = 'https://functions.poehali.dev/500cc697-682b-469a-b439-fa265e84c833';
+      const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
       
       const styleMap: Record<string, string> = {
         photorealistic: 'photorealistic, highly detailed, sharp focus, professional photography',
