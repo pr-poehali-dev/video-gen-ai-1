@@ -33,13 +33,13 @@ export const useIndexGenerators = (
     }, 3000);
 
     try {
-      const aiContentUrl = 'https://functions.poehali.dev/34147c53-3589-4dc6-9c1b-3170886e1a99';
+      const polzaUrl = 'https://functions.poehali.dev/66e7d738-ea14-49df-9131-1bcee7141463';
       
       console.log('[VIDEO] Starting generation...');
       
       let response;
       try {
-        response = await fetch(aiContentUrl, {
+        response = await fetch(polzaUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -355,7 +355,7 @@ export const useIndexGenerators = (
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          action: 'image',
+          action: 'start_image',
           prompt: enhancedPrompt,
           size: photoResolution
         })
