@@ -23,7 +23,6 @@ const GenerateContent = () => {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
-  const [isDemo, setIsDemo] = useState(false);
   const [presentationImages, setPresentationImages] = useState<GeneratedImage[]>([]);
   const [slideCount, setSlideCount] = useState<number>(5);
   const [selectedSlideIndex, setSelectedSlideIndex] = useState<number>(0);
@@ -188,10 +187,9 @@ const GenerateContent = () => {
           checkVideoStatus(data.generation_id);
         } else {
           setGeneratedContent(data.content_url);
-          setIsDemo(data.is_demo || false);
           setIsGenerating(false);
           toast({
-            title: data.is_demo ? '✨ Демо-версия' : 'Готово!',
+            title: 'Готово!',
             description: data.message || `${activeTab === 'video' ? 'Видео' : activeTab === 'text' ? 'Текст' : 'Изображение'} успешно создано`,
           });
         }
