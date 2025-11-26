@@ -48,23 +48,54 @@ export const useIndexGenerators = (
 
       const result = await response.json();
 
-      clearInterval(interval);
-      setProgress(100);
-
       if (!response.ok || result.error) {
         throw new Error(result.error || 'Ошибка генерации видео');
       }
 
-      setIsGenerating(false);
-      const videoData = `data:video/mp4;base64,${result.video_b64}`;
-      setGeneratedContent(videoData);
+      const taskId = result.task_id;
+      
+      let attempts = 0;
+      const maxAttempts = 60;
+      
+      while (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        const checkResponse = await fetch(polzaUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'check_video',
+            task_id: taskId
+          })
+        });
+        
+        const checkResult = await checkResponse.json();
+        
+        if (checkResult.status === 'completed') {
+          clearInterval(interval);
+          setProgress(100);
+          setIsGenerating(false);
+          
+          const videoData = `data:video/mp4;base64,${checkResult.video_b64}`;
+          setGeneratedContent(videoData);
 
-      handleIncrementRequest();
+          handleIncrementRequest();
 
-      toast({
-        title: 'Готово!',
-        description: 'Видео успешно сгенерировано',
-      });
+          toast({
+            title: 'Готово!',
+            description: 'Видео успешно сгенерировано',
+          });
+          return;
+        } else if (checkResult.status === 'failed' || checkResult.status === 'error') {
+          throw new Error(checkResult.message || 'Генерация видео провалена');
+        }
+        
+        attempts++;
+      }
+      
+      throw new Error('Таймаут генерации видео');
     } catch (error) {
       clearInterval(interval);
       setIsGenerating(false);

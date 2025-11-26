@@ -224,7 +224,68 @@ def generate_image(prompt: str, size: str = "1024x1024") -> str:
     return base64.b64encode(image_bytes).decode('utf-8')
 
 
+def start_video_generation(prompt: str) -> str:
+    """Запускает генерацию видео и возвращает task_id"""
+    headers = {"Authorization": f"Bearer {POLZA_API_KEY}", "Content-Type": "application/json"}
+    payload = {
+        "model": VIDEO_MODEL,
+        "prompt": prompt
+    }
+    
+    print(f"DEBUG: Sending video generation request with prompt: {prompt}")
+
+    response = requests.post(f"{BASE_URL}/videos/generations", headers=headers, json=payload, timeout=30)
+    response.raise_for_status()
+    
+    response_data = response.json()
+    print(f"DEBUG: Video generation response: {json.dumps(response_data, indent=2)}")
+    
+    task_id = _extract_request_id(response_data)
+    if not task_id:
+        raise RuntimeError(f"Не удалось получить ID задачи от API. Ответ: {json.dumps(response_data)}")
+    
+    return task_id
+
+
+def check_video_status(task_id: str) -> Dict[str, Any]:
+    """Проверяет статус генерации видео"""
+    headers = {"Authorization": f"Bearer {POLZA_API_KEY}"}
+    status_url = f"{BASE_URL}/videos/{task_id}"
+    
+    print(f"DEBUG: Checking video status for task {task_id}")
+    
+    r = requests.get(status_url, headers=headers, timeout=15)
+    if r.status_code != 200:
+        return {"status": "error", "message": f"HTTP {r.status_code}"}
+    
+    data = r.json()
+    status = str(data.get("status", "")).lower()
+    print(f"DEBUG: Video task status: {status}")
+    
+    if status in ("succeeded", "completed", "done"):
+        result_bytes = _parse_image_result(data)
+        if result_bytes:
+            return {
+                "status": "completed",
+                "video_b64": base64.b64encode(result_bytes).decode('utf-8')
+            }
+        return {
+            "status": "error",
+            "message": f"Результат не найден. Ответ: {json.dumps(data)}"
+        }
+    
+    if status in ("failed", "error", "canceled"):
+        error_info = data.get("error", {}).get("message", "Причина не указана.")
+        return {
+            "status": "failed",
+            "message": error_info
+        }
+    
+    return {"status": "processing"}
+
+
 def generate_video(prompt: str) -> str:
+    """DEPRECATED: Используется для обратной совместимости с тестами"""
     headers = {"Authorization": f"Bearer {POLZA_API_KEY}", "Content-Type": "application/json"}
     payload = {
         "model": VIDEO_MODEL,
@@ -350,14 +411,42 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
         
         elif action == 'video':
-            result = generate_video(prompt)
+            task_id = start_video_generation(prompt)
             return {
                 'statusCode': 200,
                 'headers': {
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
-                'body': json.dumps({'video_b64': result}),
+                'body': json.dumps({
+                    'task_id': task_id,
+                    'status': 'processing',
+                    'message': 'Генерация видео начата. Используйте task_id для проверки статуса.'
+                }),
+                'isBase64Encoded': False
+            }
+        
+        elif action == 'check_video':
+            task_id = body_data.get('task_id')
+            if not task_id:
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'body': json.dumps({'error': 'task_id обязателен для проверки статуса'}),
+                    'isBase64Encoded': False
+                }
+            
+            result = check_video_status(task_id)
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps(result),
                 'isBase64Encoded': False
             }
         
@@ -368,7 +457,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
-                'body': json.dumps({'error': 'Неизвестное действие. Доступно: text, image, check_image, video'}),
+                'body': json.dumps({'error': 'Неизвестное действие. Доступно: text, image, check_image, video, check_video'}),
                 'isBase64Encoded': False
             }
     
