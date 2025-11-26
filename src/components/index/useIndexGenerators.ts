@@ -54,10 +54,22 @@ export const useIndexGenerators = (
 
       const taskId = result.task_id;
       
+      clearInterval(interval);
+      
+      toast({
+        title: '⏳ Генерация запущена',
+        description: 'Создаём видео... Обычно это занимает 1-2 минуты',
+      });
+      
       let attempts = 0;
       const maxAttempts = 60;
+      const startTime = Date.now();
       
       while (attempts < maxAttempts) {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const progressPercent = Math.min(10 + (elapsed / 120) * 85, 95);
+        setProgress(progressPercent);
+        
         await new Promise(resolve => setTimeout(resolve, 3000));
         
         const checkResponse = await fetch(polzaUrl, {
@@ -74,7 +86,6 @@ export const useIndexGenerators = (
         const checkResult = await checkResponse.json();
         
         if (checkResult.status === 'completed') {
-          clearInterval(interval);
           setProgress(100);
           setIsGenerating(false);
           
@@ -84,8 +95,8 @@ export const useIndexGenerators = (
           handleIncrementRequest();
 
           toast({
-            title: 'Готово!',
-            description: 'Видео успешно сгенерировано',
+            title: '✅ Готово!',
+            description: `Видео сгенерировано за ${elapsed} секунд`,
           });
           return;
         } else if (checkResult.status === 'failed' || checkResult.status === 'error') {
@@ -95,7 +106,7 @@ export const useIndexGenerators = (
         attempts++;
       }
       
-      throw new Error('Таймаут генерации видео');
+      throw new Error('Таймаут генерации видео (>3 минут)');
     } catch (error) {
       clearInterval(interval);
       setIsGenerating(false);
@@ -230,9 +241,14 @@ export const useIndexGenerators = (
         let imageBase64 = null;
         let attempts = 0;
         const maxAttempts = 60;
+        const slideStartTime = Date.now();
         
         while (attempts < maxAttempts) {
           await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          const elapsed = Math.floor((Date.now() - slideStartTime) / 1000);
+          const slideProgress = Math.floor(((i + elapsed / 60) / presentationSlides) * 90);
+          setProgress(Math.min(slideProgress, 90));
           
           const checkResponse = await fetch(polzaUrl, {
             method: 'POST',
@@ -262,6 +278,11 @@ export const useIndexGenerators = (
         }
 
         slides.push(`data:image/png;base64,${imageBase64}`);
+        
+        toast({
+          title: `✅ Слайд ${i + 1}/${presentationSlides}`,
+          description: `Создан за ${Math.floor((Date.now() - slideStartTime) / 1000)} сек`,
+        });
       }
 
       setProgress(100);
@@ -342,11 +363,23 @@ export const useIndexGenerators = (
 
       const taskId = startResult.task_id;
       
+      clearInterval(interval);
+      
+      toast({
+        title: '🎨 Генерация запущена',
+        description: 'Создаём изображение... Обычно это занимает 20-40 секунд',
+      });
+      
       let imageBase64 = null;
       let attempts = 0;
       const maxAttempts = 60;
+      const startTime = Date.now();
       
       while (attempts < maxAttempts) {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const progressPercent = Math.min(10 + (elapsed / 60) * 85, 95);
+        setProgress(progressPercent);
+        
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         const checkResponse = await fetch(polzaUrl, {
@@ -376,7 +409,7 @@ export const useIndexGenerators = (
         throw new Error('Таймаут генерации изображения');
       }
 
-      clearInterval(interval);
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
       setProgress(100);
       setIsGenerating(false);
       const imageData = `data:image/png;base64,${imageBase64}`;
@@ -385,8 +418,8 @@ export const useIndexGenerators = (
       handleIncrementRequest();
 
       toast({
-        title: 'Готово!',
-        description: 'Изображение успешно сгенерировано',
+        title: '✅ Готово!',
+        description: `Изображение сгенерировано за ${elapsed} секунд`,
       });
     } catch (error) {
       clearInterval(interval);
