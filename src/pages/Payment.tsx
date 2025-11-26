@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import Icon from '@/components/ui/icon';
@@ -11,6 +12,7 @@ const Payment = () => {
   const { toast } = useToast();
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('any');
   const [isLoading, setIsLoading] = useState(false);
 
   const handlePayment = async () => {
@@ -35,6 +37,7 @@ const Payment = () => {
           action: 'create',
           amount: parseFloat(amount),
           description: description || 'Оплата на сайте',
+          payment_method: paymentMethod,
           return_url: window.location.origin + '/payment-success',
         }),
       });
@@ -92,6 +95,51 @@ const Payment = () => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
+          </div>
+          <div className="space-y-3">
+            <Label>Способ оплаты</Label>
+            <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+              <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent cursor-pointer">
+                <RadioGroupItem value="any" id="any" />
+                <Label htmlFor="any" className="flex-1 cursor-pointer flex items-center gap-2">
+                  <Icon name="Wallet" size={20} />
+                  <div>
+                    <div className="font-medium">Любой способ</div>
+                    <div className="text-xs text-muted-foreground">Карта, ЮMoney, СБП, кошелек</div>
+                  </div>
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent cursor-pointer">
+                <RadioGroupItem value="bank_card" id="bank_card" />
+                <Label htmlFor="bank_card" className="flex-1 cursor-pointer flex items-center gap-2">
+                  <Icon name="CreditCard" size={20} />
+                  <div>
+                    <div className="font-medium">Банковская карта</div>
+                    <div className="text-xs text-muted-foreground">Visa, Mastercard, МИР</div>
+                  </div>
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent cursor-pointer">
+                <RadioGroupItem value="yoo_money" id="yoo_money" />
+                <Label htmlFor="yoo_money" className="flex-1 cursor-pointer flex items-center gap-2">
+                  <Icon name="Coins" size={20} />
+                  <div>
+                    <div className="font-medium">ЮMoney</div>
+                    <div className="text-xs text-muted-foreground">Электронный кошелек</div>
+                  </div>
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent cursor-pointer">
+                <RadioGroupItem value="sbp" id="sbp" />
+                <Label htmlFor="sbp" className="flex-1 cursor-pointer flex items-center gap-2">
+                  <Icon name="Smartphone" size={20} />
+                  <div>
+                    <div className="font-medium">СБП</div>
+                    <div className="text-xs text-muted-foreground">Система быстрых платежей</div>
+                  </div>
+                </Label>
+              </div>
+            </RadioGroup>
           </div>
         </CardContent>
         <CardFooter>

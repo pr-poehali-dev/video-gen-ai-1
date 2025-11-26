@@ -75,8 +75,9 @@ def create_payment(body: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, A
         amount = body.get('amount')
         description = body.get('description', 'Оплата на сайте')
         return_url = body.get('return_url', 'https://example.com/success')
+        payment_method = body.get('payment_method')
         
-        print(f'[PAYMENT] Creating payment: amount={amount}, description={description}')
+        print(f'[PAYMENT] Creating payment: amount={amount}, description={description}, method={payment_method}')
         
         if not amount or float(amount) <= 0:
             return {
@@ -88,7 +89,7 @@ def create_payment(body: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, A
         
         idempotence_key = str(uuid.uuid4())
         
-        payment = Payment.create({
+        payment_data = {
             "amount": {
                 "value": f"{float(amount):.2f}",
                 "currency": "RUB"
@@ -99,7 +100,14 @@ def create_payment(body: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, A
             },
             "capture": True,
             "description": description
-        }, idempotence_key)
+        }
+        
+        if payment_method and payment_method != 'any':
+            payment_data["payment_method_data"] = {
+                "type": payment_method
+            }
+        
+        payment = Payment.create(payment_data, idempotence_key)
         
         print(f'[PAYMENT] Payment created: id={payment.id}, status={payment.status}')
         print(f'[PAYMENT] Confirmation URL: {payment.confirmation.confirmation_url}')
