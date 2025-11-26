@@ -7,13 +7,14 @@ Returns: JSON с payment_id и URL для оплаты или статусом �
 import json
 import os
 import uuid
-import base64
 from typing import Dict, Any
-import requests
+from yookassa import Configuration, Payment
 
 SHOP_ID = os.environ.get('YOOKASSA_SHOP_ID', '')
 SECRET_KEY = os.environ.get('YOOKASSA_SECRET_KEY', '')
-API_URL = 'https://api.yookassa.ru/v3'
+
+Configuration.account_id = SHOP_ID
+Configuration.secret_key = SECRET_KEY
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
@@ -87,69 +88,29 @@ def create_payment(body: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, A
         
         idempotence_key = str(uuid.uuid4())
         
-        payment_data = {
-            'amount': {
-                'value': str(amount),
-                'currency': 'RUB'
+        payment = Payment.create({
+            "amount": {
+                "value": f"{float(amount):.2f}",
+                "currency": "RUB"
             },
-            'confirmation': {
-                'type': 'redirect',
-                'return_url': return_url
+            "confirmation": {
+                "type": "redirect",
+                "return_url": return_url
             },
-            'capture': True,
-            'description': description
-        }
+            "capture": True,
+            "description": description
+        }, idempotence_key)
         
-        auth_string = f"{SHOP_ID}:{SECRET_KEY}"
-        auth_bytes = auth_string.encode('utf-8')
-        auth_b64 = base64.b64encode(auth_bytes).decode('utf-8')
+        print(f'[PAYMENT] Payment created: id={payment.id}, status={payment.status}')
+        print(f'[PAYMENT] Confirmation URL: {payment.confirmation.confirmation_url}')
         
-        print(f'[PAYMENT] Request to YooKassa: {json.dumps(payment_data)}')
-        print(f'[PAYMENT] Shop ID: {SHOP_ID[:4]}..., API URL: {API_URL}')
-        
-        response = requests.post(
-            f'{API_URL}/payments',
-            json=payment_data,
-            headers={
-                'Authorization': f'Basic {auth_b64}',
-                'Idempotence-Key': idempotence_key,
-                'Content-Type': 'application/json'
-            },
-            timeout=10
-        )
-        
-        print(f'[PAYMENT] YooKassa response status: {response.status_code}')
-        print(f'[PAYMENT] YooKassa response body: {response.text[:500]}')
-        
-        if response.status_code in [200, 201]:
-            data = response.json()
-            payment_id = data.get('id')
-            confirmation_url = data.get('confirmation', {}).get('confirmation_url')
-            
-            # Добавляем payment_id к return_url
-            if confirmation_url and return_url:
-                separator = '&' if '?' in return_url else '?'
-                updated_return_url = f"{return_url}{separator}payment_id={payment_id}"
-                print(f'[PAYMENT] Success! payment_id={payment_id}, url={confirmation_url}')
-            
-            return {
-                'statusCode': 200,
-                'headers': headers,
-                'body': json.dumps({
-                    'payment_id': payment_id,
-                    'payment_url': confirmation_url,
-                    'status': data.get('status')
-                }),
-                'isBase64Encoded': False
-            }
-        
-        print(f'[PAYMENT] Error from YooKassa: status={response.status_code}, body={response.text}')
         return {
-            'statusCode': response.status_code,
+            'statusCode': 200,
             'headers': headers,
             'body': json.dumps({
-                'error': 'Ошибка создания платежа',
-                'details': response.text
+                'payment_id': payment.id,
+                'payment_url': payment.confirmation.confirmation_url,
+                'status': payment.status
             }),
             'isBase64Encoded': False
         }
@@ -177,39 +138,19 @@ def check_payment_status(body: Dict[str, Any], headers: Dict[str, str]) -> Dict[
                 'isBase64Encoded': False
             }
         
-        auth_string = f"{SHOP_ID}:{SECRET_KEY}"
-        auth_bytes = auth_string.encode('utf-8')
-        auth_b64 = base64.b64encode(auth_bytes).decode('utf-8')
-        
-        response = requests.get(
-            f'{API_URL}/payments/{payment_id}',
-            headers={
-                'Authorization': f'Basic {auth_b64}',
-                'Content-Type': 'application/json'
-            },
-            timeout=10
-        )
-        
-        if response.status_code == 200:
-            data = response.json()
-            return {
-                'statusCode': 200,
-                'headers': headers,
-                'body': json.dumps({
-                    'payment_id': data.get('id'),
-                    'status': data.get('status'),
-                    'paid': data.get('paid'),
-                    'amount': data.get('amount')
-                }),
-                'isBase64Encoded': False
-            }
+        payment = Payment.find_one(payment_id)
         
         return {
-            'statusCode': response.status_code,
+            'statusCode': 200,
             'headers': headers,
             'body': json.dumps({
-                'error': 'Платеж не найден',
-                'details': response.text
+                'payment_id': payment.id,
+                'status': payment.status,
+                'paid': payment.paid,
+                'amount': {
+                    'value': payment.amount.value,
+                    'currency': payment.amount.currency
+                }
             }),
             'isBase64Encoded': False
         }
