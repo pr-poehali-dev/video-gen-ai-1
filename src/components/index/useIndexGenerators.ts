@@ -88,8 +88,7 @@ export const useIndexGenerators = (
           setProgress(100);
           setIsGenerating(false);
           
-          const videoData = `data:video/mp4;base64,${checkResult.video_b64}`;
-          setGeneratedContent(videoData);
+          setGeneratedContent(checkResult.video_url);
 
           handleIncrementRequest();
 

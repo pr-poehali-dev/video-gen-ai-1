@@ -271,14 +271,15 @@ def check_video_status(task_id: str) -> Dict[str, Any]:
         print(f"DEBUG: Video task status: {status}, full response: {json.dumps(data, indent=2)[:500]}")
         
         if status in ("succeeded", "completed", "done"):
-            result_bytes = _parse_image_result(data)
-            if result_bytes:
-                print(f"DEBUG: Video ready, size: {len(result_bytes)} bytes")
+            # Ищем URL видео напрямую вместо скачивания
+            video_url = data.get("url")
+            if video_url and isinstance(video_url, str) and video_url.startswith("http"):
+                print(f"DEBUG: Video ready at URL: {video_url}")
                 return {
                     "status": "completed",
-                    "video_b64": base64.b64encode(result_bytes).decode('utf-8')
+                    "video_url": video_url
                 }
-            print(f"DEBUG: Status is completed but no video data found in response")
+            print(f"DEBUG: Status is completed but no video URL found in response")
             return {
                 "status": "error",
                 "message": f"Результат не найден. Ответ: {json.dumps(data)}"
