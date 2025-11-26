@@ -543,9 +543,23 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
     
     if method == 'POST' and action == 'generate':
-        body_data = json.loads(event.get('body', '{}'))
+        try:
+            body_str = event.get('body', '{}')
+            print(f'DEBUG: body string={body_str[:200]}')
+            body_data = json.loads(body_str)
+            print(f'DEBUG: parsed body_data={body_data}')
+        except json.JSONDecodeError as e:
+            print(f'DEBUG: JSON decode error: {e}')
+            return {
+                'statusCode': 400,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': f'Invalid JSON: {str(e)}'})
+            }
+        
         content_type = body_data.get('type', 'text')
         prompt = body_data.get('prompt', '')
+        
+        print(f'DEBUG: content_type={content_type}, prompt={prompt[:50] if prompt else "empty"}')
         
         if not prompt:
             return {
